@@ -1,0 +1,6 @@
+* DONE Rotate Initial quaternion according to yaw
+* DONE Testing C++ code
+* DONE Preprocess test data sets
+* DONE settle. create initial position.
+* TODO Create Unit tests
+** unit test for settling, add a plot

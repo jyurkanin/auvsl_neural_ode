@@ -30,6 +30,8 @@ public:
   void initState();
   void initState(Scalar *start_state);
   void initStateCOM(Scalar *start_state);
+  void initStateCOM(Scalar *start_state, Scalar *base_state);
+  
   void step(Scalar vl, Scalar vr);
   void settle();
   

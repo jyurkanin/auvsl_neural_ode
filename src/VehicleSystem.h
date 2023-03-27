@@ -23,8 +23,8 @@ public:
   virtual void   forward(const VectorS &X, VectorS &Xd);
   virtual Scalar loss(const VectorS &gt_vec, VectorS &vec);
   void integrate(const VectorS &X0, VectorS &X1);  
+
   
-private:
   MatrixS m_params;
   HybridDynamics m_hybrid_dynamics;
 };

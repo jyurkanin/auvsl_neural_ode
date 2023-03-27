@@ -11,90 +11,106 @@
 
 
 namespace {
-  // using cpp_bptt::VectorF;
-  // using cpp_bptt::MatrixF;
-  // using cpp_bptt::VectorAD;
-  // using cpp_bptt::MatrixAD;
-  // using cpp_bptt::ADF;
-  // using cpp_bptt::ADAD;
-
-
-
 
   class VehicleFixture : public ::testing::Test
   {
   public:
     std::vector<VectorF> m_gt_list;
     std::vector<VectorAD> m_gt_list_adf;
-    VectorF m_x0;
-    VectorF m_params;
-    
+    VectorAD m_x0;
+    VectorAD m_params;
+
     std::shared_ptr<VehicleSystem<ADF>>    m_system_adf;
     std::shared_ptr<VehicleSimulatorAD>    m_simulator_adf;
-    std::shared_ptr<VehicleSystem<float>>  m_system_f;
-    std::shared_ptr<VehicleSimulatorF>     m_simulator_f;
     
     VehicleFixture()
     {
       srand(time(NULL)); // randomize seed
       
-      m_system_adf = std::make_shared<VehicleSystem<ADF>>();
+      m_system_adf    = std::make_shared<VehicleSystem<ADF>>();
       m_simulator_adf = std::make_shared<VehicleSimulatorAD>(m_system_adf);
       
-      m_system_f = std::make_shared<VehicleSystem<float>>();
-      m_simulator_f = std::make_shared<VehicleSimulatorF>(m_system_f);
+      m_params = VectorAD::Zero(m_system_adf->getNumParams());
+      m_x0 = VectorAD::Zero(m_system_adf->getStateDim());
+      
+      m_system_adf->getDefaultParams(m_params);
+      m_system_adf->getDefaultInitialState(m_x0);
 
-      m_params = VectorF::Random(m_system_adf->getNumParams());
-      m_x0 = VectorF::Random(m_system_adf->getStateDim());
       m_gt_list.resize(m_system_adf->getNumSteps());
       m_gt_list_adf.resize(m_system_adf->getNumSteps());
-
+      
       for(int i = 0; i < m_gt_list.size(); i++)
       {
-	m_gt_list[i] = VectorF::Random(m_system_f->getStateDim());
-	m_gt_list_adf[i] = VectorAD::Zero(m_system_f->getStateDim());
-	for(int j = 0; j < m_x0.size(); j++)
+	m_gt_list[i] = VectorF::Zero(m_system_adf->getStateDim());
+	m_gt_list_adf[i] = VectorAD::Random(m_system_adf->getStateDim());
+	for(int j = 0; j < m_gt_list_adf[i].size(); j++)
 	{
-	  m_gt_list_adf[i][j] = m_gt_list[i][j]; 
+	  m_gt_list[i][j] = CppAD::Value(m_gt_list_adf[i][j]);
 	}
       }
-      
     }
     ~VehicleFixture(){}
-        
-    VectorF getGradientHard()
-    {
-      VectorF x0(m_system_f->getStateDim());
-      for(int i = 0; i < x0.size(); i++)
+    
+    VectorF getGradientSimple()
+    {      
+      CppAD::Independent(m_params);
+      m_system_adf->setParams(m_params);
+      
+      std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
+      m_simulator_adf->forward(m_x0, x_list);
+      
+      VectorAD loss(1);
+      
+      loss[0] = 0;
+      for(int i = 0; i < x_list.size(); i++)
       {
-	x0[i] = m_x0[i];
+	loss[0] += m_system_adf->loss(m_gt_list_adf[i], x_list[i]);
       }
       
-      VectorF params(m_system_f->getNumParams());
-      for(int i = 0; i < params.size(); i++)
-      {
-	params[i] = m_params[i];
-      }
-            
-      m_system_f->setParams(params);
+      CppAD::ADFun<float> func(m_params, loss);
+      
+      VectorF y0(1);
+      y0[0] = 1;
+
+      std::cout << "Loss " << loss[0] << "\n";
+      
+      return func.Reverse(1, y0);
+    }
+    
+    VectorF getGradientBPTT()
+    {
+      m_system_adf->setParams(m_params);
       
       VectorF gradient;
       float loss;
-      m_simulator_f->forward_backward(x0, m_gt_list, gradient, loss);
+      VectorF x0_f(m_system_adf->getStateDim());
+      for(int i = 0; i < x0_f.size(); i++)
+      {
+	x0_f[i] = CppAD::Value(m_x0[i]);
+      }
+      
+      m_simulator_adf->forward_backward(x0_f, m_gt_list, gradient, loss);
+      
+      std::cout << "Loss " << loss << "\n";
       
       return gradient;
-    }
-    
+    }    
   };
 
   
-  TEST_F(VehicleFixture, validate_gradient_hard)
-  {
-    VectorF grad_hard = getGradientHard();
 
-    for(int i = 0; i < m_system_f->getNumParams(); i++)
+
+  
+  TEST_F(VehicleFixture, validate_gradient_easy)
+  {
+    VectorF grad_simple = getGradientSimple();
+    VectorF grad_bptt = getGradientBPTT();
+
+    for(int i = 0; i < m_system_adf->getNumParams(); i++)
     {
-      std::cout << grad_hard[i] << "\n";
+      std::cout << grad_simple[i] << ", " << grad_bptt[i] << "\n";
+      //EXPECT_LE(fabs(grad_simple[i] - grad_bptt[i]), fabs(1e-4f*grad_simple[i]));
     }
   }
+
 }

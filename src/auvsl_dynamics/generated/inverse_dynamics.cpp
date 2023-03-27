@@ -1,5 +1,8 @@
 #include <iit/rbd/robcogen_commons.h>
 
+#include <cppad/example/cppad_eigen.hpp>
+#include <cppad/cppad.hpp>
+
 #include "generated/inverse_dynamics.h"
 #include "generated/inertia_properties.h"
 #ifndef EIGEN_NO_DEBUG

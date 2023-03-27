@@ -1,7 +1,5 @@
 #include "VehicleSystem.h"
-#include "SimulatorF.h"
-#include "SimulatorAD.h"
-#include "SimulatorADAD.h"
+#include "Trainer.h"
 
 
 
@@ -9,5 +7,12 @@
 
 int main()
 {
+  Trainer train;
+
+  for(int i = 0; i < 1000; i++)
+  {
+    //train.train();
+    train.evaluate();
+  }
   
 }

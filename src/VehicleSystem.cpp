@@ -6,9 +6,9 @@ template<typename Scalar>
 VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics::STATE_DIM + HybridDynamics::CNTRL_DIM, 0)
 {
   this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
-  this->setNumSteps(10);
-  this->setTimestep(0.001);
-  this->setLearningRate(0.001);
+  this->setNumSteps(60);
+  this->setTimestep(0.001);  //unused
+  this->setLearningRate(1e-3f);
 }
 
 template<typename Scalar>
@@ -74,7 +74,6 @@ Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
 template<typename Scalar>
 void VehicleSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
 {
-  std::cout << "Uh, I can explain\n";
   Eigen::Matrix<Scalar, HybridDynamics::STATE_DIM, 1> model_x0;
   Eigen::Matrix<Scalar, HybridDynamics::CNTRL_DIM, 1> model_u;
   Eigen::Matrix<Scalar, HybridDynamics::STATE_DIM, 1> model_x1;
@@ -89,16 +88,14 @@ void VehicleSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
   }
   
   
-  
-  const int num_steps = 10; //10*.005 = .05
+  const int num_steps = 100; // 100*.001 = .1
   for(int ii = 0; ii < num_steps; ii++){
     model_x0[17] = model_x0[19] = model_u[0];
     model_x0[18] = model_x0[20] = model_u[1];
     
     m_hybrid_dynamics.RK4(model_x0, model_x1, model_u);
     model_x0 = model_x1;
-  }
-  
+  }  
   
   
   for(int i = 0; i < model_x1.size(); i++)
@@ -126,6 +123,6 @@ void VehicleSystem<Scalar>::getDefaultParams(VectorS &params)
   getParams(params);
 }
 
-//Template Class Vehiclesystem<ADF>;
-template class VehicleSystem<ADAD>;
+template class VehicleSystem<ADF>;
+//template class VehicleSystem<ADAD>;
 //template class VehicleSystem<float>;

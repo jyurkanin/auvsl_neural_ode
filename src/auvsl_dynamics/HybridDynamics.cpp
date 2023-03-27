@@ -29,7 +29,7 @@ using Jackal::rcg::tz_rear_right_wheel;
 using Jackal::rcg::orderedJointIDs;
 
 
-const Scalar HybridDynamics::timestep{0.005};
+const Scalar HybridDynamics::timestep{0.001};
 
 Scalar zero_const{0.0};
 Scalar g_const{-9.81};
@@ -76,8 +76,9 @@ void HybridDynamics::initState(Scalar *start_state){
   }
 }
 
+
 //velocities expressed in COM frame. more intuitive.
-void HybridDynamics::initStateCOM(Scalar *start_state){
+void HybridDynamics::initStateCOM(Scalar *start_state, Scalar *base_state){
   Jackal::rcg::Vector3 com_pos = Jackal::rcg::getWholeBodyCOM(inertias, h_transforms);
   
   Eigen::Matrix<Scalar,3,1> base_lin_vel;
@@ -85,14 +86,13 @@ void HybridDynamics::initStateCOM(Scalar *start_state){
   Eigen::Matrix<Scalar,3,1> ang_vel(start_state[11], start_state[12], start_state[13]);
 
   Eigen::Matrix<Scalar,3,3> r_ss;
-  r_ss << Scalar(0.0), -com_pos[2],  com_pos[1],
-          com_pos[2],  Scalar(0.0), -com_pos[0],
-         -com_pos[1],  com_pos[0],   Scalar(0.0);
+  r_ss << 0.,        -com_pos[2], com_pos[1],
+          com_pos[2], 0.,        -com_pos[0],
+         -com_pos[1], com_pos[0], 0.;
   
   //plus, because com_pos is the displacement from base_link to com
   base_lin_vel = com_lin_vel + (r_ss*ang_vel);
   
-  Scalar base_state[STATE_DIM];
   for(int i = 0; i < STATE_DIM; i++){
     base_state[i] = start_state[i];
   }
@@ -100,7 +100,12 @@ void HybridDynamics::initStateCOM(Scalar *start_state){
   base_state[14] = base_lin_vel[0];
   base_state[15] = base_lin_vel[1];
   base_state[16] = base_lin_vel[2];
+}
 
+void HybridDynamics::initStateCOM(Scalar *start_state)
+{
+  Scalar base_state[STATE_DIM];
+  initStateCOM(start_state, base_state);
   initState(base_state);
 }
 
@@ -242,8 +247,6 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     //Sign Corrections are needed
     //CppAD::CondExpLt(cpt_vels[ii][0], literally_zero, forces[0], forces[0]);
     
-    
-    
     Eigen::Matrix<Scalar,3,1> lin_force;
     Eigen::Matrix<Scalar,3,1> ang_force;
     
@@ -260,10 +263,15 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     Eigen::Matrix<Scalar,3,1> temp_vel = cpt_rots[ii]*cpt_vels[ii];
     
     lin_force[2] = CppAD::CondExpGt(temp_vel[2], literally_zero, lin_force[2] * .1, lin_force[2]); //hack to damp out the vertical motion.
-    
-    lin_force[0] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[0]);
-    lin_force[1] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[1]);
-    lin_force[2] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[2]);
+
+    // I Added a stupid hack here watch out. Using th exp() makes things the tire model continuous even though when it loses contact with the ground
+    Scalar coeff(1e2);
+    //lin_force[0] = lin_force[0]*CppAD::CondExpLt(sinkages[ii], literally_zero, CppAD::exp(coeff*sinkages[ii]), Scalar(1.0));
+    //lin_force[1] = lin_force[1]*CppAD::CondExpLt(sinkages[ii], literally_zero, CppAD::exp(coeff*sinkages[ii]), Scalar(1.0));
+    //lin_force[2] = lin_force[2]*CppAD::CondExpLt(sinkages[ii], literally_zero, CppAD::exp(coeff*sinkages[ii]), Scalar(1.0));
+    lin_force[0] = lin_force[0]*CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, Scalar(1.0));
+    lin_force[1] = lin_force[1]*CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, Scalar(1.0));
+    lin_force[2] = lin_force[2]*CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, Scalar(1.0));
     
     Force wrench;
     wrench[0] = ang_force[0];

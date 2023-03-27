@@ -4,7 +4,7 @@
 #include <iit/rbd/rbd.h>
 #include <iit/rbd/scalar_traits.h>
 #include <iit/rbd/InertiaMatrix.h>
-#include <iit/robcogen/scalar/cppadad.h>
+#include <iit/robcogen/scalar/cppad.h>
 
 namespace Jackal {
 namespace rcg {
