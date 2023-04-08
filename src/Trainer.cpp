@@ -116,17 +116,18 @@ void Trainer::train()
       std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
       for(int i = 0; i < m_params.size(); i++)
       {
-	std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
-	// if(fabs(traj_grad[i]) > 1.0)
-	// {
-	  
-	// }
+	
+	if(fabs(traj_grad[i]) > 1000.0)
+	{
+	  std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
+	  break;
+	}
       }
       
       m_cnt++;
       if(m_cnt == 100)
       {
-	std::cout << "Avg Loss: " << avg_loss / 100.0 <<"\n";
+	//std::cout << "Avg Loss: " << avg_loss / 100.0 <<"\n";
 	updateParams(m_batch_grad / 100.0);
 	m_cnt = 0;
 	avg_loss = 0;
@@ -288,9 +289,9 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
 
   for(int i = 0; i < xk.size(); i++)
   {
-    std::cout << CppAD::Value(xk[i]) << ", ";
+    //std::cout << CppAD::Value(xk[i]) << ", ";
   }
-  std::cout << "\n";
+  //std::cout << "\n";
   
   CppAD::Independent(m_params);
   m_system_adf->setParams(m_params);
@@ -320,7 +321,7 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
   loss_ad[0] = m_system_adf->loss(gt_vec, x_list.back());
   CppAD::ADFun<double> func(m_params, loss_ad);
 
-  std::cout << "gt x: " << CppAD::Value(gt_vec[4]) << " gt y: " << CppAD::Value(gt_vec[5]) << "\n";
+  //std::cout << "gt x: " << CppAD::Value(gt_vec[4]) << " gt y: " << CppAD::Value(gt_vec[5]) << "\n";
   
   VectorF y0(1);
   y0[0] = 1;
