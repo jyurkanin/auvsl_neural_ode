@@ -116,10 +116,11 @@ void Trainer::train()
       std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
       for(int i = 0; i < m_params.size(); i++)
       {
-	if(fabs(traj_grad[i]) > 1.0)
-	{
-	  std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
-	}
+	std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
+	// if(fabs(traj_grad[i]) > 1.0)
+	// {
+	  
+	// }
       }
       
       m_cnt++;
