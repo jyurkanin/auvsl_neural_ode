@@ -41,7 +41,8 @@ device = torch.device("cpu")
 print("Current compute device:", device)
 
 #These are determined to be the best parameters by checking all possible and removing the one that are unimportant.
-in_features = "vx vy w zr".split()
+in_features = "vx vy w zr kc kphi n0 n1 phi".split()
+
 out_features = "Fx Fy Fz".split()
 
 df = pd.read_csv("tire_data.csv")
@@ -98,8 +99,8 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.in_size = 3 # sinkage, slip_diff, vy
-    self.hidden_size = 16
+    self.in_size = 9 # sinkage, qd, vx, vy, 5 bekker params
+    self.hidden_size = 20
     self.out_size = 3
     
     self.tire_radius = .098
@@ -118,32 +119,40 @@ class TireNet(nn.Module):
   def compute_bekker_input_scaler(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_lon = torch.abs(diff) / (torch.abs(tire_tangent_vel) + 1e-4)
-    #slip_lat = torch.abs(x[:,1])
-    slip_lat = torch.atan(torch.abs(x[:,1]) / torch.abs(x[:,0]))
+    slip_lon = torch.abs(diff)
+    slip_lat = torch.abs(x[:,1])
     tire_abs = torch.abs(x[:,2])
     bekker_args = torch.cat((x[:,3][:,None], # zr
-                             slip_lon[:,None], # |diff|
-                             slip_lat[:,None] # |vy|
-                             ), 1)
+                             slip_lon[:,None], # diff
+                             tire_abs[:,None], # |qd|
+                             slip_lat[:,None], # vy
+                             x[:,4][:,None],
+                             x[:,5][:,None],
+                             x[:,6][:,None],
+                             x[:,7][:,None],
+                             x[:,8][:,None]), 1)
     
     self.in_mean = torch.mean(bekker_args, 0)
     temp = bekker_args - self.in_mean
     self.in_std = torch.sqrt(torch.var(temp, 0))
     
-  # vx,vy,w,zr, x is (4, batch_size)
+  # vx,vy,qd,zr 5 bekker params, x is (9, batch_size)
   def forward(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_lon = torch.abs(diff) / (torch.abs(tire_tangent_vel) + 1e-4)
-    #slip_lat = torch.abs(x[:,1])
-    slip_lat = torch.atan(torch.abs(x[:,1]) / torch.abs(x[:,0]))
+    slip_lon = torch.abs(diff)
+    slip_lat = torch.abs(x[:,1])
     tire_abs = torch.abs(x[:,2])
     bekker_args = torch.cat((x[:,3][:,None],   # zr
-                             slip_lon[:,None], # |diff|
-                             slip_lat[:,None], # |vy|
-                             ), 1)
-
+                             slip_lon[:,None], # diff
+                             tire_abs[:,None], # |qd|
+                             slip_lat[:,None], # vy
+                             x[:,4][:,None],
+                             x[:,5][:,None],
+                             x[:,6][:,None],
+                             x[:,7][:,None],
+                             x[:,8][:,None]), 1)
+    
     bekker_args = (bekker_args - self.in_mean) / self.in_std
     
     yhat = self.model.forward(bekker_args)
@@ -212,14 +221,19 @@ def fx_plot():
     plt.title("Slip Ratio vs. Longitudinal Force (Fx)")
     plt.xlabel("Slip Ratio")
     plt.ylabel("Longitudinal Force (N)")
-    plt.show()
+    plt.show()    
 
 def fy_plot():
-    test = np.zeros((1000,4))
+    test = np.zeros((1000,9))
     test[:,0] = 0.2                    # vx
     test[:,1] = np.linspace(-1,1,1000) # vy
     test[:,2] = 0.1                    # w
     test[:,3] = 0.001                  # zr
+    test[:,4] = 29.76               # kc
+    test[:,5] = 2083                # kphi
+    test[:,6] = .8                  # n0
+    test[:,7] = 0                   # n1
+    test[:,8] = 22.5*np.pi/180      # phi
     
     #test_norm = input_scaler.transform(test)
     test_norm = test
@@ -234,11 +248,16 @@ def fy_plot():
     plt.show()
 
 def fz_plot():
-    test = np.zeros((1000,4))
+    test = np.zeros((1000,9))
     test[:,0] = 0.2                    # vx
     test[:,1] = 0                      # vy
     test[:,2] = 0.1                    # w
     test[:,3] = np.linspace(-.1,.1,1000) # zr
+    test[:,4] = 29.76               # kc
+    test[:,5] = 2083                # kphi
+    test[:,6] = .8                  # n0
+    test[:,7] = 0                   # n1
+    test[:,8] = 22.5*np.pi/180      # phi
     
     #test_norm = input_scaler.transform(test)
     test_norm = test
@@ -254,12 +273,12 @@ def fz_plot():
 
     
 
-model_name = "train_no_ratio1.net"
+#model_name = "train_no_ratio1.net"
 #md = torch.load(model_name)
 #model.load_state_dict(md)
 
-fit(1e-4, 5000, 100)
-#fit(1e-3, 50, 10)
+fit(1e-3, 5000, 100)
+fit(1e-3, 50, 10)
 #fit(1e-4, 50000, 1000)
 #fit(1e-4, 50, 100)
 #fit(1e-4, 50, 10000)
@@ -273,7 +292,6 @@ get_evaluation_loss(test_data, test_labels)
 # fx_plot()
 # fy_plot()
 # fz_plot()
-
 
 
 

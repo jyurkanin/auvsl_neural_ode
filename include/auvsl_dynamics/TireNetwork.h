@@ -18,7 +18,7 @@ public:
   ~TireNetwork();
 
   static const int num_hidden_nodes = 16;
-  static const int num_in_features = 8;
+  static const int num_in_features = 9;
   static const int num_out_features = 3;
 
   static int  getNumParams();
