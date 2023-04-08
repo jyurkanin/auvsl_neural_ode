@@ -55,7 +55,9 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix
   Scalar diff = tire_tangent_vel - in_vec[0];
   Scalar slip_ratio = CppAD::abs(diff) / (CppAD::abs(tire_tangent_vel) + 1e-12);
   Scalar slip_angle = CppAD::atan(CppAD::abs(in_vec[1]) / (CppAD::abs(in_vec[0]) + 1e-12));
-
+  
+  slip_ratio = CppAD::CondExpGt(slip_ratio, Scalar(10.0), Scalar(10.0), slip_ratio);
+  
   // Scalar ignore1 = diff;
   // Scalar ignore2 = slip_ratio;
   // Scalar ignore3 = tire_tangent_vel;

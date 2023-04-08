@@ -123,9 +123,9 @@ namespace{
     Eigen::Matrix<ADF,9,1> features;
     Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
     
-    features[0] = 0.2;
+    features[0] = 0.0;
     features[1] = 0;
-    features[2] = 0.1;
+    features[2] = 0.0;
     features[3] = 0.005;
     
     features[4] = 29.76;
@@ -140,7 +140,7 @@ namespace{
 
     for(int j = 0; j < 8; j++)
     {
-      features[0] = j/8.0;
+      features[0] = 0; //j/8.0;
       for(int i = 0; i < len; i++)
       {
 	ADF zr = 0.1 * ADF((2.0*i/(float)len) - 1.0);

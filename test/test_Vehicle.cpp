@@ -108,8 +108,8 @@ namespace {
     
     for(int i = 0; i < num_steps; i++)
     {
-      xk[HybridDynamics::STATE_DIM] = 0; //vl
-      xk[HybridDynamics::STATE_DIM+1] = 0; //vr
+      xk[HybridDynamics::STATE_DIM] = 0.0; //vl
+      xk[HybridDynamics::STATE_DIM+1] = 0.0; //vr
       m_system_adf->integrate(xk, xk1);
       
       time[i] = i * CppAD::Value(HybridDynamics::timestep);

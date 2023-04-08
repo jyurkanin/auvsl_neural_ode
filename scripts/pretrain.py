@@ -237,21 +237,20 @@ def fz_plot():
     
 
 model_name = "train1.net"
-md = torch.load(model_name)
-model.load_state_dict(md)
+#md = torch.load(model_name)
+#model.load_state_dict(md)
 
-#fit(1e-3, 50000, 100)
-#fit(1e-4, 50000, 1000)
-#fit(1e-4, 50, 100)
+fit(1e-3, 50000, 100)
+fit(1e-3, 50, 10)
 #fit(1e-4, 50, 100)
 #fit(1e-4, 50, 10000)
 plt.show()
 
-#md = model.state_dict()
-#print_c_network(md, model.in_mean, model.in_std, output_scaler)
-#torch.save(md, model_name)
+md = model.state_dict()
+print_c_network(md, model.in_mean, model.in_std, output_scaler)
+torch.save(md, model_name)
 
-#get_evaluation_loss(test_data, test_labels)
+get_evaluation_loss(test_data, test_labels)
 fz_plot()
 
 

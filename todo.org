@@ -13,10 +13,10 @@ slip angle is just vy
 It reaches the same level of training loss as with slip ratios.
 More importantly, it explodes less. Only on a few rare occasions
 does any element of the gradient exceed 1000.
-I noticed the original slip ratio network, occasionally has huge
-.cpp training loss
-
-
+Improved slip ratio network by making the epsilon much smaller
+Also clamped the slip ratio.
+This seems to mitigate most explosions. Only seems to explode at the
+beginnings of a run when tire velocities are small
 
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
@@ -99,3 +99,12 @@ You could still just retrain the network to avoid dividing.
 * DONE OH FUCK I WAS RETARDED AND MADE IT disCONTINUOUS OH SHIDDDDD
 This will probably not solve the gradient-splosions.
 Need to remove the discontinuity where Fz == 0 when zr < 0
+
+* DONE Issues with ratio and diff networks
+I noticed the original slip ratio network, occasionally has huge
+.cpp training loss
+Ratio network with 1e-12 epsilon is not settling correctly. (slip ratio explodes to 1e12)
+Diff network has bad behavior (too much turning)
+I fixed the ratio network by clamping the slip ratio.
+Still seeing occasional massive gradient explosions. Usually at the
+beginning of a test when tire velocities are zero

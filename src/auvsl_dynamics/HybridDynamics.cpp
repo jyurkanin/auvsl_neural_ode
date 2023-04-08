@@ -263,7 +263,7 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     features[1] = cpt_vels[ii][1];
     features[2] = X[17+ii];
     features[3] = sinkages[ii];
-    
+
     TireNetwork::forward(features, forces);
     
     //forces[0] = CppAD::CondExpGt(vel_x_tan, literally_zero, forces[0], -forces[0]);
