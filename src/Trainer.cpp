@@ -119,8 +119,6 @@ void Trainer::train()
 	if(fabs(traj_grad[i]) > 1.0)
 	{
 	  std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
-	  exit(1);
-	  break;
 	}
       }
       

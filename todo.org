@@ -73,6 +73,15 @@ Idk why not.
 Nope still explosive
 
 * TODO Unit test to replicate exploding gradient
+Able to replicate, I find it doesn't blow up out of nowhere,
+it gradually blows up over a 100 steps.
+Able to prevent the blow up by modifying the epsilon used to
+avoid divide by zero when computing slip ratio.
+Making the machine eps extremely small prevented any gradient
+explosions when using train. This is great news. I am overjoyed.
+Still getting gradient explosions, but much smaller magnitude.
+~|1|
+You could still just retrain the network to avoid dividing.
 
 * DONE OH FUCK I WAS RETARDED AND MADE IT disCONTINUOUS OH SHIDDDDD
 This will probably not solve the gradient-splosions.
