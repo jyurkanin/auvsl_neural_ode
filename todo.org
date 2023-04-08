@@ -12,6 +12,7 @@ So slip ratio is just velocity difference,
 slip angle is just vy
 It reaches the same level of training loss as with slip ratios.
 More importantly, it explodes less. Only on a few rare occasions
+
 does any element of the gradient exceed 1000.
 Improved slip ratio network by making the epsilon much smaller
 Also clamped the slip ratio.

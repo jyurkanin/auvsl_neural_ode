@@ -111,7 +111,6 @@ void Trainer::train()
       bool has_explosion = false;
       for(int i = 0; i < m_params.size(); i++)
       {
-	
 	if(fabs(traj_grad[i]) > 100.0)
 	{
 	  has_explosion = true;
