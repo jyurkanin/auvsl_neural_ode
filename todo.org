@@ -2,5 +2,78 @@
 * DONE Testing C++ code
 * DONE Preprocess test data sets
 * DONE settle. create initial position.
-* TODO Create Unit tests
+* DONE Create Unit tests
 ** unit test for settling, add a plot
+** DONE Unit Test to confirm symmetry of the tire network
+* DONE Train a New Network
+Fuck. How should I architect this network.
+Final Layer should be ReLU * Tanh(sign corection)
+This enforces the basic rule of friction, that it opposes movement
+** <2023-04-02 Sun 00:04>
+I trained a new network, it uses relu, tanh, and sigmoid to make sure everything
+crosses zero at zero and everything is continuous. Based.
+I created unit tests to visualize the C++ implementation using matplotlib in cpp.
+It matches the python plots, at least visually, I didn't actually compare the
+numbers lol I just eyeballed it but it's probably good.
+I'm surprised "eyeballing it" has an application in programming
+* DONE Now that we have the network, S I M U L A T E
+** DONE Create some unit tests
+Create unit tests for basic simulations
+Like moving forward along a straight line,
+Moving in a circle
+beautiful. So smooth and nice
+** DONE Experiment with different settling damping hacks
+Check the straight line performance with different settling haxx
+Didn't see much difference when changing the damping value from
+like -200 to -1000
+** DONE Nate dogg and Warren G had to S I M U L A T E
+So its settling and driving straight in a circle.
+Lets evaluate the untrained performance on the test data sets.
+* TODO TRAIN NO WORKO
+This is bad, because basically it's a brickwall if I can't get
+around it somehow. I tried the most basic form of the problem.
+I trained one parameter. The loss blew up and the param -> nan.
+I trained one parameter and took an average over 10 trajectories. The loss blew up and the param -> nan.
+I trained one parameter and took an average over 100 trajectories. The loss blew up and the param -> nan.
+1 param, 100 traj, 2s traj, replace floats with double: param->nan
+
+So, this is not working because for some rare trajectories, the value of the gradient inexplicably explodes.
+* TODO Exclude outlier gradient magnitudes
+* DONE Running Loss? Didn't kill gradient explosions
+* DONE Try smaller timestep? This actually seems like it works. WTF.
+This seems to actually solve the problem fuck. But its too slow.
+God damn it. Still some gradient explosions magnitude 1.
+* DONE Identify the source of gradient explosions?
+It could be that some part of it is not lipshitz, or it could
+just be the general gradient variance problem that they talk
+about in the paper "Gradients are not all you need"
+It's caused by inverses, and division. Basically any
+non-lipshitz component.
+* DONE Adjust the small constant added to division?
+in slip ratio and slip angle.
+This fucking worked. It got rid of the 1e18 bullshit
+but it still varies from 1e-6 to 1 which is atrocious
+* New Network with non-lipshitz components eliminated?
+Replace slip angle with Vy, replace slip ratio with vx - tire_tangent_vel
+I'm not sure this would solve all the problems
+* Colocation method (train derivatives)
+Cheating. But simple and apparently works
+Alternatively, just use very small trajectory length, I think.
+I don't think colocation is going to work here because the real
+data is too noisy. I would have to compute target derivatives
+using finite differences which would be way too noisy.
+* DONE Smaller duration trajectories
+No Effect. Even with 2 points (smallest trajectory possible)
+The gradient still explodes up to 1e18.
+But now I can make a unit test to replicate this behavior and
+find the source of it.
+
+* DONE Euler vs RK4?
+Idk why not.
+Nope still explosive
+
+* TODO Unit test to replicate exploding gradient
+
+* DONE OH FUCK I WAS RETARDED AND MADE IT disCONTINUOUS OH SHIDDDDD
+This will probably not solve the gradient-splosions.
+Need to remove the discontinuity where Fz == 0 when zr < 0

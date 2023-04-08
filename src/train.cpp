@@ -11,8 +11,8 @@ int main()
 
   for(int i = 0; i < 1000; i++)
   {
-    //train.train();
-    train.evaluate();
+    train.train();
+    //train.evaluate_ld3();
   }
   
 }

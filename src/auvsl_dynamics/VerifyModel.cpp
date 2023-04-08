@@ -1,9 +1,8 @@
 #include "VerifyModel.h"
-#include "TireNetwork.h"
 
 //Good old fashioned spaghetti code. Enjoy.
 
-#define TIME_HORIZON 2.0f
+float TIME_HORIZON;
 
 HybridDynamics *g_hybrid_model;
 Scalar z_stable;
@@ -153,6 +152,7 @@ void load_files(const char *odom_fn, const char *imu_fn, const char *gt_fn){
   
   delete[] vx_list;
   delete[] vy_list;
+  ROS_INFO("Done Loading Files");
 }
 //Done parsing the csv's
 
@@ -166,6 +166,7 @@ void forwardPropagateHorizon(double start_time, Scalar *X_start,
                              Eigen::Matrix<float,Eigen::Dynamic,1> &dmodel_params){
   //find corresponding index in odom_vec. By finding timestamp with
   //minimum difference.
+  ROS_INFO("Forward Propagate Horizon");
   unsigned start_idx = 0;
   double time_min = 100;
   double diff;
@@ -184,13 +185,15 @@ void forwardPropagateHorizon(double start_time, Scalar *X_start,
   
   g_hybrid_model->initStateCOM(X_start);  
 
-  Eigen::Matrix<Scalar,Eigen::Dynamic,1> model_params(float_model_params.size());
-  for(int ii = 0; ii < float_model_params.size(); ii++){
+  Eigen::Matrix<Scalar,Eigen::Dynamic,1> model_params(5);
+  for(int ii = 0; ii < 5; ii++){
     model_params[ii] = float_model_params[ii];
-  }
-
+  }  
   CppAD::Independent(model_params);
-  setModelParams(model_params); //assign parameters to network weights.
+
+  for(int ii = 0; ii < 5; ii++){
+    g_hybrid_model->bekker_params[ii] = model_params[ii]; //.8;
+  }
   
   Scalar vl, vr;
   for(unsigned idx = start_idx; (odom_vec[idx].ts - start_time) < TIME_HORIZON; idx++){
@@ -209,27 +212,32 @@ void forwardPropagateHorizon(double start_time, Scalar *X_start,
   CppAD::ADFun<float> auto_diff(model_params, loss);
   
   ROS_INFO("Loss %f", CppAD::Value(lin_err));
-  
-  if(fabs(CppAD::Value(lin_err)) > 1000 || CppAD::isnan(lin_err)){
-    ROS_INFO("Loss Exploded");
-    dmodel_params = Eigen::Matrix<float,Eigen::Dynamic,1>::Zero(dmodel_params.size(),1);
+
+  if(fabs(CppAD::Value(lin_err)) > 10 || CppAD::isnan(lin_err)){
+    ROS_INFO("Loss exploded");
     return; //hack. If this conditions triggers, something bad happened during the forward pass. So ignore.
   }
   
   Eigen::Matrix<float,Eigen::Dynamic,1> y1(1);
   y1[0] = 1;
+  //ROS_INFO("Reverse AD"); //hmm
   dmodel_params = auto_diff.Reverse(1, y1);
+  ROS_INFO("dmodel_params %f %f %f %f %f", dmodel_params[0], dmodel_params[1], dmodel_params[2], dmodel_params[3], dmodel_params[4]);
 
-  //ROS_INFO("dmodel_params %f %f %f %f %f", dmodel_params[0], dmodel_params[1], dmodel_params[2], dmodel_params[3], dmodel_params[4]);
-  
-  for(int ii = 0; ii < dmodel_params.size(); ii++){
-    if(fabs(dmodel_params[ii]) > 1000 || CppAD::isnan(dmodel_params[ii])){
-      ROS_INFO("Gradient Exploded %d %f", ii, dmodel_params[ii]);
-      dmodel_params = Eigen::Matrix<float,Eigen::Dynamic,1>::Zero(dmodel_params.size(),1);
+  for(int ii = 0; ii < 5; ii++){
+    if(fabs(dmodel_params[ii]) > 10 || CppAD::isnan(dmodel_params[ii])){
+      ROS_INFO("gradient exploded");
+      dmodel_params[0] = 0;
+      dmodel_params[1] = 0;
+      dmodel_params[2] = 0;
+      dmodel_params[3] = 0;
+      dmodel_params[4] = 0;
       return;
     }
   }
   
+  //float_model_params[0] -= .001f*dmodel_params[0];
+  //ROS_INFO("Sinkage Exponent %f", float_model_params[0]);
 }
 
 
@@ -433,7 +441,7 @@ void simulateFile(Scalar &lin_err_sum_ret, Scalar &ang_err_sum_ret, unsigned &co
 
 //BackPropovaction. Oh yeah.
 //Propagate gradients deep into physical model for whatever nefarious purposes we can imagine
-void fileTrain(Eigen::Matrix<float,Eigen::Dynamic,1> &float_model_params){
+void fileTrain(Eigen::Matrix<float,Eigen::Dynamic,1> &float_model_params, Eigen::Matrix<float,Eigen::Dynamic,1> &batch_dmodel_params){
   Scalar Xn[21];
   Scalar Xn1[21];
   for(int i = 0; i < 21; i++){
@@ -450,10 +458,6 @@ void fileTrain(Eigen::Matrix<float,Eigen::Dynamic,1> &float_model_params){
   Scalar ang_err;
   
   int count = 0;
-
-  
-  Eigen::Matrix<float,Eigen::Dynamic,1> batch_dmodel_params(float_model_params.size());
-  batch_dmodel_params = Eigen::Matrix<float,Eigen::Dynamic,1>::Zero(float_model_params.size(),1); //init this sum.
   
   //so it doesnt skip the first one.
   double time = 0;
@@ -511,40 +515,17 @@ void fileTrain(Eigen::Matrix<float,Eigen::Dynamic,1> &float_model_params){
     Xn[15] = gt_vec[i].vy;
     Xn[16] = 0;
     
-    Eigen::Matrix<float,Eigen::Dynamic,1> dmodel_params(float_model_params.size());
+    Eigen::Matrix<float,Eigen::Dynamic,1> dmodel_params(5);
+    dmodel_params = Eigen::Matrix<float,Eigen::Dynamic,1>::Zero(5,1);
     //given initial conditions at start time of the control sequence, calc the derivatve of loss wrt model params
-    float sum_l1 = 0;
-    for(int ii = 0; ii < float_model_params.size(); ii++){
-      sum_l1 += fabs(float_model_params[ii]);
-    }
-    
-    ROS_INFO("sum_l1 %f", sum_l1);
-    
+    //ROS_INFO("%f %f %f %f %f", float_model_params[0], float_model_params[1], float_model_params[2], float_model_params[3], float_model_params[4]);
     forwardPropagateHorizon(time, Xn, float_model_params, dmodel_params);
-    float_model_params = float_model_params - (lr_*dmodel_params);
-    
     batch_dmodel_params += dmodel_params;
     
     count++;
   }
-
-  //batch training mode
-  //batch_dmodel_params = batch_dmodel_params / (float)count;
-  //float_model_params = float_model_params - (lr_*batch_dmodel_params);
   
-  ROS_INFO("\n\n");
-  ROS_INFO("======================================================================================");
-  ROS_INFO("%f %f %f %f %f", float_model_params[0], float_model_params[1], float_model_params[2], float_model_params[3], float_model_params[4]);
-  ROS_INFO("======================================================================================\n\n\n");
-
-  //Sure whatever. Just log some values. The "5" is not important
-  float temp_values[5];
-  temp_values[0] = float_model_params[0];
-  temp_values[1] = float_model_params[1];
-  temp_values[2] = float_model_params[2];
-  temp_values[3] = float_model_params[3];
-  temp_values[4] = float_model_params[4];
-  g_hybrid_model->log_value(temp_values);
+  //ROS_INFO("Sinkage Exponent %f", float_model_params[0]);
   
   ROS_INFO(" ");
   ROS_INFO(" ");
@@ -563,6 +544,7 @@ void fileTrain(Eigen::Matrix<float,Eigen::Dynamic,1> &float_model_params){
 
 
 void test_CV3_paths(){
+  TIME_HORIZON = 6.0f;
   Scalar total_lin_err = 0;
   Scalar total_ang_err = 0;
   
@@ -618,6 +600,7 @@ void test_CV3_paths(){
 
 
 void test_LD3_path(){
+  TIME_HORIZON = 6.0f;
   ros::Time start_time = ros::Time::now();
   ros::Duration total_run_time = ros::Time::now() - start_time;
   
@@ -642,20 +625,26 @@ void test_LD3_path(){
 //This function just does the gradient descent.
 //Doesnt derive the gradient.
 void train_model_on_dataset(float lr){
+  TIME_HORIZON = 3.0f;
   //Need to derive expression for gradient wrt loss function.
   lr_ = lr;
   
   char odom_fn[100];
   char imu_fn[100];
   char gt_fn[100];
-
-  unsigned num_params = getNumWeights();
-  ROS_INFO("Num Params %u", num_params);
-  Eigen::Matrix<float,Eigen::Dynamic,1> float_model_params(num_params);
-  getModelParams(float_model_params);
   
-  for(int ii = 0; ii < 10; ii++){
-    for(int jj = 1; jj <= 17; jj++){
+  Eigen::Matrix<float,Eigen::Dynamic,1> float_model_params(5);
+  float_model_params[0] = CppAD::Value(g_hybrid_model->bekker_params[0]);
+  float_model_params[1] = CppAD::Value(g_hybrid_model->bekker_params[1]);
+  float_model_params[2] = CppAD::Value(g_hybrid_model->bekker_params[2]);
+  float_model_params[3] = CppAD::Value(g_hybrid_model->bekker_params[3]);
+  float_model_params[4] = CppAD::Value(g_hybrid_model->bekker_params[4]);
+
+  Eigen::Matrix<float,Eigen::Dynamic,1> batch_dmodel_params(5);
+  
+  for(int ii = 0; ii < 1000; ii++){
+    batch_dmodel_params = Eigen::Matrix<float,Eigen::Dynamic,1>::Zero(5,1); //init this sum.
+    for(int jj = 1; jj <= 3; jj++){
       memset(odom_fn, 0, 100);
       sprintf(odom_fn, "/home/justin/Downloads/Train3/extracted_data/odometry/%04d_odom_data.txt", jj);
       ROS_INFO("Reading Odom File %s", odom_fn);
@@ -670,11 +659,35 @@ void train_model_on_dataset(float lr){
     
       load_files(odom_fn, imu_fn, gt_fn);  
 
-      fileTrain(float_model_params);
+      fileTrain(float_model_params, batch_dmodel_params);
     }
+
+    float grad_norm = 0;
+    for(int i = 0; i < 5; i++){
+      grad_norm += (batch_dmodel_params[i]*batch_dmodel_params[i]);
+    }
+    grad_norm = sqrtf(grad_norm);
+    ROS_INFO("grad norm %f", grad_norm);
+    
+    if(grad_norm > 0){
+      batch_dmodel_params = batch_dmodel_params / grad_norm;
+      float_model_params = float_model_params - (lr_*batch_dmodel_params);
+    }
+    
+    ROS_INFO("\n\n");
+    ROS_INFO("======================================================================================");
+    ROS_INFO("%f %f %f %f %f", float_model_params[0], float_model_params[1], float_model_params[2], float_model_params[3], float_model_params[4]);
+    ROS_INFO("======================================================================================\n\n\n");
+    
+    float temp_values[5];
+    temp_values[0] = float_model_params[0];
+    temp_values[1] = float_model_params[1];
+    temp_values[2] = float_model_params[2];
+    temp_values[3] = float_model_params[3];
+    temp_values[4] = float_model_params[4];
+    g_hybrid_model->log_value(temp_values);
+    
   }
-  
-  saveHybridNetwork();
 }
 
 
@@ -691,107 +704,4 @@ void init_tests(){
 void del_tests(){
   HybridDynamics::stop_log();
   delete g_hybrid_model;
-}
-
-
-unsigned getNumWeights(){
-  unsigned sum = 0;
-  sum += TireNetwork::weight0.rows()*TireNetwork::weight0.cols();
-  sum += TireNetwork::bias0.rows();
-  sum += TireNetwork::weight2.rows()*TireNetwork::weight2.cols();
-  sum += TireNetwork::bias2.rows();
-  sum += TireNetwork::weight4.rows()*TireNetwork::weight4.cols();
-  sum += TireNetwork::bias4.rows();
-  return sum;
-}
-
-template <typename MatrixType>
-void setModelWeights(Eigen::Matrix<Scalar,Eigen::Dynamic,1> &model_params, MatrixType &weights, unsigned &cnt){
-  for(int i = 0; i < weights.rows(); i++){
-    for(int j = 0; j < weights.cols(); j++){
-      weights(i,j) = model_params[cnt];
-      cnt++;
-    }
-  }
-}
-
-void setModelParams(Eigen::Matrix<Scalar,Eigen::Dynamic,1> &model_params){
-  unsigned cnt = 0;
-  setModelWeights(model_params, TireNetwork::weight0, cnt);
-  setModelWeights(model_params, TireNetwork::weight2, cnt);
-  setModelWeights(model_params, TireNetwork::weight4, cnt);
-  setModelWeights(model_params, TireNetwork::bias0, cnt);
-  setModelWeights(model_params, TireNetwork::bias2, cnt);
-  setModelWeights(model_params, TireNetwork::bias4, cnt);
-}
-
-
-
-
-//flatten matrix and concatenate into model_params
-template <typename MatrixType>
-void getModelWeights(Eigen::Matrix<float,Eigen::Dynamic,1> &float_model_params, const MatrixType &weights, unsigned &cnt){
-  for(int i = 0; i < weights.rows(); i++){
-    for(int j = 0; j < weights.cols(); j++){
-      float_model_params[cnt] = CppAD::Value(weights(i,j));
-      cnt++;
-    }
-  }
-}
-
-void getModelParams(Eigen::Matrix<float,Eigen::Dynamic,1> &float_model_params){
-  unsigned cnt = 0;
-  getModelWeights(float_model_params, TireNetwork::weight0, cnt);
-  getModelWeights(float_model_params, TireNetwork::weight2, cnt);
-  getModelWeights(float_model_params, TireNetwork::weight4, cnt);
-  getModelWeights(float_model_params, TireNetwork::bias0, cnt);
-  getModelWeights(float_model_params, TireNetwork::bias2, cnt);
-  getModelWeights(float_model_params, TireNetwork::bias4, cnt);
-}
-
-template <typename MatrixType>
-void writeMatrixToFile(std::ofstream &save_file, const MatrixType &matrix){
-  for(int i = 0; i < matrix.rows(); i++){
-    for(int j = 0; j < matrix.cols()-1; j++){
-      save_file << matrix(i, j) << ',';
-    }
-    save_file << matrix(i, matrix.cols()-1) << '\n';
-  }
-}
-
-void saveHybridNetwork(){
-  std::string filename;
-  ros::param::get("/hybrid_network_file_name", filename);
-  std::ofstream save_file(filename);
-  writeMatrixToFile(save_file, TireNetwork::weight0);
-  writeMatrixToFile(save_file, TireNetwork::weight2);
-  writeMatrixToFile(save_file, TireNetwork::weight4);
-  writeMatrixToFile(save_file, TireNetwork::bias0);
-  writeMatrixToFile(save_file, TireNetwork::bias2);
-  writeMatrixToFile(save_file, TireNetwork::bias4);
-}
-
-template <typename MatrixType>
-void loadMatrixFromFile(std::ifstream &save_file, MatrixType &matrix){
-  char comma; //this just reads the comma so the stream can move past it
-  for(int i = 0; i < matrix.rows(); i++){
-    for(int j = 0; j < matrix.cols()-1; j++){
-      save_file >> matrix(i, j);
-      save_file >> comma; //ignore the comma
-    }
-    save_file >> matrix(i, matrix.cols()-1);
-    //dont need to manually increment past whitespace.
-  }
-}
-
-void loadHybridNetwork(){
-  std::string filename;
-  ros::param::get("/hybrid_network_file_name", filename);
-  std::ifstream save_file(filename);
-  loadMatrixFromFile(save_file, TireNetwork::weight0);
-  loadMatrixFromFile(save_file, TireNetwork::weight2);
-  loadMatrixFromFile(save_file, TireNetwork::weight4);
-  loadMatrixFromFile(save_file, TireNetwork::bias0);
-  loadMatrixFromFile(save_file, TireNetwork::bias2);
-  loadMatrixFromFile(save_file, TireNetwork::bias4);
 }

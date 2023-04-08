@@ -10,7 +10,8 @@ namespace Jackal {
 namespace rcg {
 
   //typedef typename iit::rbd::DoubleTraits ScalarTraits;
-typedef typename iit::robcogen::CppADFloatTraits ScalarTraits;
+  //typedef typename iit::robcogen::CppADFloatTraits ScalarTraits;
+  typedef typename iit::robcogen::CppADDoubleTraits ScalarTraits;
 typedef typename ScalarTraits::Scalar Scalar;
 
 typedef iit::rbd::Core<Scalar> TypesGen;

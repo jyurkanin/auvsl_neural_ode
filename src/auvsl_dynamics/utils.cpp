@@ -9,7 +9,7 @@ Eigen::Matrix<Scalar,4,1> calcQuatDot(Eigen::Matrix<Scalar,4,1> orientation, Eig
   m(2, 0) = -orientation[1];   m(2, 1) =  orientation[0];   m(2, 2) =  orientation[3];
   m(3, 0) = -orientation[0];   m(3, 1) = -orientation[1];   m(3, 2) = -orientation[2];
   
-  return Scalar(0.5) * m * ang_vel_body;
+  return .5 * m * ang_vel_body;
 }
 
 
