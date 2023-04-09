@@ -16,6 +16,7 @@ Trainer::Trainer()
  
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
+  m_squared_grad = VectorAD::Zero(m_system_adf->getNumParams());
   m_system_adf->getDefaultParams(m_params);
 
   computeEqState();
@@ -109,30 +110,34 @@ void Trainer::train()
     {
       std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
       trainTrajectory(traj, x_list, traj_grad, loss);
-      m_batch_grad += traj_grad;
-      avg_loss += loss;
-
-      //plotTrajectory(traj, x_list);      
-      std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
+      
+      bool has_explosion = false;
       for(int i = 0; i < m_params.size(); i++)
       {
 	
-	if(fabs(traj_grad[i]) > 1000.0)
+	if(fabs(traj_grad[i]) > 100.0)
 	{
+	  has_explosion = true;
 	  std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
 	  break;
 	}
       }
-      
-      m_cnt++;
-      if(m_cnt == 100)
+
+      if(!has_explosion)
       {
-	//std::cout << "Avg Loss: " << avg_loss / 100.0 <<"\n";
+	m_batch_grad += traj_grad;
+	avg_loss += loss;
+	//plotTrajectory(traj, x_list);      
+	std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
+	m_cnt++;
+      }
+      
+      if(m_cnt == 10)
+      {
+	std::cout << "Avg Loss: " << avg_loss / 100.0 <<"\n";
 	updateParams(m_batch_grad / 100.0);
 	m_cnt = 0;
 	avg_loss = 0;
-
-	//return;
       }
     }
   }
@@ -149,7 +154,7 @@ void Trainer::evaluate_cv3()
   double loss = 0;
   int cnt = 0;
   
-  for(int i = 55; i <= 55; i++)
+  for(int i = 1; i <= 144; i++)
   {
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
@@ -204,7 +209,8 @@ void Trainer::updateParams(const VectorF &grad)
   //for(int i = 0; i < m_params.size(); i++)
   for(int i = 0; i < 1; i++)
   {
-    //m_params[i] -= m_system_adf->getLearningRate()*ADF(grad[i]);
+    m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad[i]*grad[i]);
+    m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad[i]);
   }
 
   std::cout << "Param: " << m_params[0] << "\n";

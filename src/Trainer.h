@@ -46,6 +46,7 @@ private:
   int m_cnt;
   std::vector<DataRow> m_data;
   VectorAD m_params;
+  VectorAD m_squared_grad;
   VectorF m_batch_grad;
   std::shared_ptr<VehicleSystem<ADF>> m_system_adf;
 };

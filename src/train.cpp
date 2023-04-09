@@ -8,11 +8,14 @@
 int main()
 {
   Trainer train;
-
-  for(int i = 0; i < 1000; i++)
+  train.evaluate_cv3();
+  train.evaluate_ld3();
+  for(int i = 0; i < 10; i++)
   {
     train.train();
-    //train.evaluate_ld3();
+    
   }
+  train.evaluate_cv3();
+  train.evaluate_ld3();
   
 }

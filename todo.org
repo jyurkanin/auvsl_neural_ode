@@ -18,6 +18,18 @@ Also clamped the slip ratio.
 This seems to mitigate most explosions. Only seems to explode at the
 beginnings of a run when tire velocities are small
 
+train.evaluate_cv3();
+train.evaluate_ld3();
+
+Before training:
+CV3 avg loss: 0.0781642
+LD3 avg loss: 0.0264296
+After training:
+CV3 avg loss: 0.0781142
+LD3 avg loss: 0.0264126
+
+Very minor improvement.
+
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
 * DONE Preprocess test data sets
