@@ -116,7 +116,6 @@ void HybridDynamics::initStateCOM(Scalar *start_state)
 void HybridDynamics::settle(){
   //reach equillibrium sinkage.
   for(int i = 0; i < 20; i++){
-    std::cout << "Settle step: " << i << "\n";
     step(0,0);
   }
 }

@@ -36,13 +36,18 @@ public:
   void evaluate_cv3();
   void evaluate_ld3();
   void computeEqState();
+  bool saveVec(const VectorAD &params, const std::string &file_name);
+  bool loadVec(VectorAD &params, const std::string &file_name);
+  void save();
+  void load();
   
 private:
   const double m_gt_sample_period = 10.0;
   
   ADF m_z_stable;
   VectorAD m_quat_stable;
-  
+
+  std::string m_param_file;
   int m_cnt;
   std::vector<DataRow> m_data;
   VectorAD m_params;

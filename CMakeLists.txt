@@ -121,7 +121,29 @@ target_include_directories(test_TireNetwork PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(test_TireNetwork ${PYTHON_LIBRARIES})
 target_link_libraries(test_TireNetwork GTest::gtest_main)
 target_link_libraries(test_TireNetwork cpp_bptt)
-
 include(GoogleTest)
 gtest_discover_tests(test_TireNetwork)
 
+
+add_executable(
+	test_Trainer
+	test/test_Trainer.cpp
+	src/Trainer.cpp
+	src/VehicleSystem.cpp
+	src/auvsl_dynamics/HybridDynamics.cpp
+	src/auvsl_dynamics/TireNetwork.cpp
+	src/auvsl_dynamics/utils.cpp
+	src/auvsl_dynamics/generated/forward_dynamics.cpp
+	src/auvsl_dynamics/generated/inertia_properties.cpp
+	src/auvsl_dynamics/generated/inverse_dynamics.cpp
+	src/auvsl_dynamics/generated/jacobians.cpp
+	src/auvsl_dynamics/generated/jsim.cpp
+	src/auvsl_dynamics/generated/miscellaneous.cpp
+	src/auvsl_dynamics/generated/transforms.cpp
+)
+target_include_directories(test_Trainer PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(test_Trainer ${PYTHON_LIBRARIES})
+target_link_libraries(test_Trainer GTest::gtest_main)
+target_link_libraries(test_Trainer cpp_bptt)
+include(GoogleTest)
+gtest_discover_tests(test_Trainer)

@@ -201,17 +201,7 @@ void TireNetwork::getParams(VectorS &params, int idx)
 
 int TireNetwork::load_model(){
   std::cout << "Loading Model\n";
-  
-  Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,TireNetwork::num_in_features> temp_weight0;
-  Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,TireNetwork::num_hidden_nodes> temp_weight2;
-  Eigen::Matrix<Scalar,TireNetwork::num_out_features,TireNetwork::num_hidden_nodes> temp_weight4;
-  Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> temp_bias0;
-  Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> temp_bias2;
-  Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> temp_bias4;
-  Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> temp_out_std;
-  Eigen::Matrix<Scalar,TireNetwork::num_in_features,1> temp_in_mean;
-  Eigen::Matrix<Scalar,TireNetwork::num_in_features,1> temp_in_std_inv;
-  
+    
   is_loaded = 1;
   
   weight0 <<  5.8153e-01, -8.9222e-03,  2.0581e-02, -1.6544e-03, -5.6084e-03,

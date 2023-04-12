@@ -21,6 +21,7 @@ Trainer::Trainer()
 
   computeEqState();
   m_cnt = 0;
+  m_param_file = "/home/justin/tire.net";
 }
 
 Trainer::~Trainer()
@@ -41,18 +42,14 @@ void Trainer::computeEqState()
   
   m_z_stable = m_system_adf->m_hybrid_dynamics.state_[6];
 
-  std::cout << "Equillibrium State:\n";
-  std::cout << "| z stable: " << m_z_stable << "\n";
-  std::cout << "| quat[0]: " << m_quat_stable[0] << "\n";
-  std::cout << "| quat[1]: " << m_quat_stable[1] << "\n";
-  std::cout << "| quat[2]: " << m_quat_stable[2] << "\n";
-  std::cout << "| quat[3]: " << m_quat_stable[3] << "\n";
 }
 
 // ,time,vel_left,vel_right,x,y,yaw,wx,wy,wz
 void Trainer::loadDataFile(std::string fn)
 {
   std::cout << "Opening " << fn << "\n";
+  std::flush(std::cout);
+  
   std::ifstream data_file(fn);
 
   if(!data_file.is_open())
@@ -129,13 +126,15 @@ void Trainer::train()
 	avg_loss += loss;
 	//plotTrajectory(traj, x_list);      
 	std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
+	std::flush(std::cout);
 	m_cnt++;
       }
       
       if(m_cnt == 10)
       {
-	std::cout << "Avg Loss: " << avg_loss / 100.0 <<"\n";
-	updateParams(m_batch_grad / 100.0);
+	std::cout << "Avg Loss: " << avg_loss / 10.0 <<"\n";
+	std::flush(std::cout);
+	updateParams(m_batch_grad / 10.0);
 	m_cnt = 0;
 	avg_loss = 0;
       }
@@ -206,14 +205,26 @@ void Trainer::evaluate_ld3()
 
 void Trainer::updateParams(const VectorF &grad)
 {
-  //for(int i = 0; i < m_params.size(); i++)
-  for(int i = 0; i < 1; i++)
+  ADF norm = 0;
+  //for(int i = 0; i < 1; i++)
+  for(int i = 0; i < m_params.size(); i++)
   {
     m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad[i]*grad[i]);
     m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad[i]);
+    norm += CppAD::abs(m_params[i]);
+  }
+  
+  std::cout << "Param norm: " << CppAD::Value(norm) << " Param[0]: " << CppAD::Value(m_params[0]) << "\n";
+  for(int i = 0; i < m_params.size(); i++)
+  {
+    
+    if(CppAD::abs(m_params[i]) > 100.0)
+    {
+      std::cout << "Param[" << i <<"] Exploded: " << CppAD::Value(m_params[i]) << "\n";
+      break;
+    }
   }
 
-  std::cout << "Param: " << m_params[0] << "\n";
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
 }
 
@@ -292,19 +303,13 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
   initializeState(traj[0], xk);
   xk[HybridDynamics::STATE_DIM+0] = traj[0].vl;
   xk[HybridDynamics::STATE_DIM+1] = traj[0].vr;
-
-  for(int i = 0; i < xk.size(); i++)
-  {
-    //std::cout << CppAD::Value(xk[i]) << ", ";
-  }
-  //std::cout << "\n";
   
   CppAD::Independent(m_params);
   m_system_adf->setParams(m_params);
     
   initializeState(traj[0], xk);
   x_list[0] = xk;
-  //loss_ad[0] = 0;
+  loss_ad[0] = 0;
   
   VectorAD gt_vec;
   for(int i = 1; i < x_list.size(); i++)
@@ -319,15 +324,12 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
     gt_vec = VectorAD::Zero(m_system_adf->getStateDim());
     gt_vec[4] = ADF(traj[i].x);
     gt_vec[5] = ADF(traj[i].y);
-
     
     //loss_ad[0] += m_system_adf->loss(gt_vec, x_list[i]);
   }
 
   loss_ad[0] = m_system_adf->loss(gt_vec, x_list.back());
   CppAD::ADFun<double> func(m_params, loss_ad);
-
-  //std::cout << "gt x: " << CppAD::Value(gt_vec[4]) << " gt y: " << CppAD::Value(gt_vec[5]) << "\n";
   
   VectorF y0(1);
   y0[0] = 1;
@@ -385,4 +387,51 @@ void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
   
   xk_robot[21] = gt_state.vl; // Control tire velocities
   xk_robot[22] = gt_state.vr;
+}
+
+void Trainer::save()
+{
+  m_system_adf->getParams(m_params);
+  saveVec(m_params, m_param_file);
+}
+bool Trainer::saveVec(const VectorAD &params, const std::string &file_name)
+{
+  std::ofstream data_file(file_name);
+  if(!data_file.is_open())
+  {
+    return true;
+  }
+  
+  for(int i = 0; i < params.size(); i++)
+  {
+    data_file << CppAD::Value(params[i]) << ",";
+  }
+  data_file << "\n";
+
+  return false;
+}
+
+void Trainer::load()
+{
+  if(!loadVec(m_params, m_param_file))
+  {
+    m_system_adf->setParams(m_params);
+  }
+}
+bool Trainer::loadVec(VectorAD &params, const std::string &file_name)
+{
+  char comma;
+  std::ifstream data_file(file_name);
+  if(!data_file.is_open())
+  {
+    return true;
+  }
+  
+  for(int i = 0; i < params.size(); i++)
+  {
+    data_file >> params[i];
+    data_file >> comma;
+  }
+  
+  return false;
 }

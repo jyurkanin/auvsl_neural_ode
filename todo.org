@@ -29,6 +29,29 @@ CV3 avg loss: 0.0781142
 LD3 avg loss: 0.0264126
 
 Very minor improvement.
+* <2023-04-09 Sun 16:02>
+I retrained, using all available parameters and used RMSprop
+instead of straight gradient descent.
+
+Before training:
+CV3 avg loss: 0.0781642
+LD3 avg loss: 0.0264296
+After Training:
+CV3 avg loss: 0.0343975
+LD3 avg loss: 0.015283
+
+This improvement is Significant. We're so back.
+* <2023-04-11 Tue 00:45>
+I realized, the ode is still exploding with longer trajectories.
+Explodes often with 4s and not at all with 2s.
+I should stop fucking around.
+Next step is to train with a bigger network, no bekker params,
+and using the diff model. This has the highest chance to succeed.
+I should run this shit and train the fuck out of it and then
+move on with my god damn life.
+
+Model is still training with 4s trajectories, but its slower and
+its also exploding pretty often
 
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
@@ -54,16 +77,17 @@ like -200 to -1000
 ** DONE Nate dogg and Warren G had to S I M U L A T E
 So its settling and driving straight in a circle.
 Lets evaluate the untrained performance on the test data sets.
-* TODO TRAIN NO WORKO
+* DONE TRAIN NO WORKO
 This is bad, because basically it's a brickwall if I can't get
 around it somehow. I tried the most basic form of the problem.
 I trained one parameter. The loss blew up and the param -> nan.
 I trained one parameter and took an average over 10 trajectories. The loss blew up and the param -> nan.
 I trained one parameter and took an average over 100 trajectories. The loss blew up and the param -> nan.
 1 param, 100 traj, 2s traj, replace floats with double: param->nan
+Traino, yes worko :)
 
 So, this is not working because for some rare trajectories, the value of the gradient inexplicably explodes.
-* TODO Exclude outlier gradient magnitudes
+* DONE Exclude outlier gradient magnitudes
 * DONE Running Loss? Didn't kill gradient explosions
 * DONE Try smaller timestep? This actually seems like it works. WTF.
 This seems to actually solve the problem fuck. But its too slow.
