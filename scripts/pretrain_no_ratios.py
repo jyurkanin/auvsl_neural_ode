@@ -49,6 +49,18 @@ df = pd.read_csv("tire_data.csv")
 data_x = np.array(df[in_features])
 data_y = np.array(df[out_features])
 
+# print("Mean: ", np.mean(temp_data_y, axis=0))
+# print("Std: ", np.std(temp_data_y, axis=0))
+
+# select_rows = np.all(np.abs(temp_data_y - np.mean(temp_data_y, axis=0)) < 1.0 * np.std(temp_data_y, axis=0), axis=1)
+# print(select_rows.shape)
+# data_x = temp_data_x[select_rows]
+# data_y = temp_data_y[select_rows]
+
+# print("Shapes:")
+# print(temp_data_x.shape, data_x.shape)
+# print(temp_data_y.shape, data_y.shape)
+
 data_len = data_x.shape[0]
 
 train_data = data_x[:int(data_len*.95),:]
@@ -86,7 +98,7 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.in_size = 3 # sinkage, slip ratio, slip angle, 5 bekker params
+    self.in_size = 3 # sinkage, slip_diff, vy
     self.hidden_size = 16
     self.out_size = 3
     
@@ -101,39 +113,40 @@ class TireNet(nn.Module):
       nn.Tanh(),
       nn.Linear(self.hidden_size, self.out_size),
       nn.ReLU()
-      #nn.ELU()
     )
 
   def compute_bekker_input_scaler(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_ratio = torch.div(torch.abs(diff), torch.abs(tire_tangent_vel) + 1e-4)
-    slip_angle = torch.atan(torch.div(torch.abs(x[:,1]), torch.abs(x[:,0]) + 1e-3))
-    bekker_args = torch.cat((x[:,3][:,None],
-                             slip_ratio[:,None],
-                             slip_angle[:,None],
+    slip_lon = torch.abs(diff) / (torch.abs(tire_tangent_vel) + 1e-4)
+    #slip_lat = torch.abs(x[:,1])
+    slip_lat = torch.atan(torch.abs(x[:,1]) / torch.abs(x[:,0]))
+    tire_abs = torch.abs(x[:,2])
+    bekker_args = torch.cat((x[:,3][:,None], # zr
+                             slip_lon[:,None], # |diff|
+                             slip_lat[:,None] # |vy|
                              ), 1)
     
     self.in_mean = torch.mean(bekker_args, 0)
     temp = bekker_args - self.in_mean
     self.in_std = torch.sqrt(torch.var(temp, 0))
     
-  # vx,vy,qd,zr
+  # vx,vy,w,zr, x is (4, batch_size)
   def forward(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_ratio = torch.div(torch.abs(diff), torch.abs(tire_tangent_vel) + 1e-4)
-    slip_angle = torch.atan(torch.div(torch.abs(x[:,1]), torch.abs(x[:,0]) + 1e-3))
-    bekker_args = torch.cat((x[:,3][:,None],
-                             slip_ratio[:,None],
-                             slip_angle[:,None],
+    slip_lon = torch.abs(diff) / (torch.abs(tire_tangent_vel) + 1e-4)
+    #slip_lat = torch.abs(x[:,1])
+    slip_lat = torch.atan(torch.abs(x[:,1]) / torch.abs(x[:,0]))
+    tire_abs = torch.abs(x[:,2])
+    bekker_args = torch.cat((x[:,3][:,None],   # zr
+                             slip_lon[:,None], # |diff|
+                             slip_lat[:,None], # |vy|
                              ), 1)
 
     bekker_args = (bekker_args - self.in_mean) / self.in_std
     
     yhat = self.model.forward(bekker_args)
-    
-    #yhat = torch.add(yhat, self.const_one_tensor)
     
     yhat_sign_corrected = torch.cat((
       (yhat[:,0] * torch.tanh(100*diff))[:,None],
@@ -175,8 +188,31 @@ def get_evaluation_loss(test_x, test_y):
     predicted_force = model.forward(torch.from_numpy(input_vec).float()).detach().numpy()
     predicted_force = output_scaler.inverse_transform(predicted_force)
     print(np.mean(np.square(predicted_force.flatten() - test_y.flatten())))
+
+    plt.scatter(test_x[:100,0], test_y[:100,0])
+    plt.scatter(test_x[:100,0], predicted_force[:100,0])
+    plt.show()
     
 
+
+def fx_plot():
+    test = np.zeros((1000,4))
+    test[:,0] = 0                      # vx
+    test[:,1] = 0;                     # vy
+    test[:,2] = np.linspace(-5,5,1000) # diff
+    test[:,3] = 0.001                  # zr
+    
+    #test_norm = input_scaler.transform(test)
+    test_norm = test
+    x = torch.from_numpy(test_norm)
+    test_out = model.forward(x.float()).detach().numpy()
+    test_out = output_scaler.inverse_transform(test_out)[:,0]
+    
+    plt.plot((test[:,2]*.098) - test[:,0], test_out)
+    plt.title("Slip Ratio vs. Longitudinal Force (Fx)")
+    plt.xlabel("Slip Ratio")
+    plt.ylabel("Longitudinal Force (N)")
+    plt.show()
 
 def fy_plot():
     test = np.zeros((1000,4))
@@ -218,22 +254,25 @@ def fz_plot():
 
     
 
-model_name = "train1.net"
+model_name = "train_no_ratio1.net"
 #md = torch.load(model_name)
 #model.load_state_dict(md)
 
-fit(1e-3, 5000, 100)
+fit(1e-4, 5000, 100)
 #fit(1e-3, 50, 10)
+#fit(1e-4, 50000, 1000)
 #fit(1e-4, 50, 100)
 #fit(1e-4, 50, 10000)
 plt.show()
 
 md = model.state_dict()
-print_c_network(md, model.in_mean, model.in_std, output_scaler)
+#print_c_network(md, model.in_mean, model.in_std, output_scaler)
 torch.save(md, model_name)
 
 get_evaluation_loss(test_data, test_labels)
-fz_plot()
+# fx_plot()
+# fy_plot()
+# fz_plot()
 
 
 

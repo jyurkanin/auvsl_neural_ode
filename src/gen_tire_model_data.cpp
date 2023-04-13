@@ -28,30 +28,24 @@ std::vector<float> get_forces(float vx, float vy, float w,
   features[5] = bk_n0;
   features[6] = bk_n1;
   features[7] = bk_phi;  
+
+  if(vel_x_tan != 0.0f)
+  {
+    slip_ratio = fabs(vel_x_tan - vx)/fabs(vel_x_tan);
+  }
+  else
+  {
+    slip_ratio = fabs(vel_x_tan - vx)/1e-3;
+  }
+  if(vx != 0.0)
+  {
+    slip_angle = atan(fabs(vy) / fabs(vx));  
+  }
+  else
+  {
+    slip_angle = atan(fabs(vy) / 1e-3);  
+  }
   
-  if(vel_x_tan == 0){
-    if(vx == 0){
-      slip_ratio = 0;
-    }
-    else{
-      slip_ratio = 1. - (vx/1.0e-3);
-    }
-  }
-  else{
-    if(vx == 0){
-      slip_ratio = 1. - (1.0e-3/vel_x_tan);  
-    }
-    else{
-      slip_ratio = 1. - (vx/vel_x_tan);  
-    }
-  }
-  
-  if(vx == 0){
-    slip_angle = atan(vy / 1.0e-3);
-  }
-  else{
-    slip_angle = atan(vy / fabs(vx));
-  }
   
   features[0] = zr;
   features[1] = slip_ratio; //1 - (vx/(.1*wy));
@@ -60,13 +54,13 @@ std::vector<float> get_forces(float vx, float vy, float w,
   std::vector<float> forces(6);
   forces = tire_model_bekker(features);
   
-  if(w > 0){
-    forces[0] = forces[0];
-    forces[3] = forces[3];
+  if(vel_x_tan > vx){
+    forces[0] = fabs(forces[0]);
+    forces[3] = fabs(forces[3]);
   }
   else{
-    forces[0] = -forces[0];
-    forces[3] = -forces[3];      
+    forces[0] = -fabs(forces[0]);
+    forces[3] = -fabs(forces[3]);  
   }
   
   if(vy > 0){
@@ -94,12 +88,13 @@ int main(){
     float vy = rand_float(1, -1);
     float wy = rand_float(1, -1);
     float zr = rand_float(.01,.0001);
-    
-    float bk_kc   = rand_float(100.0,20.0);
-    float bk_kphi = rand_float(3500.0,500.0);
-    float bk_n0   = rand_float(1.3,0.3);
-    float bk_n1   = rand_float(0.2,0.0);
-    float bk_phi  = rand_float(0.52,0.17);
+
+    //29.76, 2083, 0.8, 0, 0.392699
+    float bk_kc   = 29.76; //rand_float(100.0,20.0);
+    float bk_kphi = 2083.0; //rand_float(3500.0,500.0);
+    float bk_n0   = 0.8; //rand_float(1.3,0.3);
+    float bk_n1   = 0.0; //rand_float(0.2,0.0);
+    float bk_phi  = 0.3927; //rand_float(0.52,0.17);
     
     wrench = get_forces(vx, vy, wy, zr, bk_kc, bk_kphi, bk_n0, bk_n1, bk_phi);
     
