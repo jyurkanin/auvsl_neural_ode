@@ -158,9 +158,9 @@ class TireNet(nn.Module):
     yhat = self.model.forward(bekker_args)
     
     yhat_sign_corrected = torch.cat((
-      (yhat[:,0] * torch.tanh(100*diff))[:,None],
-      (yhat[:,1] * torch.tanh(-100*x[:,1]))[:,None],
-      (yhat[:,2] / (1 + torch.exp(-100*x[:,3])))[:,None]), 1)
+      (yhat[:,0] * torch.tanh(1*diff))[:,None],
+      (yhat[:,1] * torch.tanh(-1*x[:,1]))[:,None],
+      (yhat[:,2] / (1 + torch.exp(-1*x[:,3])))[:,None]), 1)
     return yhat_sign_corrected
     
 model = TireNet()
@@ -273,7 +273,7 @@ def fz_plot():
 
     
 
-#model_name = "train_no_ratio1.net"
+model_name = "train_no_ratio1.net"
 #md = torch.load(model_name)
 #model.load_state_dict(md)
 
@@ -285,7 +285,7 @@ fit(1e-3, 50, 10)
 plt.show()
 
 md = model.state_dict()
-#print_c_network(md, model.in_mean, model.in_std, output_scaler)
+print_c_network(md, model.in_mean, model.in_std, output_scaler)
 torch.save(md, model_name)
 
 get_evaluation_loss(test_data, test_labels)
