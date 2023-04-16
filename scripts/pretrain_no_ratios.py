@@ -41,8 +41,7 @@ device = torch.device("cpu")
 print("Current compute device:", device)
 
 #These are determined to be the best parameters by checking all possible and removing the one that are unimportant.
-in_features = "vx vy w zr kc kphi n0 n1 phi".split()
-
+in_features = "vx vy w zr".split()
 out_features = "Fx Fy Fz".split()
 
 df = pd.read_csv("tire_data.csv")
@@ -99,12 +98,11 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.in_size = 9 # sinkage, qd, vx, vy, 5 bekker params
-    self.hidden_size = 20
+    self.in_size = 4 # sinkage, qd, vx, vy
+    self.hidden_size = 8
     self.out_size = 3
     
     self.tire_radius = .098
-    self.const_one_tensor = torch.Tensor([1.0]).to(device)
     
     self.loss_fn = torch.nn.MSELoss()
     self.model = nn.Sequential(
@@ -126,11 +124,7 @@ class TireNet(nn.Module):
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|
                              slip_lat[:,None], # vy
-                             x[:,4][:,None],
-                             x[:,5][:,None],
-                             x[:,6][:,None],
-                             x[:,7][:,None],
-                             x[:,8][:,None]), 1)
+                             ), 1)
     
     self.in_mean = torch.mean(bekker_args, 0)
     temp = bekker_args - self.in_mean
@@ -147,11 +141,7 @@ class TireNet(nn.Module):
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|
                              slip_lat[:,None], # vy
-                             x[:,4][:,None],
-                             x[:,5][:,None],
-                             x[:,6][:,None],
-                             x[:,7][:,None],
-                             x[:,8][:,None]), 1)
+                             ), 1)
     
     bekker_args = (bekker_args - self.in_mean) / self.in_std
     
@@ -229,11 +219,6 @@ def fy_plot():
     test[:,1] = np.linspace(-1,1,1000) # vy
     test[:,2] = 0.1                    # w
     test[:,3] = 0.001                  # zr
-    test[:,4] = 29.76               # kc
-    test[:,5] = 2083                # kphi
-    test[:,6] = .8                  # n0
-    test[:,7] = 0                   # n1
-    test[:,8] = 22.5*np.pi/180      # phi
     
     #test_norm = input_scaler.transform(test)
     test_norm = test
@@ -253,11 +238,6 @@ def fz_plot():
     test[:,1] = 0                      # vy
     test[:,2] = 0.1                    # w
     test[:,3] = np.linspace(-.1,.1,1000) # zr
-    test[:,4] = 29.76               # kc
-    test[:,5] = 2083                # kphi
-    test[:,6] = .8                  # n0
-    test[:,7] = 0                   # n1
-    test[:,8] = 22.5*np.pi/180      # phi
     
     #test_norm = input_scaler.transform(test)
     test_norm = test
@@ -278,6 +258,8 @@ model_name = "train_no_ratio1.net"
 #model.load_state_dict(md)
 
 fit(1e-3, 5000, 100)
+plt.show()
+get_evaluation_loss(test_data, test_labels)
 fit(1e-3, 50, 10)
 #fit(1e-4, 50000, 1000)
 #fit(1e-4, 50, 100)

@@ -94,6 +94,8 @@ void Trainer::train()
   double avg_loss = 0;
   std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
   char fn_array[100];
+
+  m_system_adf->setTimestep(m_train_steps);
   
   for(int i = 1; i <= 17; i++)
   {
@@ -152,6 +154,8 @@ void Trainer::evaluate_cv3()
   double loss = 0;
   int cnt = 0;
   
+  m_system_adf->setTimestep(m_eval_steps);
+  
   for(int i = 1; i <= 144; i++)
   {
     memset(fn_array, 0, 100);
@@ -183,6 +187,8 @@ void Trainer::evaluate_ld3()
   double loss_avg = 0;
   double loss = 0;
   int cnt = 0;
+  
+  m_system_adf->setTimestep(m_eval_steps);
   
   memset(fn_array, 0, 100);
   sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/LD3_data%02d.csv", 1);

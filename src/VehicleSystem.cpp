@@ -6,7 +6,7 @@ template<typename Scalar>
 VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics::STATE_DIM + HybridDynamics::CNTRL_DIM, 0)
 {
   this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
-  this->setNumSteps(40);
+  this->setNumSteps(10);
   this->setTimestep(0.001);  //unused
   this->setLearningRate(1e-4f);
 }
