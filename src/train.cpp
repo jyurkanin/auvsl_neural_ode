@@ -17,12 +17,12 @@ int main()
   for(int i = 0; i < 100; i++)
   {
     train.train();
-    train.save();
+    //train.save();
     
-    if((i % 10) == 9)
+    if((i % 10) == 3)
     {
       train.evaluate_cv3();
-      train.evaluate_ld3();
+      //train.evaluate_ld3();
     }
   }
     

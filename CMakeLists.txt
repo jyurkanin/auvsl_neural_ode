@@ -6,18 +6,18 @@ find_package(PythonLibs 3.8)
 
 
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -g")
-set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall -Ofast -mtune=native -march=native -DNDEBUG")
+set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall -O3 -mtune=native -march=native -DNDEBUG")
 
 add_compile_options(
-  "-Wall" "-Ofast" "-mtune=native" "-march=native" "-DNDEBUG"
+  "-Wall" "-O3" "-mtune=native" "-march=native" "-DNDEBUG"
 )
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
 
 include_directories(/usr/include/eigen3)
-include_directories(/usr/local/include/cpp_bptt/src)
-include_directories(/usr/local/include/cpp_neural/src)
+include_directories(/home/justin/code/CppNeural/src/cpp_neural_lib/src)
+include_directories(/home/justin/code/CppNeural/src/cpp_bptt_lib/src)
 
 include_directories(include/auvsl_dynamics)
 include_directories(src)
@@ -52,32 +52,12 @@ add_executable(train
 	src/auvsl_dynamics/generated/jsim.cpp
 	src/auvsl_dynamics/generated/miscellaneous.cpp
 	src/auvsl_dynamics/generated/transforms.cpp
+	
+	/home/justin/code/CppNeural/src/cpp_bptt_lib/src/SimulatorAD.cpp
 )
-target_link_libraries(train cpp_bptt)
+
 target_include_directories(train PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(train ${PYTHON_LIBRARIES})
-
-
-add_executable(generate_code
-	src/generate_code.cpp
-	src/VehicleSystem.cpp
-	src/auvsl_dynamics/HybridDynamics.cpp
-	src/auvsl_dynamics/TireNetwork.cpp
-	src/auvsl_dynamics/utils.cpp
-	src/auvsl_dynamics/generated/forward_dynamics.cpp
-	src/auvsl_dynamics/generated/inertia_properties.cpp
-	src/auvsl_dynamics/generated/inverse_dynamics.cpp
-	src/auvsl_dynamics/generated/jacobians.cpp
-	src/auvsl_dynamics/generated/jsim.cpp
-	src/auvsl_dynamics/generated/miscellaneous.cpp
-	src/auvsl_dynamics/generated/transforms.cpp
-)
-target_link_libraries(generate_code cpp_bptt)
-
-add_executable(gen_tire_data
-	src/gen_tire_model_data.cpp
-)
-
 
 add_executable(
 	runUnitTest
@@ -93,11 +73,12 @@ add_executable(
 	src/auvsl_dynamics/generated/jsim.cpp
 	src/auvsl_dynamics/generated/miscellaneous.cpp
 	src/auvsl_dynamics/generated/transforms.cpp
+
+	/home/justin/code/CppNeural/src/cpp_bptt_lib/src/SimulatorAD.cpp
 )
 target_include_directories(runUnitTest PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(runUnitTest ${PYTHON_LIBRARIES})
 target_link_libraries(runUnitTest GTest::gtest_main)
-target_link_libraries(runUnitTest cpp_bptt)
 include(GoogleTest)
 gtest_discover_tests(runUnitTest)
 
@@ -116,11 +97,12 @@ add_executable(
 	src/auvsl_dynamics/generated/jsim.cpp
 	src/auvsl_dynamics/generated/miscellaneous.cpp
 	src/auvsl_dynamics/generated/transforms.cpp
+
+	/home/justin/code/CppNeural/src/cpp_bptt_lib/src/SimulatorAD.cpp
 )
 target_include_directories(test_TireNetwork PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(test_TireNetwork ${PYTHON_LIBRARIES})
 target_link_libraries(test_TireNetwork GTest::gtest_main)
-target_link_libraries(test_TireNetwork cpp_bptt)
 include(GoogleTest)
 gtest_discover_tests(test_TireNetwork)
 
@@ -140,10 +122,11 @@ add_executable(
 	src/auvsl_dynamics/generated/jsim.cpp
 	src/auvsl_dynamics/generated/miscellaneous.cpp
 	src/auvsl_dynamics/generated/transforms.cpp
+
+	/home/justin/code/CppNeural/src/cpp_bptt_lib/src/SimulatorAD.cpp
 )
 target_include_directories(test_Trainer PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(test_Trainer ${PYTHON_LIBRARIES})
 target_link_libraries(test_Trainer GTest::gtest_main)
-target_link_libraries(test_Trainer cpp_bptt)
 include(GoogleTest)
 gtest_discover_tests(test_Trainer)

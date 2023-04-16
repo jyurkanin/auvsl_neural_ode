@@ -54,6 +54,29 @@ move on with my god damn life.
 Model is still training with 4s trajectories, but its slower and
 its also exploding pretty often
 
+* <2023-04-12 Wed 21:25>
+Okay, the diff model seems to be doing great. I realized I can
+get away with changing tanh(100*.) to tanh(1*.)
+and that helped stop some explosions
+It' seemed like even with 6s trajectories it was working fine.
+I'm going to train with 3s trajectories, then I'm goign to train
+with 6s. Tomorrow: Experiment with compiling everything from source,
+none of these gay libraries.
+It seems like the optimization flags aren't doing shit and I think
+the reason is because of all the gay libraries I made
+
+* <2023-04-13 Thu 23:16>
+Messing with the libraries didn't speed things up unfortunately
+
+* <2023-04-14 Fri 18:09>
+Linear relative error on CV3 is like 10%. Not great. Need to beat 9.26%
+Improvements:
+Bigger network? Yes.
+
+* Possibly separate sinkage->fz from the rest of the network?
+Would reduce noise. Also, I doubt the sinkage we are seeing is going
+to be very significant
+
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
 * DONE Preprocess test data sets
