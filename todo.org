@@ -99,11 +99,34 @@ improves.
 
 This is because I tried training with a bigger network and it
 reached a worse asymptotic performance so maybe smaller is better.
-Current validation loss (at 10 steps) is .004 so that might bode
-well for 60 steps. Strange though, because the validation loss is
-represented as a ratio of total distance travelled so I would
-expect it to be higher for small trajectories. Oh, this branch
-didn't have that. Great.
+Current validation loss (at 60 steps) is right about 10%
+So maybe retraining over short trajectories with a smaller model was a good idea?
+Cool, just realized I forgot to change the number of hidden units in TireNetwork.h
+so it was reading in tons of uninitialized data. Wowee. Or was it loading a 20neuron
+network from tire.net? World may never know tbh. Fuck. Well now it should train way faster
+at least. Shit. Goind to make debug first this time.
+
+Alright sick wow, now that I have this small network properly working it's giving me 10% error
+out of the box with no fine tuning nice. Hopefully this shit works out this time.
+*Withered wojak meme*
+It was evaluating over 10 timesteps. It's over.
+I fucked up again and it was evaling over 10 timesteps. Shit, fuck.
+Okay, so now we are getting a relative error of 7.94%. Nice. That's enough.
+After 1 training update, error blew back up to 15%. WTF
+I believe this is the result of gradients that are too big
+and I need to clip these gradients. If I wake up in the morning and
+my shit is fucked, I'm going to compute stats on the gradients
+and figure out a good clipping value.
+
+Training over 10 steps worked great.
+Training over 60 steps was terrible.
+Validation Loss steadily increased the whole time from 15%->20%
+Will try to compute gradient clipping values
+
+Not working. loss is consistently rising. Fuck.
+
+* <2023-04-18 Tue 18:03>
+Will try training with no sign haxx and see what happens
 
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code

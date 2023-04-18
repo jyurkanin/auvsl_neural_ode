@@ -11,15 +11,15 @@ int main()
   std::cout << "Default Performance:\n";
   
   train.load();
-  train.evaluate_cv3();
-  train.evaluate_ld3();
+  // train.evaluate_cv3();
+  // train.evaluate_ld3();
   
-  for(int i = 0; i < 100; i++)
+  for(int i = 0; i < 1000; i++)
   {
     train.train();
     train.save();
     
-    if((i % 10) == 9)
+    if((i % 3) == 0)
     {
       train.evaluate_cv3();
       train.evaluate_ld3();

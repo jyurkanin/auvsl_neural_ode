@@ -44,8 +44,8 @@ public:
 private:
   const double m_gt_sample_period = 10.0;
 
-  constexpr int m_train_steps = 2;
-  constexpr int m_eval_steps = 60;
+  const int m_train_steps = 60;
+  const int m_eval_steps = 60;
   
   ADF m_z_stable;
   VectorAD m_quat_stable;

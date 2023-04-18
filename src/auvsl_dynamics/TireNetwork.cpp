@@ -61,11 +61,11 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix
   bekker_vec[1] = slip_lon;
   bekker_vec[2] = tire_abs;
   bekker_vec[3] = slip_lat;
-  bekker_vec[4] = in_vec[4];
-  bekker_vec[5] = in_vec[5];
-  bekker_vec[6] = in_vec[6];
-  bekker_vec[7] = in_vec[7];
-  bekker_vec[8] = in_vec[8];
+  // bekker_vec[4] = in_vec[4];
+  // bekker_vec[5] = in_vec[5];
+  // bekker_vec[6] = in_vec[6];
+  // bekker_vec[7] = in_vec[7];
+  // bekker_vec[8] = in_vec[8];
 
   // Apply scaling after calculating the bekker features from kinematics
   scaled_features = (bekker_vec - in_mean).cwiseProduct(in_std_inv);
