@@ -99,7 +99,7 @@ class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
     self.in_size = 4 # sinkage, qd, vx, vy
-    self.hidden_size = 8
+    self.hidden_size = 16
     self.out_size = 3
     
     self.tire_radius = .098
@@ -110,16 +110,15 @@ class TireNet(nn.Module):
       nn.Tanh(),
       nn.Linear(self.hidden_size, self.hidden_size),
       nn.Tanh(),
-      nn.Linear(self.hidden_size, self.out_size),
-      nn.ReLU()
+      nn.Linear(self.hidden_size, self.out_size)
     )
 
   def compute_bekker_input_scaler(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_lon = torch.abs(diff)
-    slip_lat = torch.abs(x[:,1])
-    tire_abs = torch.abs(x[:,2])
+    slip_lon = diff
+    slip_lat = x[:,1]
+    tire_abs = x[:,2]
     bekker_args = torch.cat((x[:,3][:,None], # zr
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|
@@ -134,24 +133,18 @@ class TireNet(nn.Module):
   def forward(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_lon = torch.abs(diff)
-    slip_lat = torch.abs(x[:,1])
-    tire_abs = torch.abs(x[:,2])
+    slip_lon = diff
+    slip_lat = x[:,1]
+    tire_abs = x[:,2]
     bekker_args = torch.cat((x[:,3][:,None],   # zr
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|
                              slip_lat[:,None], # vy
                              ), 1)
     
-    bekker_args = (bekker_args - self.in_mean) / self.in_std
-    
+    bekker_args = (bekker_args - self.in_mean) / self.in_std    
     yhat = self.model.forward(bekker_args)
-    
-    yhat_sign_corrected = torch.cat((
-      (yhat[:,0] * torch.tanh(1*diff))[:,None],
-      (yhat[:,1] * torch.tanh(-1*x[:,1]))[:,None],
-      (yhat[:,2] / (1 + torch.exp(-1*x[:,3])))[:,None]), 1)
-    return yhat_sign_corrected
+    return yhat
     
 model = TireNet()
 model.compute_bekker_input_scaler(train_data)
@@ -258,8 +251,6 @@ model_name = "train_no_ratio1.net"
 #model.load_state_dict(md)
 
 fit(1e-3, 5000, 100)
-plt.show()
-get_evaluation_loss(test_data, test_labels)
 fit(1e-3, 50, 10)
 #fit(1e-4, 50000, 1000)
 #fit(1e-4, 50, 100)

@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -g")
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall -Ofast -mtune=native -march=native -DNDEBUG")
 
 add_compile_options(
-  "-Wall" "-Ofast" "-mtune=native" "-march=native" "-DNDEBUG"
+  "-Wall" "-Ofast" "-mtune=native" "-march=native" "-DNDEBUG" "-mfma" "-fno-math-errno" "-ffast-math"
 )
 
 set(CMAKE_CXX_STANDARD 20)
