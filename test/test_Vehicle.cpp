@@ -26,7 +26,7 @@ namespace {
     {
       srand(time(NULL)); // randomize seed
       
-      m_system_adf    = std::make_shared<VehicleSystem<ADF>>();
+      m_system_adf = std::make_shared<VehicleSystem<ADF>>();
       
       m_params = VectorAD::Zero(m_system_adf->getNumParams());
       m_x0 = VectorAD::Zero(m_system_adf->getStateDim());
