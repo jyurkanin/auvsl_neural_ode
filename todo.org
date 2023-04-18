@@ -127,6 +127,10 @@ Not working. loss is consistently rising. Fuck.
 
 * <2023-04-18 Tue 18:03>
 Will try training with no sign haxx and see what happens
+Didn't work. Didn't settle. Basically that was expected.
+Will try training the bekker params.
+Also could try training the shit out of the model with
+2 tiemsteps. Idk.
 
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
