@@ -132,6 +132,12 @@ Will try training the bekker params.
 Also could try training the shit out of the model with
 2 tiemsteps. Idk.
 
+* <2023-04-19 Wed 17:58>
+Training with bekker params straight up did not work.
+I tried with 2 timesteps and it did much worse.
+Maybe it will work for longer timesteps???
+I thought I triwed that though?
+
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
 * DONE Preprocess test data sets
