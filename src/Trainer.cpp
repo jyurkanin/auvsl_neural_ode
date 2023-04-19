@@ -88,6 +88,8 @@ void Trainer::loadDataFile(std::string fn)
 
 void Trainer::train()
 {
+  m_system_adf->setNumSteps(m_train_steps);
+  
   VectorF traj_grad(m_system_adf->getNumParams());
   int traj_len = m_system_adf->getNumSteps();
   double loss;
@@ -131,9 +133,9 @@ void Trainer::train()
       
       if(m_cnt == 100)
       {
-	std::cout << "Avg Loss: " << avg_loss / 10.0 <<"\n";
+	std::cout << "Avg Loss: " << avg_loss / m_cnt <<"\n";
 	std::flush(std::cout);
-	updateParams(m_batch_grad / 10.0);
+	updateParams(m_batch_grad / m_cnt);
 	m_cnt = 0;
 	avg_loss = 0;
       }
@@ -273,6 +275,7 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
 
 void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<VectorAD> &x_list, double &loss)
 {
+  m_system_adf->setNumSteps(m_eval_steps);
   m_system_adf->setParams(m_params);
   
   VectorAD xk(m_system_adf->getStateDim());
@@ -281,6 +284,7 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
   initializeState(traj[0], xk);
   x_list[0] = xk;
 
+  ADF traj_len = 0;
   VectorAD gt_vec;
   for(int i = 1; i < x_list.size(); i++)
   {
@@ -294,10 +298,15 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
     gt_vec = VectorAD::Zero(m_system_adf->getStateDim());
     gt_vec[4] = ADF(traj[i].x);
     gt_vec[5] = ADF(traj[i].y);
+
+    ADF dx = traj[i].x - traj[i-1].x;                                                                                                   
+    ADF dy = traj[i].y - traj[i-1].y;                                                                                                   
+    
+    traj_len += CppAD::sqrt(dx*dx + dy*dy);                                                                                             
   }
   
   // This could also be a running loss instead of a terminal loss
-  loss = CppAD::Value(m_system_adf->loss(gt_vec, x_list.back()));
+  loss = CppAD::Value(m_system_adf->loss(gt_vec, x_list.back()) / traj_len);
   std::cout << "cv3run loss: " << loss << "\n";
 }
 

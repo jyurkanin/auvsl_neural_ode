@@ -53,6 +53,14 @@ move on with my god damn life.
 
 Model is still training with 4s trajectories, but its slower and
 its also exploding pretty often
+* <2023-04-18 Tue 20:06>
+This shit appears to have worked. just training the bekker params.
+I'm appalled. God I hope I didn't fuck something up and the
+numbers I'm seeing are real. If not, I will be taking my own life.
+I double checked and I don't see anything wrong with the math.
+
+The numbers werne't real. The loss function was missing a sqrt.
+The real CV3 error is like .127, LD3 is .0745
 
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code

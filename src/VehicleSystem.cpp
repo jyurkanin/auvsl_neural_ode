@@ -74,7 +74,7 @@ Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
 {
   Scalar x_err = gt_vec[4] - vec[4];
   Scalar y_err = gt_vec[5] - vec[5];
-  return (x_err*x_err) + (y_err*y_err);
+  return CppAD::sqrt((x_err*x_err) + (y_err*y_err));
 }
 
 template<typename Scalar>
