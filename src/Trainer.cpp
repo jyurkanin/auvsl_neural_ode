@@ -129,7 +129,7 @@ void Trainer::train()
 	m_cnt++;
       }
       
-      if(m_cnt == 10)
+      if(m_cnt == 100)
       {
 	std::cout << "Avg Loss: " << avg_loss / 10.0 <<"\n";
 	std::flush(std::cout);
@@ -213,7 +213,14 @@ void Trainer::updateParams(const VectorF &grad)
     norm += CppAD::abs(m_params[i]);
   }
   
-  std::cout << "Param norm: " << CppAD::Value(norm) << " Param[0]: " << CppAD::Value(m_params[0]) << "\n";
+  std::cout << "Param norm: " << CppAD::Value(norm) << "\n";
+  std::cout << "Params: " <<
+    CppAD::Value(m_params[0]) << ", " <<
+    CppAD::Value(m_params[1]) << ", " <<
+    CppAD::Value(m_params[2]) << ", " <<
+    CppAD::Value(m_params[3]) << ", " <<
+    CppAD::Value(m_params[4]) << "\n";
+  
   for(int i = 0; i < m_params.size(); i++)
   {
     
@@ -291,6 +298,7 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
   
   // This could also be a running loss instead of a terminal loss
   loss = CppAD::Value(m_system_adf->loss(gt_vec, x_list.back()));
+  std::cout << "cv3run loss: " << loss << "\n";
 }
 
 void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<VectorAD> &x_list, VectorF &gradient, double& loss)

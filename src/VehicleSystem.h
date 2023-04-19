@@ -24,7 +24,7 @@ public:
   virtual Scalar loss(const VectorS &gt_vec, VectorS &vec);
   void integrate(const VectorS &X0, VectorS &X1);  
 
-  
+  const int m_num_bekker_params = 5;
   MatrixS m_params;
   HybridDynamics m_hybrid_dynamics;
 };

@@ -5,8 +5,8 @@
 template<typename Scalar>
 VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics::STATE_DIM + HybridDynamics::CNTRL_DIM, 0)
 {
-  this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
-  this->setNumSteps(40);
+  this->setNumParams(m_num_bekker_params);
+  this->setNumSteps(60);
   this->setTimestep(0.001);  //unused
   this->setLearningRate(1e-4f);
 }
@@ -20,15 +20,21 @@ VehicleSystem<Scalar>::~VehicleSystem()
 template<typename Scalar>
 void VehicleSystem<Scalar>::setParams(const VectorS &params)
 {
-  int idx = 0;
-  m_hybrid_dynamics.tire_network.setParams(params, idx);
+  m_hybrid_dynamics.bekker_params[0] = params[0];
+  m_hybrid_dynamics.bekker_params[1] = params[1];
+  m_hybrid_dynamics.bekker_params[2] = params[2];
+  m_hybrid_dynamics.bekker_params[3] = params[3];
+  m_hybrid_dynamics.bekker_params[4] = params[4];
 }
 
 template<typename Scalar>
 void VehicleSystem<Scalar>::getParams(VectorS &params)
 {
-  int idx = 0;
-  m_hybrid_dynamics.tire_network.getParams(params, idx);
+  params[0] = m_hybrid_dynamics.bekker_params[0];
+  params[1] = m_hybrid_dynamics.bekker_params[1];
+  params[2] = m_hybrid_dynamics.bekker_params[2];
+  params[3] = m_hybrid_dynamics.bekker_params[3];
+  params[4] = m_hybrid_dynamics.bekker_params[4];
 }
 
 template<typename Scalar>

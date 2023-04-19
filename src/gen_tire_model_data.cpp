@@ -90,11 +90,11 @@ int main(){
     float zr = rand_float(.01,.0001);
 
     //29.76, 2083, 0.8, 0, 0.392699
-    float bk_kc   = 29.76; //rand_float(100.0,20.0);
-    float bk_kphi = 2083.0; //rand_float(3500.0,500.0);
-    float bk_n0   = 0.8; //rand_float(1.3,0.3);
-    float bk_n1   = 0.0; //rand_float(0.2,0.0);
-    float bk_phi  = 0.3927; //rand_float(0.52,0.17);
+    float bk_kc   = rand_float(100.0,20.0);
+    float bk_kphi = rand_float(3500.0,500.0);
+    float bk_n0   = rand_float(1.3,0.3);
+    float bk_n1   = rand_float(0.2,0.0);
+    float bk_phi  = rand_float(0.52,0.17);
     
     wrench = get_forces(vx, vy, wy, zr, bk_kc, bk_kphi, bk_n0, bk_n1, bk_phi);
     
