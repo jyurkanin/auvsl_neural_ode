@@ -8,7 +8,8 @@ VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics
   this->setNumParams(m_num_bekker_params);
   this->setNumSteps(60);
   this->setTimestep(0.001);  //unused
-  this->setLearningRate(1e-4f);
+  //this->setLearningRate(1e-1f);
+  this->setLearningRate(1.0);
 }
 
 template<typename Scalar>

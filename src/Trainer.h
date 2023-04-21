@@ -47,7 +47,7 @@ private:
   ADF m_z_stable;
   VectorAD m_quat_stable;
 
-  const int m_train_steps = 2;
+  const int m_train_steps = 60;
   const int m_eval_steps = 60;
   
   std::string m_param_file;

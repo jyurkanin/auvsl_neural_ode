@@ -62,6 +62,23 @@ I double checked and I don't see anything wrong with the math.
 The numbers werne't real. The loss function was missing a sqrt.
 The real CV3 error is like .127, LD3 is .0745
 
+* <2023-04-19 Wed 23:08>
+Okay bro. I'm nearly out of ideas, so I am training on the
+bekker params, at 60 steps. I trained with 60 steps and 1e-4
+learning rate. But the decrease in loss was very small. I'm goign
+to try again with lr=1e-2. This ran overnight and barely trained.
+It only improved the loss slightly. I think I need to turn the
+gradient explosion checking off.
+
+Gradient explosion turned off. LR=1e-2 did basically nothing but
+the loss was at least monotonically decreasing.
+
+Upping the LR to 1.0, fuck it. Not working.
+
+
+
+
+
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
 * DONE Preprocess test data sets

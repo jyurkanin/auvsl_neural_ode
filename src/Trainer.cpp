@@ -115,8 +115,8 @@ void Trainer::train()
       {
 	if(fabs(traj_grad[i]) > 100.0)
 	{
-	  has_explosion = true;
-	  std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
+	  // has_explosion = true;
+	  // std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
 	  break;
 	}
       }
@@ -126,12 +126,12 @@ void Trainer::train()
 	m_batch_grad += traj_grad;
 	avg_loss += loss;
 	//plotTrajectory(traj, x_list);      
-	std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
+	std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\t" << traj_grad[1] << "\t" << traj_grad[2] << "\t" << traj_grad[3] << "\t" << traj_grad[4] << "\n";
 	std::flush(std::cout);
 	m_cnt++;
       }
       
-      if(m_cnt == 100)
+      if(m_cnt == 10)
       {
 	std::cout << "Avg Loss: " << avg_loss / m_cnt <<"\n";
 	std::flush(std::cout);
