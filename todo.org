@@ -137,6 +137,13 @@ Training with bekker params straight up did not work.
 I tried with 2 timesteps and it did much worse.
 Maybe it will work for longer timesteps???
 I thought I triwed that though?
+Nope, training with bekker params is a failure rip.
+
+* <2023-04-21 Fri 12:57>
+Honestly training with 10 timesteps or 2 timesteps on the
+small network is good enough performance. I think I will be
+able to justify it, and make an argument about the difference between
+training and test datasets.
 
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code

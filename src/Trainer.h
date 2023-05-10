@@ -44,7 +44,7 @@ public:
 private:
   const double m_gt_sample_period = 10.0;
 
-  const int m_train_steps = 2;
+  const int m_train_steps = 10;
   const int m_eval_steps = 60;
   
   ADF m_z_stable;
