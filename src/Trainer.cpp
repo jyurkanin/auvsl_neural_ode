@@ -89,10 +89,10 @@ void Trainer::loadDataFile(std::string fn)
 void Trainer::train()
 {
   VectorF traj_grad(m_system_adf->getNumParams());
-  int traj_len = m_system_adf->getNumSteps();
+  int traj_len = m_train_steps;
   double loss;
   double avg_loss = 0;
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
+  std::vector<VectorAD> x_list(m_train_steps);
   char fn_array[100];
   
   for(int i = 1; i <= 17; i++)
@@ -130,11 +130,11 @@ void Trainer::train()
 	m_cnt++;
       }
       
-      if(m_cnt == 10)
+      if(m_cnt == 100)
       {
-	std::cout << "Avg Loss: " << avg_loss / 10.0 <<"\n";
+	std::cout << "Avg Loss: " << avg_loss / m_cnt <<"\n";
 	std::flush(std::cout);
-	updateParams(m_batch_grad / 10.0);
+	updateParams(m_batch_grad / m_cnt);
 	m_cnt = 0;
 	avg_loss = 0;
       }
@@ -145,8 +145,8 @@ void Trainer::train()
 
 void Trainer::evaluate_cv3()
 {
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
-  int traj_len = m_system_adf->getNumSteps();
+  std::vector<VectorAD> x_list(m_eval_steps);
+  int traj_len = m_eval_steps;
   char fn_array[100];
   
   double loss_avg = 0;
@@ -177,8 +177,8 @@ void Trainer::evaluate_cv3()
 
 void Trainer::evaluate_ld3()
 {
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
-  int traj_len = m_system_adf->getNumSteps();
+  std::vector<VectorAD> x_list(m_eval_steps);
+  int traj_len = m_eval_steps;
   char fn_array[100];
   
   double loss_avg = 0;
@@ -275,6 +275,7 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
   initializeState(traj[0], xk);
   x_list[0] = xk;
 
+  ADF traj_len = 0;
   VectorAD gt_vec;
   for(int i = 1; i < x_list.size(); i++)
   {
@@ -288,10 +289,14 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
     gt_vec = VectorAD::Zero(m_system_adf->getStateDim());
     gt_vec[4] = ADF(traj[i].x);
     gt_vec[5] = ADF(traj[i].y);
+
+    ADF dx = traj[i].x - traj[i-1].x;
+    ADF dy = traj[i].y - traj[i-1].y;
+    traj_len += CppAD::sqrt(dx*dx + dy*dy);
   }
   
   // This could also be a running loss instead of a terminal loss
-  loss = CppAD::Value(m_system_adf->loss(gt_vec, x_list.back()));
+  loss = CppAD::Value(m_system_adf->loss(gt_vec, x_list.back()) / traj_len);
 }
 
 void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<VectorAD> &x_list, VectorF &gradient, double& loss)
