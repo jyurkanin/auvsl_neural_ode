@@ -35,7 +35,7 @@ std::vector<float> get_forces(float vx, float vy, float w,
   }
   else
   {
-    slip_ratio = fabs(vel_x_tan - vx)/1e-3;
+    slip_ratio = fabs(vel_x_tan - vx)/1e-6;
   }
   if(vx != 0.0)
   {
