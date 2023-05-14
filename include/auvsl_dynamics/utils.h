@@ -14,3 +14,11 @@ Eigen::Matrix<Scalar,4,1> calcQuatDot(Eigen::Matrix<Scalar,4,1> orientation, Eig
 //The rotation that converts a frame coincident with A to frame B
 Eigen::Matrix<Scalar,3,3> toMatrixRotation(Eigen::Matrix<Scalar,4,1> quaternion);
 Eigen::Matrix<Scalar,3,3> toMatrixRotation(Scalar x, Scalar y, Scalar z, Scalar w);
+
+void toEulerAngles(const Scalar &qw,
+		   const Scalar &qx,
+		   const Scalar &qy,
+		   const Scalar &qz,
+		   Scalar &roll,
+		   Scalar &pitch,
+		   Scalar &yaw);

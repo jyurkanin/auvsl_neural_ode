@@ -30,7 +30,7 @@ using Jackal::rcg::tz_rear_right_wheel;
 using Jackal::rcg::orderedJointIDs;
 
 
-const Scalar HybridDynamics::timestep = .001;
+const Scalar HybridDynamics::timestep = 1e-3;
 const Acceleration HybridDynamics::GRAVITY_VEC = (Acceleration() << 0,0,0,0,0,-9.81).finished();
 //const Acceleration HybridDynamics::GRAVITY_VEC = (Acceleration() << 0,0,0,0,0,0).finished();
 

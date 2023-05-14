@@ -105,7 +105,7 @@ void Trainer::train()
     std::string fn(fn_array);
     loadDataFile(fn);
     
-    for(int j = 0; j < (m_data.size() - traj_len); j += traj_len)
+    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_train_steps)
     {
       std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
       trainTrajectory(traj, x_list, traj_grad, loss);
@@ -131,7 +131,7 @@ void Trainer::train()
 	m_cnt++;
       }
       
-      if(m_cnt == 10)
+      if(m_cnt == 100)
       {
 	std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
 	std::flush(std::cout);
@@ -166,7 +166,7 @@ void Trainer::evaluate_cv3()
     std::string fn(fn_array);
     loadDataFile(fn);
     
-    for(int j = 0; j < (m_data.size() - traj_len); j += traj_len)
+    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
     {
       std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
       evaluateTrajectory(traj, x_list, loss);
@@ -197,11 +197,11 @@ void Trainer::evaluate_ld3()
   std::string fn(fn_array);
 
   loadDataFile(fn);
-  for(int j = 0; j < (m_data.size() - traj_len); j += traj_len)
+  for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
   {
     std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
     evaluateTrajectory(traj, x_list, loss);
-    //plotTrajectory(traj, x_list);
+    plotTrajectory(traj, x_list);
     
     loss_avg += loss;
     cnt++;
@@ -267,13 +267,13 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
     model_x[i] = CppAD::Value(x_list[i][4]);
     model_y[i] = CppAD::Value(x_list[i][5]);
     model_z[i] = CppAD::Value(x_list[i][6]);
-    model_yaw[i] = CppAD::Value(2*CppAD::atan(x_list[i][2] / x_list[i][3]));
+    model_yaw[i] = CppAD::Value(2*CppAD::atan(x_list[i][2] / x_list[i][3])); //this is an approximation
     
     gt_x[i] = traj[i].x;
     gt_y[i] = traj[i].y;
     gt_yaw[i] = traj[i].yaw;
 
-    x_axis[i] = (double)i;
+    x_axis[i] = .1*i;
   }
 
   plt::subplot(1,3,1);
@@ -325,6 +325,8 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
     x_list[i] = xk;
     
     gt_vec = VectorAD::Zero(m_system_adf->getStateDim());
+    
+    gt_vec[3] = ADF(traj[i].yaw);
     gt_vec[4] = ADF(traj[i].x);
     gt_vec[5] = ADF(traj[i].y);
 
@@ -337,8 +339,13 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
   //plotTrajectory(traj, x_list);
   
   // This could also be a running loss instead of a terminal loss
-  loss = CppAD::Value(m_system_adf->loss(gt_vec, x_list.back()) / traj_len);
-  loss = std::sqrt(loss);
+  Scalar ang_mse;
+  Scalar lin_mse;
+  m_system_adf->evaluate(gt_vec, x_list.back(), ang_mse, lin_mse);
+  std::cout << "Lin err " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Ang err " << CppAD::Value(CppAD::sqrt(ang_mse)) << "\n";
+  
+  loss = CppAD::Value(CppAD::sqrt(lin_mse / traj_len));
+  
 }
 
 void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<VectorAD> &x_list, VectorF &gradient, double& loss)
@@ -369,6 +376,7 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
     x_list[i] = xk;
     
     gt_vec = VectorAD::Zero(m_system_adf->getStateDim());
+    gt_vec[3] = ADF(traj[i].yaw);
     gt_vec[4] = ADF(traj[i].x);
     gt_vec[5] = ADF(traj[i].y);
     

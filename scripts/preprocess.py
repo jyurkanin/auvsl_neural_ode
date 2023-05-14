@@ -6,8 +6,6 @@ import matplotlib.pyplot as plt
 # 0001_CV_grass_GT.txt
 # 0001_Tr_grass_GT.txt
 
-
-
 # The main goal of this file is to resample all sources of data to 10hz
 
 # Use this to obtain 
@@ -56,13 +54,16 @@ def readFiles(name, num_files):
 
         vx_interp = np.append(np.diff(x_interp), 0) / timestep # Finite differences
         vy_interp = np.append(np.diff(y_interp), 0) / timestep
+
+        yaw_unbounded = (np.interp(resample_times, df_gt["time"], np.unwrap(df_gt["yaw"]))).reshape(-1,1)
+        yaw = np.arctan2(np.sin(yaw_unbounded), np.cos(yaw_unbounded))
         
         train_data = np.concatenate([resample_times.reshape(-1,1),
                                      np.interp(resample_times, df_odom["time"], df_odom["vel_left"]).reshape(-1,1),
                                      np.interp(resample_times, df_odom["time"], df_odom["vel_right"]).reshape(-1,1),
                                      x_interp.reshape(-1,1),
                                      y_interp.reshape(-1,1),
-                                     (np.interp(resample_times, df_gt["time"], np.unwrap(df_gt["yaw"]))).reshape(-1,1),
+                                     yaw,
                                      np.interp(resample_times, df_imu["time"], df_imu["wx"]).reshape(-1,1),
                                      np.interp(resample_times, df_imu["time"], df_imu["wy"]).reshape(-1,1),
                                      np.interp(resample_times, df_imu["time"], df_imu["wz"]).reshape(-1,1),
@@ -135,14 +136,14 @@ def plot_ld3_vx():
     
     
 # Training and validation datasets
-#readFiles("Train3", 17)
-#readFiles("CV3", 144)
-#readFiles("LD3", 1)
+readFiles("Train3", 17)
+readFiles("CV3", 144)
+readFiles("LD3", 1)
 
-plot_train3_w()
-plot_cv3_w()
-plot_ld3_w()
+# plot_train3_w()
+# plot_cv3_w()
+# plot_ld3_w()
 
-plot_train3_vx()
-plot_cv3_vx()
-plot_ld3_vx()
+# plot_train3_vx()
+# plot_cv3_vx()
+# plot_ld3_vx()
