@@ -201,6 +201,18 @@ Adding angular error did not really improve the situation. It did improve
 the CV3 accuracy even further but LD3 still craps out at like .155
 
 
+* <2023-05-18 Thu 19:36>
+Okay, shit is fucked. I don't think fancy optimization with constraints
+will work. I was thinking that maybe I could augment the output of the network
+to return a -Fx and a +Fx and choose +Fx when diff > 1 else -Fx.
+This also plataued around .158 for LD3 accuracy
+
+
+Possibly retry the technique where i generated an additional
+Fx term that changed sign with Vx. I just added another output
+to the network. BUt it would need Vx as an input feature.
+
+
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
 * DONE Preprocess test data sets

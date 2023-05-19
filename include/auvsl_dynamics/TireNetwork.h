@@ -20,6 +20,7 @@ public:
   static const int num_hidden_nodes = 8;
   static const int num_in_features = 4;
   static const int num_out_features = 3;
+  static const int num_out_nodes = 4;
 
   static int  getNumParams();
   static void setParams(const VectorS &params, int idx);
@@ -33,8 +34,8 @@ public:
   static Eigen::Matrix<Scalar,num_hidden_nodes,1> bias0;
   static Eigen::Matrix<Scalar,num_hidden_nodes,num_hidden_nodes> weight2;
   static Eigen::Matrix<Scalar,num_hidden_nodes,1> bias2;
-  static Eigen::Matrix<Scalar,num_out_features,num_hidden_nodes> weight4;
-  static Eigen::Matrix<Scalar,num_out_features,1> bias4;
+  static Eigen::Matrix<Scalar,num_out_nodes,num_hidden_nodes> weight4;
+  static Eigen::Matrix<Scalar,num_out_nodes,1> bias4;
 
 private:
   static Eigen::Matrix<Scalar,num_out_features,1> out_std;

@@ -7,10 +7,10 @@
 
 Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,TireNetwork::num_in_features> TireNetwork::weight0;
 Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,TireNetwork::num_hidden_nodes> TireNetwork::weight2;
-Eigen::Matrix<Scalar,TireNetwork::num_out_features,TireNetwork::num_hidden_nodes> TireNetwork::weight4;
+Eigen::Matrix<Scalar,TireNetwork::num_out_nodes,TireNetwork::num_hidden_nodes> TireNetwork::weight4;
 Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> TireNetwork::bias0;
 Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> TireNetwork::bias2;
-Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> TireNetwork::bias4;
+Eigen::Matrix<Scalar,TireNetwork::num_out_nodes,1> TireNetwork::bias4;
 Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> TireNetwork::out_std;
 Eigen::Matrix<Scalar,TireNetwork::num_in_features,1> TireNetwork::in_mean;
 Eigen::Matrix<Scalar,TireNetwork::num_in_features,1> TireNetwork::in_std_inv;
@@ -46,7 +46,7 @@ inline Scalar relu_wrapper(Scalar x){
 void TireNetwork::forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix<Scalar,num_out_features,1> &out_vec){
   Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> layer0_out;
   Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> layer2_out;
-  Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> layer4_out;
+  Eigen::Matrix<Scalar,TireNetwork::num_out_nodes,1>    layer4_out;
   Eigen::Matrix<Scalar,TireNetwork::num_in_features,1> scaled_features;
   Eigen::Matrix<Scalar,TireNetwork::num_in_features,1> bekker_vec;
   
@@ -61,12 +61,7 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix
   bekker_vec[1] = slip_lon;
   bekker_vec[2] = tire_abs;
   bekker_vec[3] = slip_lat;
-  // bekker_vec[4] = in_vec[4];
-  // bekker_vec[5] = in_vec[5];
-  // bekker_vec[6] = in_vec[6];
-  // bekker_vec[7] = in_vec[7];
-  // bekker_vec[8] = in_vec[8];
-
+  
   // Apply scaling after calculating the bekker features from kinematics
   scaled_features = (bekker_vec - in_mean).cwiseProduct(in_std_inv);
 
@@ -78,7 +73,8 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix
   layer4_out = (weight4*layer2_out) + bias4;        
   
   // Sign change passivity haxx
-  out_vec[0] = relu_wrapper(layer4_out[0])*CppAD::tanh(1*diff);
+  Scalar fx = CppAD::CondExpGt(diff, Scalar(0), layer4_out[0], layer4_out[3]);
+  out_vec[0] = relu_wrapper(fx)*CppAD::tanh(1*diff);
   out_vec[1] = relu_wrapper(layer4_out[1])*CppAD::tanh(-1*in_vec[1]);
   out_vec[2] = relu_wrapper(layer4_out[2])/(1 + CppAD::exp(-1*in_vec[3]));
   
@@ -197,27 +193,36 @@ int TireNetwork::load_model(){
     
   is_loaded = 1;
   
-  weight0 << -1.7484e-01,  1.6525e+00, -6.8996e-02, -5.9168e-01, -3.4555e-01,
-    4.6433e-01,  3.1354e-01,  1.9098e-01,  1.1104e-01, -5.4889e-01,
-    -2.5016e-03, -1.2739e-01, -7.0772e-01, -1.9510e-01,  1.2977e-02,
-    -1.2896e-01, -3.5542e-01,  7.6961e-02,  2.8606e-02, -2.9580e-01,
-    2.7108e-01, -1.9145e+00,  8.5818e-02, -2.5109e-01, -5.1642e-01,
-    1.8547e-01,  1.9089e-01,  3.8624e-01, -2.5881e-01, -2.4439e-03,
-    4.8472e-04,  1.7329e-03;
-  bias0 <<  2.0486,  1.5814, -0.8503, -2.6291,  0.8921, -3.7739,  1.4840,  0.1440;
-  weight2 << -0.4313,  1.0166,  0.9065, -0.8379,  0.6155,  3.0698,  1.1143, -0.6207,
-    0.0440, -0.0322,  0.0723, -0.4120, -0.0300,  0.0468,  0.0812,  3.0522,
-    -0.3356, -0.8850,  1.0218, -1.3081, -0.2968, -0.4051,  0.9048,  0.0117,
-    0.8444,  1.0906,  2.0426,  1.9503, -1.0902,  0.3945,  1.4630,  1.1683,
-    -2.0804,  1.5648, -1.0079, -0.0329, -0.9311, -2.5838, -1.1102,  1.0741,
-    0.0104,  0.0073,  0.0236, -0.0033,  0.0148, -0.0742,  0.0072,  1.9988,
-    -0.2176, -0.2047,  0.6015, -0.9912, -0.4051,  0.7649, -0.1259, -0.0506,
-    -0.2627, -0.8253,  0.0100,  0.3662, -0.3856, -1.4246,  0.4105,  0.1293;
-  bias2 << -0.3422,  0.4901,  0.9934, -0.7216,  0.4807, -0.7637,  0.5814, -0.6752;
-  weight4 <<  0.3545, -0.1442,  2.4540, -3.1774, -5.8501, -0.7761,  4.0456, -5.6217,
-    -2.1220, -0.1018,  2.2535, -2.1167, -5.7603, -0.8064,  3.9032, -3.4517,
-    -0.0415, -2.2064,  0.8490, -0.0772,  0.0278, -3.6400, -0.0999, -0.0941;
-  bias4 << 1.3820, 1.1332, 2.5680;
+  weight0 <<  8.6618e-02, -4.4287e-01, -3.6348e-02, -3.6585e-02, -1.0653e-01,
+    1.3329e-01,  2.0307e-02, -2.4276e-01, -5.1753e-01,  3.4944e-03,
+    7.4600e-04,  9.1612e-03, -5.1693e-01,  4.9814e-03,  1.3711e-03,
+    1.6810e-03, -1.0607e-02,  6.7861e-01, -7.7098e-02,  3.9396e-02,
+    7.6277e-02, -5.7747e-01, -1.5226e-01,  1.1935e+00,  1.2991e-01,
+    -8.8606e-01, -1.6855e-01, -4.4853e-01, -9.2104e-02,  4.3377e+00,
+    -4.8113e-01,  1.8564e-01;
+  bias0 << -0.7269,  1.7868,  1.4498, -0.6849,  1.1558,  0.0634, -2.7032,  7.2892;
+  weight2 <<  4.1872e+00, -2.2286e-01,  8.3592e-01, -3.7154e-01, -1.8595e-01,
+    -1.8077e+00,  3.6354e+00, -4.3550e-01, -1.6418e-01,  8.9724e-01,
+    7.9922e-01,  8.0776e-01, -3.8217e-01,  1.8029e-02, -1.7631e+00,
+    -2.5200e+00, -5.6034e-01,  5.5166e-01, -1.4804e+00, -1.5179e+00,
+    1.4365e+00,  5.9059e-01, -3.0519e-01,  3.4721e-02,  7.7272e-01,
+    1.3312e+00,  9.3108e-01,  9.2185e-01,  1.9445e-01,  6.5389e-02,
+    2.2893e-01, -6.1285e-01, -9.9064e-01, -3.4836e-01,  1.1553e-01,
+    4.1533e-01,  4.2089e-01,  3.6133e-01, -1.1934e+00,  4.8163e-02,
+    2.3472e+00, -1.7792e+00,  5.2336e-01, -6.7307e-01,  1.1635e+00,
+    1.3204e+00,  3.0293e+00,  2.8534e+00, -6.5871e-03,  2.0153e-02,
+    1.3200e+00,  8.0346e-01,  6.3944e-04, -4.9467e-04, -4.8546e-02,
+    8.2892e-03,  1.0414e+00, -1.3534e-01, -7.7075e-01,  2.9723e+00,
+    7.7868e-01, -4.7488e-03,  6.8639e-01,  1.0937e+00;
+  bias2 << -0.3056,  0.4081,  1.3510,  0.2477, -0.1936, -1.4022, -0.6021, -1.6096;
+  weight4 <<  5.9224e+00,  1.5597e+00,  3.9146e+00,  2.6720e+00, -6.5347e+00,
+    -3.3334e+00, -4.7684e+00, -2.9885e+00,  4.8018e+00, -3.5219e+00,
+    1.9938e+00,  3.5726e+00, -3.4848e+00, -2.0534e+00, -1.9556e+00,
+    -3.3136e+00, -1.0818e-02, -3.5562e-02,  5.0956e-03, -1.6256e-01,
+    1.1429e-01, -6.7342e-02, -5.1142e+00, -1.4483e+00,  5.9052e+00,
+    1.5399e+00,  3.9213e+00,  2.6651e+00, -6.5237e+00, -3.3502e+00,
+    -4.7373e+00, -2.9457e+00;
+  bias4 << 2.3340, 2.5582, 2.3674, 2.3358;
   out_std << 44.45929437637364, 44.319044796830426, 55.11481922955709;
   in_mean << 0.005049827974289656, 0.5013627409934998, 0.49966344237327576, 0.5000784397125244;
   in_std_inv << 0.0028585679829120636, 0.2916049659252167, 0.2884257733821869, 0.288765013217926;
