@@ -16,7 +16,7 @@ Trainer::Trainer()
  
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
-  m_squared_grad = VectorAD::Zero(m_system_adf->getNumParams());
+  m_squared_grad = VectorAD::Ones(m_system_adf->getNumParams());
   m_system_adf->getDefaultParams(m_params);
 
   computeEqState();
@@ -88,6 +88,8 @@ void Trainer::loadDataFile(std::string fn)
 
 void Trainer::train()
 {
+  m_system_adf->setNumSteps(m_train_steps);
+  
   VectorF traj_grad(m_system_adf->getNumParams());
   int traj_len = m_train_steps;
   double loss;
@@ -111,7 +113,6 @@ void Trainer::train()
       bool has_explosion = false;
       for(int i = 0; i < m_params.size(); i++)
       {
-	
 	if(fabs(traj_grad[i]) > 100.0)
 	{
 	  has_explosion = true;
@@ -132,13 +133,15 @@ void Trainer::train()
       
       if(m_cnt == 100)
       {
-	std::cout << "Avg Loss: " << avg_loss / m_cnt <<"\n";
+	std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
 	std::flush(std::cout);
 	updateParams(m_batch_grad / m_cnt);
 	m_cnt = 0;
 	avg_loss = 0;
       }
     }
+
+    save();
   }
   
 }
@@ -152,6 +155,8 @@ void Trainer::evaluate_cv3()
   double loss_avg = 0;
   double loss = 0;
   int cnt = 0;
+  
+  m_system_adf->setNumSteps(m_eval_steps);
   
   for(int i = 1; i <= 144; i++)
   {
@@ -185,6 +190,8 @@ void Trainer::evaluate_ld3()
   double loss = 0;
   int cnt = 0;
   
+  m_system_adf->setNumSteps(m_eval_steps);
+  
   memset(fn_array, 0, 100);
   sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/LD3_data%02d.csv", 1);
   std::string fn(fn_array);
@@ -206,11 +213,24 @@ void Trainer::evaluate_ld3()
 void Trainer::updateParams(const VectorF &grad)
 {
   ADF norm = 0;
-  //for(int i = 0; i < 1; i++)
+  float grad_idx;
+  
   for(int i = 0; i < m_params.size(); i++)
   {
-    m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad[i]*grad[i]);
-    m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad[i]);
+    grad_idx = grad[i];
+    if(grad[i] < -1)
+    {
+      std::cout << "Clipped [" << i << "] " << grad[i] << "\n";
+      grad_idx = -1;
+    }
+    else if(grad[i] > 1)
+    {
+      std::cout << "Clipped [" << i << "] " << grad[i] << "\n";
+      grad_idx = 1;
+    }
+    
+    m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad_idx*grad_idx);
+    m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
     norm += CppAD::abs(m_params[i]);
   }
   
@@ -234,20 +254,29 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   std::vector<double> model_x(x_list.size());
   std::vector<double> model_y(x_list.size());
   std::vector<double> model_z(x_list.size());
+  std::vector<double> model_yaw(x_list.size());
+  
   std::vector<double> gt_x(x_list.size());
   std::vector<double> gt_y(x_list.size());
+  std::vector<double> gt_yaw(x_list.size());
+
+  std::vector<double> x_axis(x_list.size());
   
   for(int i = 0; i < x_list.size(); i++)
   {
     model_x[i] = CppAD::Value(x_list[i][4]);
     model_y[i] = CppAD::Value(x_list[i][5]);
     model_z[i] = CppAD::Value(x_list[i][6]);
+    model_yaw[i] = CppAD::Value(2*CppAD::atan(x_list[i][2] / x_list[i][3]));
     
     gt_x[i] = traj[i].x;
     gt_y[i] = traj[i].y;
+    gt_yaw[i] = traj[i].yaw;
+
+    x_axis[i] = (double)i;
   }
 
-  plt::subplot(1,2,1);
+  plt::subplot(1,3,1);
   plt::title("X-Y plot");
   plt::xlabel("[m]");
   plt::ylabel("[m]");
@@ -255,12 +284,19 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   plt::plot(gt_x, gt_y, "b", {{"label", "gt"}});
   plt::legend();
   
-  plt::subplot(1,2,2);
+  plt::subplot(1,3,2);
   plt::title("Time vs Elevation");
   plt::xlabel("Time [s]");
   plt::ylabel("Elevation [m]");
   plt::plot(model_z);
 
+  plt::subplot(1,3,3);
+  plt::title("Time vs yaw");
+  plt::xlabel("Time [s]");
+  plt::ylabel("yaw [Rads]");
+  plt::plot(x_axis, model_yaw, "r", {{"label", "model"}});
+  plt::plot(x_axis, gt_yaw, "b", {{"label", "gt"}});
+  plt::legend();
   
   plt::show();
 }
@@ -268,6 +304,8 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
 void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<VectorAD> &x_list, double &loss)
 {
   m_system_adf->setParams(m_params);
+  
+  m_system_adf->setNumSteps(m_eval_steps);
   
   VectorAD xk(m_system_adf->getStateDim());
   VectorAD xk1(m_system_adf->getStateDim());
@@ -292,8 +330,11 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
 
     ADF dx = traj[i].x - traj[i-1].x;
     ADF dy = traj[i].y - traj[i-1].y;
+
     traj_len += CppAD::sqrt(dx*dx + dy*dy);
   }
+  
+  //plotTrajectory(traj, x_list);
   
   // This could also be a running loss instead of a terminal loss
   loss = CppAD::Value(m_system_adf->loss(gt_vec, x_list.back()) / traj_len);
@@ -330,10 +371,12 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
     gt_vec[4] = ADF(traj[i].x);
     gt_vec[5] = ADF(traj[i].y);
     
-    //loss_ad[0] += m_system_adf->loss(gt_vec, x_list[i]);
+    loss_ad[0] += m_system_adf->loss(gt_vec, x_list[i]);
   }
 
-  loss_ad[0] = m_system_adf->loss(gt_vec, x_list.back());
+  loss_ad[0] /= x_list.size();
+  
+  //loss_ad[0] = m_system_adf->loss(gt_vec, x_list.back());
   CppAD::ADFun<double> func(m_params, loss_ad);
   
   VectorF y0(1);

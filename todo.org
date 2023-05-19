@@ -12,6 +12,7 @@ So slip ratio is just velocity difference,
 slip angle is just vy
 It reaches the same level of training loss as with slip ratios.
 More importantly, it explodes less. Only on a few rare occasions
+
 does any element of the gradient exceed 1000.
 Improved slip ratio network by making the epsilon much smaller
 Also clamped the slip ratio.
@@ -52,6 +53,97 @@ move on with my god damn life.
 
 Model is still training with 4s trajectories, but its slower and
 its also exploding pretty often
+
+* <2023-04-16 Sun 12:57>
+Not able to get below 10% error.
+I basically have no plan at this point, which is bad.
+Using a smaller network. Only 8 hidden neurons.
+I'm retraining with with 10 timesteps.
+Then I'm going to retrain with 60 timesteps.
+I'm desparate to get this bitch below 10%
+
+A possible way forward: Make a 2d neural ode model.
+Present results for both 3d and 2d models.
+Use the 2d model to get the best possible results.
+This is just cope. There's still no guarantee of reaching
+a good accuracy level. It will maybe work.
+
+Possibly remove the sign correction stuff and add a big
+penalty to the loss function for an increasing system energy?
+I think this is actually my best bet. I don't want to create a
+fancy 2d model. That's pure copium.
+Wait fuck, how do I create a loss function for the energy of the
+system if the tires are adding energy?
+Not sure. Maybe add a loss function to penalize the tire network
+for violating energy?
+
+Maybe differentiate through the vanilla bekker model to find
+better tire-soil parameters? Have to cope with the slip ratios.
+Numerical explosions likely. Bad.
+
+Do I even need conservation of energy haxx now that I made
+everything lipshitz continuous? Can I just slap my neural
+network boy right in there and call it a day? Maybe I could
+add an additional penalty to the loss function for when the
+tire network doesn't cross zero at zero? Might work, who knows.
+
+It's probably also worth a shot to just train the bekker params
+with a neural tire-soil model.
+
+1. Try to train without sign haxx
+2. Try to train just no_slip model but just the bekker params
+
+Currently training a small network at 10 timesteps, then I'm going
+to scale it up to like 60 timesteps or more and see if the training
+improves.
+
+This is because I tried training with a bigger network and it
+reached a worse asymptotic performance so maybe smaller is better.
+Current validation loss (at 60 steps) is right about 10%
+So maybe retraining over short trajectories with a smaller model was a good idea?
+Cool, just realized I forgot to change the number of hidden units in TireNetwork.h
+so it was reading in tons of uninitialized data. Wowee. Or was it loading a 20neuron
+network from tire.net? World may never know tbh. Fuck. Well now it should train way faster
+at least. Shit. Goind to make debug first this time.
+
+Alright sick wow, now that I have this small network properly working it's giving me 10% error
+out of the box with no fine tuning nice. Hopefully this shit works out this time.
+*Withered wojak meme*
+It was evaluating over 10 timesteps. It's over.
+I fucked up again and it was evaling over 10 timesteps. Shit, fuck.
+Okay, so now we are getting a relative error of 7.94%. Nice. That's enough.
+After 1 training update, error blew back up to 15%. WTF
+I believe this is the result of gradients that are too big
+and I need to clip these gradients. If I wake up in the morning and
+my shit is fucked, I'm going to compute stats on the gradients
+and figure out a good clipping value.
+
+Training over 10 steps worked great.
+Training over 60 steps was terrible.
+Validation Loss steadily increased the whole time from 15%->20%
+Will try to compute gradient clipping values
+
+Not working. loss is consistently rising. Fuck.
+
+* <2023-04-18 Tue 18:03>
+Will try training with no sign haxx and see what happens
+Didn't work. Didn't settle. Basically that was expected.
+Will try training the bekker params.
+Also could try training the shit out of the model with
+2 tiemsteps. Idk.
+
+* <2023-04-19 Wed 17:58>
+Training with bekker params straight up did not work.
+I tried with 2 timesteps and it did much worse.
+Maybe it will work for longer timesteps???
+I thought I triwed that though?
+Nope, training with bekker params is a failure rip.
+
+* <2023-04-21 Fri 12:57>
+Honestly training with 10 timesteps or 2 timesteps on the
+small network is good enough performance. I think I will be
+able to justify it, and make an argument about the difference between
+training and test datasets.
 
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code

@@ -74,16 +74,75 @@ def readFiles(name, num_files):
         train_df = pd.DataFrame(train_data, columns="time vel_left vel_right x y yaw wx wy wz vx vy".split())
         train_df.to_csv("{0}_data{1:02d}.csv".format(name, ii))
 
-def plotFile():
-    df = pd.read_csv("train_data01.csv")
-    plt.plot(df["time"], df["yaw"]) # % (2*np.pi)
+def plot_train3_w():
+    for i in range(1,18):
+        fn = "Train3_data{0:02d}.csv".format(i)
+        df = pd.read_csv(fn)
+        print("Filename", fn)
+        w = (df["vel_left"] - df["vel_right"])/2
+        
+        plt.plot(w)
+        
     plt.show()
 
-# Training dataset
-readFiles("Train3", 17)
-readFiles("CV3", 144)
-readFiles("LD3", 1)
+def plot_cv3_w():
+    for i in range(1,145):
+        fn = "CV3_data{0:02d}.csv".format(i)
+        df = pd.read_csv(fn)
+        print("Filename", fn)
+        w = (df["vel_left"] - df["vel_right"])/2
+        plt.plot(w)
+        
+    plt.show()
+
+def plot_ld3_w():
+    fn = "LD3_data01.csv"
+    df = pd.read_csv(fn)
+    w = (df["vel_left"] - df["vel_right"])/2
+    plt.plot(w)
+    plt.show()
 
 
 
-#plotFile()
+def plot_train3_vx():
+    for i in range(1,18):
+        fn = "Train3_data{0:02d}.csv".format(i)
+        df = pd.read_csv(fn)
+        print("Filename", fn)
+        w = (df["vel_left"] + df["vel_right"])/2
+        plt.plot(w)
+        
+    plt.show()
+
+def plot_cv3_vx():
+    for i in range(1,145):
+        fn = "CV3_data{0:02d}.csv".format(i)
+        df = pd.read_csv(fn)
+        print("Filename", fn)
+        w = (df["vel_left"] + df["vel_right"])/2
+        plt.plot(w)
+        
+    plt.show()
+
+def plot_ld3_vx():
+    fn = "LD3_data01.csv"
+    df = pd.read_csv(fn)
+    w = (df["vel_left"] + df["vel_right"])/2
+    plt.plot(w)
+    plt.show()
+
+    
+    
+    
+# Training and validation datasets
+#readFiles("Train3", 17)
+#readFiles("CV3", 144)
+#readFiles("LD3", 1)
+
+plot_train3_w()
+plot_cv3_w()
+plot_ld3_w()
+
+plot_train3_vx()
+plot_cv3_vx()
+plot_ld3_vx()

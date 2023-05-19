@@ -98,12 +98,11 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.in_size = 3 # sinkage, slip_diff, vy
-    self.hidden_size = 16
+    self.in_size = 4 # sinkage, qd, vx, vy
+    self.hidden_size = 8
     self.out_size = 3
     
     self.tire_radius = .098
-    self.const_one_tensor = torch.Tensor([1.0]).to(device)
     
     self.loss_fn = torch.nn.MSELoss()
     self.model = nn.Sequential(
@@ -118,40 +117,40 @@ class TireNet(nn.Module):
   def compute_bekker_input_scaler(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_lon = torch.abs(diff) / (torch.abs(tire_tangent_vel) + 1e-4)
-    #slip_lat = torch.abs(x[:,1])
-    slip_lat = torch.atan(torch.abs(x[:,1]) / torch.abs(x[:,0]))
+    slip_lon = torch.abs(diff)
+    slip_lat = torch.abs(x[:,1])
     tire_abs = torch.abs(x[:,2])
     bekker_args = torch.cat((x[:,3][:,None], # zr
-                             slip_lon[:,None], # |diff|
-                             slip_lat[:,None] # |vy|
+                             slip_lon[:,None], # diff
+                             tire_abs[:,None], # |qd|
+                             slip_lat[:,None], # vy
                              ), 1)
     
     self.in_mean = torch.mean(bekker_args, 0)
     temp = bekker_args - self.in_mean
     self.in_std = torch.sqrt(torch.var(temp, 0))
     
-  # vx,vy,w,zr, x is (4, batch_size)
+  # vx,vy,qd,zr 5 bekker params, x is (9, batch_size)
   def forward(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_lon = torch.abs(diff) / (torch.abs(tire_tangent_vel) + 1e-4)
-    #slip_lat = torch.abs(x[:,1])
-    slip_lat = torch.atan(torch.abs(x[:,1]) / torch.abs(x[:,0]))
+    slip_lon = torch.abs(diff)
+    slip_lat = torch.abs(x[:,1])
     tire_abs = torch.abs(x[:,2])
     bekker_args = torch.cat((x[:,3][:,None],   # zr
-                             slip_lon[:,None], # |diff|
-                             slip_lat[:,None], # |vy|
+                             slip_lon[:,None], # diff
+                             tire_abs[:,None], # |qd|
+                             slip_lat[:,None], # vy
                              ), 1)
-
+    
     bekker_args = (bekker_args - self.in_mean) / self.in_std
     
     yhat = self.model.forward(bekker_args)
     
     yhat_sign_corrected = torch.cat((
-      (yhat[:,0] * torch.tanh(100*diff))[:,None],
-      (yhat[:,1] * torch.tanh(-100*x[:,1]))[:,None],
-      (yhat[:,2] / (1 + torch.exp(-100*x[:,3])))[:,None]), 1)
+      (yhat[:,0] * torch.tanh(1*diff))[:,None],
+      (yhat[:,1] * torch.tanh(-1*x[:,1]))[:,None],
+      (yhat[:,2] / (1 + torch.exp(-1*x[:,3])))[:,None]), 1)
     return yhat_sign_corrected
     
 model = TireNet()
@@ -212,10 +211,10 @@ def fx_plot():
     plt.title("Slip Ratio vs. Longitudinal Force (Fx)")
     plt.xlabel("Slip Ratio")
     plt.ylabel("Longitudinal Force (N)")
-    plt.show()
+    plt.show()    
 
 def fy_plot():
-    test = np.zeros((1000,4))
+    test = np.zeros((1000,9))
     test[:,0] = 0.2                    # vx
     test[:,1] = np.linspace(-1,1,1000) # vy
     test[:,2] = 0.1                    # w
@@ -234,7 +233,7 @@ def fy_plot():
     plt.show()
 
 def fz_plot():
-    test = np.zeros((1000,4))
+    test = np.zeros((1000,9))
     test[:,0] = 0.2                    # vx
     test[:,1] = 0                      # vy
     test[:,2] = 0.1                    # w
@@ -258,22 +257,23 @@ model_name = "train_no_ratio1.net"
 #md = torch.load(model_name)
 #model.load_state_dict(md)
 
-fit(1e-4, 5000, 100)
-#fit(1e-3, 50, 10)
+fit(1e-3, 5000, 100)
+plt.show()
+get_evaluation_loss(test_data, test_labels)
+fit(1e-3, 50, 10)
 #fit(1e-4, 50000, 1000)
 #fit(1e-4, 50, 100)
 #fit(1e-4, 50, 10000)
 plt.show()
 
 md = model.state_dict()
-#print_c_network(md, model.in_mean, model.in_std, output_scaler)
+print_c_network(md, model.in_mean, model.in_std, output_scaler)
 torch.save(md, model_name)
 
 get_evaluation_loss(test_data, test_labels)
 # fx_plot()
 # fy_plot()
 # fz_plot()
-
 
 
 

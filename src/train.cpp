@@ -14,12 +14,14 @@ int main()
   train.evaluate_cv3();
   train.evaluate_ld3();
   
+
   for(int i = 0; i < 10000; i++)
   {
     train.train();
     train.save();
     
-    if((i % 10) == 3)
+
+    if((i % 3) == 0)
     {
       train.evaluate_cv3();
       train.evaluate_ld3();
