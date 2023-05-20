@@ -194,8 +194,8 @@ void TireNetwork::getParams(VectorS &params, int idx)
 
 int TireNetwork::load_model(){
   std::cout << "Loading Model\n";
-    
   is_loaded = 1;
+  return 1;
   
   weight0 << -1.7484e-01,  1.6525e+00, -6.8996e-02, -5.9168e-01, -3.4555e-01,
     4.6433e-01,  3.1354e-01,  1.9098e-01,  1.1104e-01, -5.4889e-01,

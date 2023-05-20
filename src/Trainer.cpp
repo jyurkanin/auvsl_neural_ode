@@ -306,7 +306,6 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
 void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<VectorAD> &x_list, double &loss)
 {
   m_system_adf->setParams(m_params);
-  
   m_system_adf->setNumSteps(m_eval_steps);
   
   VectorAD xk(m_system_adf->getStateDim());
@@ -418,8 +417,8 @@ void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
   xk[11] = 0; // Spatial Velocity
   xk[12] = 0;
   xk[13] = gt_state.wz;
-  xk[14] = gt_state.vx;
-  xk[15] = gt_state.vx;
+  xk[14] = gt_state.vx; //todo: Try it without these.
+  xk[15] = gt_state.vy;
   xk[16] = 0;
 
   xk[17] = 0; // Joint velocities

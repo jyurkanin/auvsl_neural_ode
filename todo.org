@@ -151,6 +151,9 @@ just to test if something else is fucked up. If this gives bad
 performance I will actually be happy, because then I at least have another way forward
 that isn't just training some variation of yet another fucking model.
 
+* POTENTIAL FUCKING TYPOS THAT ARE FUCKING MY SHIT, FUCK
+I think this could be IT:
+//gt_state.vx in Trainer.cpp (iykyk)
 
 
 * DONE Rotate Initial quaternion according to yaw

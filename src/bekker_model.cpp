@@ -169,7 +169,7 @@ std::vector<float> tire_model_bekker(const std::vector<float> &features){
   bekker_model.R = 0.098;
   bekker_model.b = .05;
   
-  bekker_model.zr = std::min(features[0], bekker_model.R);
+  bekker_model.zr = features[0];
   bekker_model.slip_ratio = features[1];
   bekker_model.slip_angle = features[2];
   

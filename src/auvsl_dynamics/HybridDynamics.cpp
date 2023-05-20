@@ -1,3 +1,4 @@
+#include "bekker_model.h"
 #include "HybridDynamics.h"
 #include "generated/declarations.h"
 #include "generated/miscellaneous.h"
@@ -5,6 +6,7 @@
 #include <iit/rbd/robcogen_commons.h>
 #include <cppad/cppad.hpp>
 #include <cppad/utility/to_string.hpp>
+#include <stdlib.h>
 
 using CppAD::AD;
 
@@ -29,7 +31,7 @@ using Jackal::rcg::tz_rear_right_wheel;
 using Jackal::rcg::orderedJointIDs;
 
 
-const Scalar HybridDynamics::timestep{0.005};
+const Scalar HybridDynamics::timestep{0.001};
 
 Scalar zero_const{0.0};
 Scalar g_const{-9.81};
@@ -77,7 +79,8 @@ void HybridDynamics::initState(Scalar *start_state){
 }
 
 //velocities expressed in COM frame. more intuitive.
-void HybridDynamics::initStateCOM(Scalar *start_state){
+//velocities expressed in COM frame. more intuitive.
+void HybridDynamics::initStateCOM(Scalar *start_state, Scalar *base_state){
   Jackal::rcg::Vector3 com_pos = Jackal::rcg::getWholeBodyCOM(inertias, h_transforms);
   
   Eigen::Matrix<Scalar,3,1> base_lin_vel;
@@ -85,14 +88,13 @@ void HybridDynamics::initStateCOM(Scalar *start_state){
   Eigen::Matrix<Scalar,3,1> ang_vel(start_state[11], start_state[12], start_state[13]);
 
   Eigen::Matrix<Scalar,3,3> r_ss;
-  r_ss << Scalar(0.0), -com_pos[2],  com_pos[1],
-          com_pos[2],  Scalar(0.0), -com_pos[0],
-         -com_pos[1],  com_pos[0],   Scalar(0.0);
+  r_ss << 0.,        -com_pos[2], com_pos[1],
+          com_pos[2], 0.,        -com_pos[0],
+         -com_pos[1], com_pos[0], 0.;
   
   //plus, because com_pos is the displacement from base_link to com
   base_lin_vel = com_lin_vel + (r_ss*ang_vel);
   
-  Scalar base_state[STATE_DIM];
   for(int i = 0; i < STATE_DIM; i++){
     base_state[i] = start_state[i];
   }
@@ -100,15 +102,22 @@ void HybridDynamics::initStateCOM(Scalar *start_state){
   base_state[14] = base_lin_vel[0];
   base_state[15] = base_lin_vel[1];
   base_state[16] = base_lin_vel[2];
+}
 
+void HybridDynamics::initStateCOM(Scalar *start_state)
+{
+  Scalar base_state[STATE_DIM];
+  initStateCOM(start_state, base_state);
   initState(base_state);
 }
 
 void HybridDynamics::settle(){
   //reach equillibrium sinkage.
   for(int i = 0; i < 20; i++){
-    step(Scalar(0.0),Scalar(0.0));
+    step(Scalar(0.0), Scalar(0.0));
   }
+  std::cout << "Settling is finished\n\n\n\n";
+  
 }
 
 //step is .05s
@@ -120,7 +129,7 @@ void HybridDynamics::step(Scalar vl, Scalar vr){
   u(0) = vl;
   u(1) = vr;
   
-  const int num_steps = 10; //10*.005 = .05
+  const int num_steps = 50; //50*.001 = .05
   for(int ii = 0; ii < num_steps; ii++){
     state_[17] = state_[19] = u[0];
     state_[18] = state_[20] = u[1];
@@ -227,22 +236,40 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
   
   Eigen::Matrix<Scalar,TireNetwork::num_in_features,1> features;
   Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> forces;
+  features[3] = bekker_params[0];
+  features[4] = bekker_params[1];
+  features[5] = bekker_params[2];
+  features[6] = bekker_params[3];
+  features[7] = bekker_params[4];
   
   Scalar literally_zero(0);
+  Scalar small_val(1e-6);
   
   for(int ii = 0; ii < 4; ii++){
-    features[0] = (cpt_vels[ii][0]); //CppAD::abs
-    features[1] = (cpt_vels[ii][1]);
-    features[2] = cpt_vels[ii][2];
-    features[3] = (X[17+ii]);
-    features[4] = sinkages[ii];
+    Scalar vel_x_tan = tire_radius*CppAD::CondExpEq(X[17+ii], literally_zero, small_val, X[17+ii]);
+    Scalar tire_vx = CppAD::CondExpEq(cpt_vels[ii][0], literally_zero, small_val, cpt_vels[ii][0]);    
+    Scalar slip_ratio = 1.0 - CppAD::abs(tire_vx / vel_x_tan);
+    Scalar slip_angle = CppAD::atan(CppAD::abs(cpt_vels[ii][1] / tire_vx));
+
+    features[0] = sinkages[ii];
+    features[1] = slip_ratio;
+    features[2] = slip_angle;
+
+    std::vector<float> forces_vec(6);
+    std::vector<float> features_vec(8);
+    for(int i = 0; i < 8; i++)
+    {
+      features_vec[i] = CppAD::Value(features[i]);
+    }
+    features_vec[0] = std::max(0.0f, features_vec[0]);
     
-    //TireNetwork::forward(features, forces);
+    forces_vec = tire_model_bekker(features_vec);
+    forces[0] = forces_vec[3];
+    forces[1] = forces_vec[4];
+    forces[2] = forces_vec[5];
 
     //Sign Corrections are needed
     //CppAD::CondExpLt(cpt_vels[ii][0], literally_zero, forces[0], forces[0]);
-    
-    
     
     Eigen::Matrix<Scalar,3,1> lin_force;
     Eigen::Matrix<Scalar,3,1> ang_force;
@@ -261,9 +288,19 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     
     lin_force[2] = CppAD::CondExpGt(temp_vel[2], literally_zero, lin_force[2] * .1, lin_force[2]); //hack to damp out the vertical motion.
     
+    //lin_force[2] += -200*cpt_vels[ii][2];
+    
+    // sign corrections:
+    Scalar diff = vel_x_tan - tire_vx;
+    lin_force[0] = CppAD::CondExpGt(diff,            literally_zero,  CppAD::abs(lin_force[0]), -CppAD::abs(lin_force[0]));
+    lin_force[1] = CppAD::CondExpGt(cpt_vels[ii][1], literally_zero, -CppAD::abs(lin_force[1]), CppAD::abs(lin_force[1]));
+    
+    
     lin_force[0] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[0]);
     lin_force[1] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[1]);
     lin_force[2] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[2]);
+    
+    // std::cout << "Sinkage " << sinkages[ii] << " lin_forces[0] " << lin_force[0] << " lin_forces[1] " << lin_force[1] << "\n";
     
     Force wrench;
     wrench[0] = ang_force[0];

@@ -7,7 +7,7 @@
 
 int main()
 {
-  feenableexcept(FE_ALL_EXCEPT & ~FE_INEXACT);
+  //feenableexcept(FE_INVALID | FE_OVERFLOW);
   
   Trainer train;
   std::cout << "Default Performance:\n";

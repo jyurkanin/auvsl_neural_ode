@@ -87,17 +87,18 @@ void VehicleSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
     model_u[i] = Xk[i+model_x0.size()];
   }
   
-  
   const int num_steps = 100; // 100*.001 = .1
   for(int ii = 0; ii < num_steps; ii++)
   {
+    //std::cout << model_x0[0] << "," << model_x0[1] << "," << model_x0[2] << "," << model_x0[3] << "\n";
     model_x0[17] = model_x0[19] = model_u[0];
     model_x0[18] = model_x0[20] = model_u[1];
     
     m_hybrid_dynamics.RK4(model_x0, model_x1, model_u);
     model_x0 = model_x1;
+    //model_x0[0] = 0; // @deleteme
+    //model_x0[1] = 0; // @deleteme
   }  
-  
   
   for(int i = 0; i < model_x1.size(); i++)
   {
