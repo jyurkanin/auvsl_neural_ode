@@ -148,6 +148,8 @@ void Trainer::train()
 
 void Trainer::evaluate_cv3()
 {
+  m_system_adf->setNumSteps(m_eval_steps);
+  
   std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
   int traj_len = m_system_adf->getNumSteps();
   char fn_array[100];
@@ -155,8 +157,6 @@ void Trainer::evaluate_cv3()
   double loss_avg = 0;
   double loss = 0;
   int cnt = 0;
-  
-  m_system_adf->setNumSteps(m_eval_steps);
   
   for(int i = 1; i <= 144; i++)
   {
@@ -182,6 +182,8 @@ void Trainer::evaluate_cv3()
 
 void Trainer::evaluate_ld3()
 {
+  m_system_adf->setNumSteps(m_eval_steps);
+  
   std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
   int traj_len = m_system_adf->getNumSteps();
   char fn_array[100];
@@ -189,9 +191,7 @@ void Trainer::evaluate_ld3()
   double loss_avg = 0;
   double loss = 0;
   int cnt = 0;
-  
-  m_system_adf->setNumSteps(m_eval_steps);
-  
+    
   memset(fn_array, 0, 100);
   sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/LD3_data%02d.csv", 1);
   std::string fn(fn_array);
@@ -201,7 +201,7 @@ void Trainer::evaluate_ld3()
   {
     std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
     evaluateTrajectory(traj, x_list, loss);
-    plotTrajectory(traj, x_list);
+    //plotTrajectory(traj, x_list);
     
     loss_avg += loss;
     cnt++;
@@ -276,12 +276,23 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
     x_axis[i] = .1*i;
   }
 
+  std::vector<double> aspect_ratio_hack_x(2);
+  std::vector<double> aspect_ratio_hack_y(2);
+  double min = std::min(*std::min_element(model_x.begin(), model_x.end()), *std::min_element(model_y.begin(), model_y.end()));
+  double max = std::max(*std::max_element(model_x.begin(), model_x.end()), *std::max_element(model_y.begin(), model_y.end()));
+  aspect_ratio_hack_x[0] = min;
+  aspect_ratio_hack_y[0] = min;
+  aspect_ratio_hack_x[1] = max;
+  aspect_ratio_hack_y[1] = max;
+  
+  
   plt::subplot(1,3,1);
   plt::title("X-Y plot");
   plt::xlabel("[m]");
   plt::ylabel("[m]");
   plt::plot(model_x, model_y, "r", {{"label", "model"}});
   plt::plot(gt_x, gt_y, "b", {{"label", "gt"}});
+  plt::scatter(aspect_ratio_hack_x, aspect_ratio_hack_y);
   plt::legend();
   
   plt::subplot(1,3,2);
@@ -342,9 +353,14 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
   Scalar ang_mse;
   Scalar lin_mse;
   m_system_adf->evaluate(gt_vec, x_list.back(), ang_mse, lin_mse);
-  std::cout << "Lin err " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Ang err " << CppAD::Value(CppAD::sqrt(ang_mse)) << "\n";
+  //std::cout << "Lin err " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Ang err " << CppAD::Value(CppAD::sqrt(ang_mse)) << "\n";
+
+  loss = CppAD::Value(CppAD::sqrt(lin_mse) / traj_len);
+  // std::cout << "Lin err: " << CppAD::Value(CppAD::sqrt(lin_mse))
+  // 	    << " traj_len: " << CppAD::Value(traj_len)
+  // 	    << " Relative Linear: " << loss << "\n";
   
-  loss = CppAD::Value(CppAD::sqrt(lin_mse / traj_len));
+  
   
 }
 
@@ -426,7 +442,7 @@ void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
   xk[12] = 0;
   xk[13] = gt_state.wz;
   xk[14] = gt_state.vx;
-  xk[15] = gt_state.vx;
+  xk[15] = gt_state.vy;
   xk[16] = 0;
 
   xk[17] = 0; // Joint velocities

@@ -200,6 +200,41 @@ Also change loss function to get smallest angle between actual and gt
 Adding angular error did not really improve the situation. It did improve
 the CV3 accuracy even further but LD3 still craps out at like .155
 
+* <2023-05-19 Fri 23:12>
+Fixed possible typo in initializeState. It was:
+  xk[14] = gt_state.vx;
+  xk[15] = gt_state.vx;
+
+So hopefully now that I changed that 2nd line to vy its
+fixed. This should hopefully improve accuracy on LD3.
+Spoiler: it didn't.
+
+Another big error in how accuracy was computed.
+loss = CppAD::Value(CppAD::sqrt(lin_mse / traj_len)); // (wrong)
+vs
+loss = CppAD::Value(CppAD::sqrt(lin_mse) / traj_len); // (correct)
+
+This is big. This accounts for the discrepancy in LD3 vs CV3 performance.
+
+CV3 Accuracy was reduced to 3.6%
+LD3 Accuracy was reduced to 15.2%x
+
+I don't know why.
+I need to actually debug the LD3.
+I'm not sure what is actually wrong.
+I assumed it was bad longitudinal performance, but it could
+literally be anything. I want to understand it it's yaw,x,or y
+that is getting fucked up.
+
+* <2023-05-20 Sat 11:45>
+SHIT FUCK BITCH. LD3 is improved significantly by fixing these gay retarded errors, but now CV3 sucks.
+LD3 avg loss: 0.0682702
+CV3 avg loss: 0.140094
+
+Need to evaluate CV3 test performance very carefully and diagnose errors.
+It seems like yaw is mostly okay, I think. But longitudinal and lateral
+performance is equally fucked. Maybe now that I have the validation
+tests fixed, maybe a bigger network will help.
 
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
