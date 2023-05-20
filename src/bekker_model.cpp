@@ -1,5 +1,4 @@
-#include <vector>
-#include <cmath>
+#include "bekker_model.h"
 
 struct BekkerModel{
 public:
@@ -32,7 +31,7 @@ public:
   static float theta_r;
   static float theta_c;
   
-  static constexpr int num_steps = 100;
+  static constexpr int num_steps = 10;
   
   static float sigma_x_cf(float theta){
     //in some cases, cosf - cosf can return negative due to theta != theta_f, but very close.

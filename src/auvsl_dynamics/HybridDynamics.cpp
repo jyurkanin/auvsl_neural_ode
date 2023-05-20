@@ -1,3 +1,4 @@
+#include <cppad/cg/cppadcg.hpp>
 #include "HybridDynamics.h"
 #include "generated/declarations.h"
 #include "generated/miscellaneous.h"
@@ -5,6 +6,7 @@
 #include <iit/rbd/robcogen_commons.h>
 #include <cppad/cppad.hpp>
 #include <cppad/utility/to_string.hpp>
+#include "bekker_model.h"
 #include <iostream>
 
 using CppAD::AD;
@@ -43,11 +45,11 @@ HybridDynamics::HybridDynamics(){
   
   //For more information on these, see TerrainMap.cpp and TerrainMap.h
   
-  // bekker_params[0] = 29.76;           //kc
-  // bekker_params[1] = 2083;            //kphi
-  // bekker_params[2] = .8;              //n0
-  // bekker_params[3] = 0;               //n1
-  // bekker_params[4] = 22.5*M_PI/180.0; //phi
+  bekker_params[0] = 29.76;           //kc
+  bekker_params[1] = 2083;            //kphi
+  bekker_params[2] = .8;              //n0
+  bekker_params[3] = 0;               //n1
+  bekker_params[4] = 22.5*M_PI/180.0; //phi
   
   // bekker_params[0] = 29.760084;
   // bekker_params[1] = 2083.000000;
@@ -55,11 +57,11 @@ HybridDynamics::HybridDynamics(){
   // bekker_params[3] = 0.152998;
   // bekker_params[4] = 0.471988;
   
-  bekker_params[0] = 29.758547;
-  bekker_params[1] = 2083.000000;
-  bekker_params[2] = 1.197933;
-  bekker_params[3] = 0.102483;
-  bekker_params[4] = 0.652405;
+  // bekker_params[0] = 29.758547;
+  // bekker_params[1] = 2083.000000;
+  // bekker_params[2] = 1.197933;
+  // bekker_params[3] = 0.102483;
+  // bekker_params[4] = 0.652405;
   
   JointState q(0,0,0,0);   //Joint position
   f_transforms.fr_front_left_wheel_link_X_fr_base_link.update(q);
@@ -248,26 +250,38 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     const Scalar literally_zero = 0;
     
     //17 is the idx that tire velocities start at.
-    //Scalar vel_x_tan = tire_radius*CppAD::CondExpEq(X[17+ii], literally_zero, small_val, X[17+ii]);
-    //Scalar tire_vx = CppAD::CondExpEq(cpt_vels[ii][0], literally_zero, small_val, cpt_vels[ii][0]);
+    Scalar vel_x_tan = tire_radius*CppAD::CondExpEq(X[17+ii], literally_zero, small_val, X[17+ii]);
+    Scalar tire_vx = CppAD::CondExpEq(cpt_vels[ii][0], literally_zero, small_val, cpt_vels[ii][0]);
     
-    //slip_ratio = 1.0 - (tire_vx / vel_x_tan);
-    //slip_angle = CppAD::atan(cpt_vels[ii][1] / CppAD::abs(tire_vx));
+    slip_ratio = 1.0 - (tire_vx / vel_x_tan);
+    slip_angle = CppAD::atan(cpt_vels[ii][1] / CppAD::abs(tire_vx));
+     
+    features[0] = sinkages[ii];
+    features[1] = slip_ratio;
+    features[2] = slip_angle;
     
-    //features[0] = sinkages[ii];
-    //features[1] = slip_ratio;
-    //features[2] = slip_angle;
-    
-    features[0] = cpt_vels[ii][0];
-    features[1] = cpt_vels[ii][1];
-    features[2] = X[17+ii];
-    features[3] = sinkages[ii];
+    // features[0] = cpt_vels[ii][0];
+    // features[1] = cpt_vels[ii][1];
+    // features[2] = X[17+ii];
+    // features[3] = sinkages[ii];
 
-    TireNetwork::forward(features, forces);
+    std::vector<float> feature_vec(9);
+    std::vector<float> force_vec(3);
+    for(int i = 0; i < 9; i++)
+    {
+      feature_vec[i] = CppAD::Value(features[i]);
+    }
+    force_vec = tire_model_bekker(feature_vec);
     
-    //forces[0] = CppAD::CondExpGt(vel_x_tan, literally_zero, forces[0], -forces[0]);
-    //forces[1] = CppAD::CondExpGt(cpt_vels[ii][1], literally_zero, -CppAD::abs(forces[1]), CppAD::abs(forces[1]));
+    forces[0] = force_vec[0];
+    forces[1] = force_vec[1];
+    forces[2] = force_vec[2];
     
+    //TireNetwork::forward(features, forces);
+    
+    
+    forces[0] = CppAD::CondExpGt(vel_x_tan, literally_zero, forces[0], -forces[0]);
+    forces[1] = CppAD::CondExpGt(cpt_vels[ii][1], literally_zero, -CppAD::abs(forces[1]), CppAD::abs(forces[1]));
     //forces[2] = std::min(forces[2], 0); //Fz should never point up
     
     Eigen::Matrix<Scalar,3,1> lin_force;
@@ -285,18 +299,18 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     //So that reaction forces are oriented with the surface normal
     Eigen::Matrix<Scalar,3,1> temp_vel = cpt_rots[ii]*cpt_vels[ii];
     
-    //ang_force = cpt_rots[ii].transpose()*ang_force;
-    //Numerical hack to help stabilize sinkage
-    //lin_force[2] = CppAD::CondExpGt(temp_vel[2], literally_zero, lin_force[2] * .1, lin_force[2]); //not continuous
-    //lin_force[2] = CppAD::CondExpGt(temp_vel[2], literally_zero, lin_force[2] * 0.1, lin_force[2]); //Continuous, but kinda dumb
-    //lin_force[2] = -10*CppAD::tanh(10*cpt_vels[ii][2]); //Continuous, much simpler, gets the job done
-    //lin_force[2] = lin_force[2] * CppAD::exp(-temp_vel[2]); //Continuous, much simpler, gets the job done
-    lin_force[2] += -200*cpt_vels[ii][2]; //dead simple, works fine.
+    // ang_force = cpt_rots[ii].transpose()*ang_force;
+    // Numerical hack to help stabilize sinkage
+    lin_force[2] = CppAD::CondExpGt(temp_vel[2], literally_zero, lin_force[2] * .1, lin_force[2]); //not continuous
+    // lin_force[2] = CppAD::CondExpGt(temp_vel[2], literally_zero, lin_force[2] * 0.1, lin_force[2]); //Continuous, but kinda dumb
+    // lin_force[2] = -10*CppAD::tanh(10*cpt_vels[ii][2]); //Continuous, much simpler, gets the job done
+    // lin_force[2] = lin_force[2] * CppAD::exp(-temp_vel[2]); //Continuous, much simpler, gets the job done
+    // lin_force[2] += -200*cpt_vels[ii][2]; //dead simple, works fine.
     
     // Unfortunately, If we set lateral and longitudinal force to zero, then it becomes a discontinuity. Fuck.
-    // lin_force[0] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[0]);
-    // lin_force[1] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[1]);
-    // lin_force[2] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[2]);
+    lin_force[0] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[0]);
+    lin_force[1] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[1]);
+    lin_force[2] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[2]);
     
     Force wrench;
     wrench[0] = ang_force[0];

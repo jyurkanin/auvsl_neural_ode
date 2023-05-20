@@ -2,11 +2,13 @@
 #include "Trainer.h"
 #include <iostream>
 
-
+#include <fenv.h>
 
 
 int main()
 {
+  feenableexcept(FE_ALL_EXCEPT & ~FE_INEXACT);
+  
   Trainer train;
   std::cout << "Default Performance:\n";
   

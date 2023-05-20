@@ -8,9 +8,9 @@ find_package(PythonLibs 3.8)
 set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -g")
 set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall -Ofast -mtune=native -march=native -DNDEBUG")
 
-add_compile_options(
-  "-Wall" "-Ofast" "-mtune=native" "-march=native" "-DNDEBUG"
-)
+#add_compile_options(
+#  "-Wall" "-Ofast" "-mtune=native" "-march=native" "-DNDEBUG"
+#)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})
@@ -42,6 +42,7 @@ add_executable(train
 	src/train.cpp
 	src/VehicleSystem.cpp
 	src/Trainer.cpp
+	src/bekker_model.cpp
  	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/TireNetwork.cpp
 	src/auvsl_dynamics/utils.cpp

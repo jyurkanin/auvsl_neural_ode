@@ -145,6 +145,14 @@ small network is good enough performance. I think I will be
 able to justify it, and make an argument about the difference between
 training and test datasets.
 
+* <2023-05-19 Fri 18:27>
+Alright shit. Lets implement this with the classical bekker model
+just to test if something else is fucked up. If this gives bad
+performance I will actually be happy, because then I at least have another way forward
+that isn't just training some variation of yet another fucking model.
+
+
+
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
 * DONE Preprocess test data sets

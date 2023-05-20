@@ -171,6 +171,8 @@ void Trainer::evaluate_cv3()
       std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
       evaluateTrajectory(traj, x_list, loss);
       //plotTrajectory(traj, x_list);
+
+      std::cout << "Loss: " << loss << "\n";
       
       loss_avg += loss;
       cnt++;
