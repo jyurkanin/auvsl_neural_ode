@@ -145,6 +145,97 @@ small network is good enough performance. I think I will be
 able to justify it, and make an argument about the difference between
 training and test datasets.
 
+* <2023-05-10 Wed 21:56>
+Trying to improve performance on the ld3 test dataset.
+I am trying to train with 60 steps and changing it from incrementing
+by 60 to incrementing by 4 so effectively it trains over the
+data many more times. Did not improve significantly.
+
+justin@SenseNet:~/code/auvsl_dynamics_bptt/build$ grep "CV3 avg" train_output.txt
+CV3 avg loss: 0.209038
+CV3 avg loss: 0.149164
+CV3 avg loss: 0.135871
+CV3 avg loss: 0.131235
+CV3 avg loss: 0.130213
+CV3 avg loss: 0.128472
+CV3 avg loss: 0.133146
+CV3 avg loss: 0.133035
+CV3 avg loss: 0.133578
+CV3 avg loss: 0.135477
+CV3 avg loss: 0.137866
+CV3 avg loss: 0.139977
+CV3 avg loss: 0.141098
+justin@SenseNet:~/code/auvsl_dynamics_bptt/build$ grep "LD3 avg" train_output.txt
+LD3 avg loss: 0.152006
+LD3 avg loss: 0.151174
+LD3 avg loss: 0.151254
+LD3 avg loss: 0.151245
+LD3 avg loss: 0.15123
+LD3 avg loss: 0.151169
+LD3 avg loss: 0.151135
+LD3 avg loss: 0.151088
+LD3 avg loss: 0.151048
+LD3 avg loss: 0.151032
+LD3 avg loss: 0.150993
+LD3 avg loss: 0.150959
+LD3 avg loss: 0.150932
+
+* <2023-05-12 Fri 23:50>
+Still trying to imrpvoe ld3 test dataset performance.
+What if I tried training with timestep = 1e-4? Hmmm, idk lets see
+And also, train_steps=2
+
+I don't have any better ideas unfortunately.
+LD3 performance is slowly decreasing but it might have
+hit a wall. Not sure.
+We now come to you live from the training process:
+It appears to be slowing down and approaching about .15
+Yeah it won't progress past .157. Fuck.
+
+The only way forward that I can think of, is to add angular error
+to the loss function. Done lets try it.
+Need to fix the preprocessing script to bound yaw values from [-pi,pi]?
+Also change loss function to get smallest angle between actual and gt
+
+Adding angular error did not really improve the situation. It did improve
+the CV3 accuracy even further but LD3 still craps out at like .155
+
+* <2023-05-19 Fri 23:12>
+Fixed possible typo in initializeState. It was:
+  xk[14] = gt_state.vx;
+  xk[15] = gt_state.vx;
+
+So hopefully now that I changed that 2nd line to vy its
+fixed. This should hopefully improve accuracy on LD3.
+Spoiler: it didn't.
+
+Another big error in how accuracy was computed.
+loss = CppAD::Value(CppAD::sqrt(lin_mse / traj_len)); // (wrong)
+vs
+loss = CppAD::Value(CppAD::sqrt(lin_mse) / traj_len); // (correct)
+
+This is big. This accounts for the discrepancy in LD3 vs CV3 performance.
+
+CV3 Accuracy was reduced to 3.6%
+LD3 Accuracy was reduced to 15.2%x
+
+I don't know why.
+I need to actually debug the LD3.
+I'm not sure what is actually wrong.
+I assumed it was bad longitudinal performance, but it could
+literally be anything. I want to understand it it's yaw,x,or y
+that is getting fucked up.
+
+* <2023-05-20 Sat 11:45>
+SHIT FUCK BITCH. LD3 is improved significantly by fixing these gay retarded errors, but now CV3 sucks.
+LD3 avg loss: 0.0682702
+CV3 avg loss: 0.140094
+
+Need to evaluate CV3 test performance very carefully and diagnose errors.
+It seems like yaw is mostly okay, I think. But longitudinal and lateral
+performance is equally fucked. Maybe now that I have the validation
+tests fixed, maybe a bigger network will help.
+
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
 * DONE Preprocess test data sets

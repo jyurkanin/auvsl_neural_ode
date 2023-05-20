@@ -22,6 +22,8 @@ public:
   virtual void   getParams(VectorS &params);
   virtual void   forward(const VectorS &X, VectorS &Xd);
   virtual Scalar loss(const VectorS &gt_vec, VectorS &vec);
+  
+  void evaluate(const VectorS &gt_vec, const VectorS &vec, Scalar &ang_err, Scalar &lin_err);
   void integrate(const VectorS &X0, VectorS &X1);  
 
   

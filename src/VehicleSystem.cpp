@@ -1,5 +1,7 @@
 #include "VehicleSystem.h"
+#include "utils.h"
 
+#include <iostream>
 #include <assert.h>
 
 template<typename Scalar>
@@ -62,14 +64,46 @@ void VehicleSystem<Scalar>::forward(const VectorS &X, VectorS &Xd)
   }  
 }
 
-// Linear Error
+// Linear and Angular error
 template<typename Scalar>
 Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
 {
   Scalar x_err = gt_vec[4] - vec[4];
   Scalar y_err = gt_vec[5] - vec[5];
-  return CppAD::sqrt((x_err*x_err) + (y_err*y_err));
+  Scalar lin_err = (x_err*x_err) + (y_err*y_err);
+
+  Scalar roll, pitch, yaw;
+  toEulerAngles(vec[3], vec[0], vec[1], vec[2],
+		roll, pitch, yaw);
+  
+  Scalar yaw_err = yaw - gt_vec[3];
+  yaw_err = CppAD::atan2(CppAD::sin(yaw_err), CppAD::cos(yaw_err));
+  Scalar ang_err = yaw_err*yaw_err;
+  
+  // std::cout << "gt Yaw " << CppAD::Value(gt_vec[3]);
+  // std::cout << " yaw " << CppAD::Value(yaw);
+  // std::cout << " Yaw err " << CppAD::Value(yaw_err);
+  // std::cout << "\n";
+      
+  return ang_err + lin_err;
 }
+
+template<typename Scalar>
+void VehicleSystem<Scalar>::evaluate(const VectorS &gt_vec, const VectorS &vec, Scalar &ang_mse, Scalar &lin_mse)
+{
+  Scalar x_err = gt_vec[4] - vec[4];
+  Scalar y_err = gt_vec[5] - vec[5];
+  lin_mse = (x_err*x_err) + (y_err*y_err);
+
+  Scalar roll, pitch, yaw;
+  toEulerAngles(vec[0], vec[1], vec[2], vec[3],
+		roll, pitch, yaw);
+  
+  Scalar yaw_err = yaw - gt_vec[3];
+  yaw_err = CppAD::atan2(CppAD::sin(yaw_err), CppAD::cos(yaw_err));
+  ang_mse = yaw_err*yaw_err;
+}
+
 
 template<typename Scalar>
 void VehicleSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)

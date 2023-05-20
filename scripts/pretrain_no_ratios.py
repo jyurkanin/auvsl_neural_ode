@@ -110,8 +110,8 @@ class TireNet(nn.Module):
       nn.Tanh(),
       nn.Linear(self.hidden_size, self.hidden_size),
       nn.Tanh(),
-      nn.Linear(self.hidden_size, self.out_size),
-      nn.ReLU()
+      nn.Linear(self.hidden_size, self.out_size)
+      #nn.ReLU()
     )
 
   def compute_bekker_input_scaler(self, x):

@@ -35,3 +35,29 @@ Eigen::Matrix<Scalar,3,3> toMatrixRotation(Scalar x, Scalar y, Scalar z, Scalar 
     2*x*z - 2*w*y, 2*y*z + 2*w*x, 1 - 2*x*x - 2*y*y;
   return rot;
 }
+
+// whos gonna stop me
+// copy and pasted from youtube
+void toEulerAngles(const Scalar &qw,
+		   const Scalar &qx,
+		   const Scalar &qy,
+		   const Scalar &qz,
+		   Scalar &roll,
+		   Scalar &pitch,
+		   Scalar &yaw)
+{
+    // roll (x-axis rotation)
+    Scalar sinr_cosp = 2 * (qw * qx + qy * qz);
+    Scalar cosr_cosp = 1 - 2 * (qx * qx + qy * qy);
+    roll = CppAD::atan2(sinr_cosp, cosr_cosp);
+
+    // pitch (y-axis rotation)
+    Scalar sinp = CppAD::sqrt(1 + 2 * (qw * qy - qx * qz));
+    Scalar cosp = CppAD::sqrt(1 - 2 * (qw * qy - qx * qz));
+    pitch = 2 * CppAD::atan2(sinp, cosp) - M_PI / 2; // Why do we subtract pi/2?
+
+    // yaw (z-axis rotation)
+    Scalar siny_cosp = 2 * (qw * qz + qx * qy);
+    Scalar cosy_cosp = 1 - 2 * (qy * qy + qz * qz);
+    yaw = CppAD::atan2(siny_cosp, cosy_cosp);
+}
