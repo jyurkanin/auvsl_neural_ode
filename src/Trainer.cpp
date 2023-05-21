@@ -131,7 +131,7 @@ void Trainer::train()
 	m_cnt++;
       }
       
-      if(m_cnt == 100)
+      if(m_cnt == 20)
       {
 	std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
 	std::flush(std::cout);
@@ -160,6 +160,15 @@ void Trainer::evaluate_cv3()
   
   for(int i = 1; i <= 144; i++)
   {
+    // if(!((i == 6) ||
+    // 	 (i == 32) ||
+    // 	 (i == 33) ||
+    // 	 (i == 34) ||
+    // 	 (i == 114)))
+    // {
+    //   continue;
+    // }
+    
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
     
@@ -323,7 +332,9 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
   
   initializeState(traj[0], xk);
   x_list[0] = xk;
-
+  
+  //std::cout << "Tire Velocities: " << traj[20].vl << ", " << traj[20].vr << "\n";
+  
   ADF traj_len = 0;
   VectorAD gt_vec;
   for(int i = 1; i < x_list.size(); i++)

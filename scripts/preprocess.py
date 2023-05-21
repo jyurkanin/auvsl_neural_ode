@@ -82,7 +82,7 @@ def plot_train3_w():
         print("Filename", fn)
         w = (df["vel_left"] - df["vel_right"])/2
         
-        plt.plot(w)
+        plt.scatter(np.arange(len(w)), w)
         
     plt.show()
 
@@ -121,7 +121,8 @@ def plot_cv3_vx():
         df = pd.read_csv(fn)
         print("Filename", fn)
         w = (df["vel_left"] + df["vel_right"])/2
-        plt.plot(w)
+        #plt.plot(w)
+        plt.scatter(np.arange(len(w)), w)
         
     plt.show()
 
@@ -136,14 +137,14 @@ def plot_ld3_vx():
     
     
 # Training and validation datasets
-readFiles("Train3", 17)
-readFiles("CV3", 144)
-readFiles("LD3", 1)
+# readFiles("Train3", 17)
+# readFiles("CV3", 144)
+# readFiles("LD3", 1)
 
-# plot_train3_w()
+plot_train3_w()
 # plot_cv3_w()
 # plot_ld3_w()
 
-# plot_train3_vx()
+plot_train3_vx()
 # plot_cv3_vx()
 # plot_ld3_vx()

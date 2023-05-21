@@ -236,6 +236,96 @@ It seems like yaw is mostly okay, I think. But longitudinal and lateral
 performance is equally fucked. Maybe now that I have the validation
 tests fixed, maybe a bigger network will help.
 
+We could help identify possible areas for improvement by checking out the different CV3 trajectories.
+There are some that are mostly straight, so we should be able to isolate the longitudinal performance.
+Pretty sure.
+
+Okay, so CV3 61 shows an example of us appearing to turn the wrong way.
+There's some others. I want to check the initial vx, vy, wz
+
+CV3 73 is pretty high speed (11mps) and the model goes straight
+while gt turns. Pretty bad case. Could address this with a better
+pretraining dataset.
+
+CV3 98 is completely fucked. Looks like intial conditions are fucked.
+CV3 104 is also completely fucked. Looks like intial conditions are fucked.
+
+Im seeing a trend where it looks like for the second interval on each test
+trajectory, the initial conditions look fucked.
+
+So, now I'm going to train for a while. The performance should
+improve a bit. Then I'm going to evaluate the same tests as above again.
+
+Evaluating the same tests shows great results. Massive improvement.
+No more glaring issues. Overall performance on these
+4 CV3 tests is like 5.4%
+
+With 32 hidden units:
+LD3 avg loss: 1.03729
+LD3 avg loss: 1.03623
+LD3 avg loss: 0.756829
+LD3 avg loss: 0.0846263
+LD3 avg loss: 0.0759111
+LD3 avg loss: 0.0672367
+LD3 avg loss: 0.066986
+LD3 avg loss: 0.0688053
+LD3 avg loss: 0.0698828
+LD3 avg loss: 0.0693427
+LD3 avg loss: 0.0685603
+LD3 avg loss: 0.0683913
+LD3 avg loss: 0.068311
+
+CV3 avg loss: 0.413945
+CV3 avg loss: 0.412914
+CV3 avg loss: 0.281909
+CV3 avg loss: 0.165502
+CV3 avg loss: 0.147556
+CV3 avg loss: 0.126712
+CV3 avg loss: 0.12138
+CV3 avg loss: 0.120514
+CV3 avg loss: 0.121548
+CV3 avg loss: 0.12088
+CV3 avg loss: 0.119026
+CV3 avg loss: 0.118591
+CV3 avg loss: 0.119088
+
+It looks like now that the only main issue on CV3 is that
+the relative performance is bad when the trajectory is short.
+Rip.
+
+Bad tests are CV3 #6,32,33,34,114 (there are more but hopefully
+these are representative of any issues that are present)
+
+Seems like the common thing between all these trajectories
+is that the turns are sharp, with the left tires moving
+around 0mps or less.
+
+Not sure how to fix this stuff. Oh well.
+I've been training with different number of steps.
+I tried with 4 steps and it was basically
+plataued on the same loss values.
+
+Training now with 60 steps.
+Tried with lr=1e-4 and validation loss was just
+plateauing/changing very slowly.
+Retrying with lr=1e-3
+
+Ways forward from here:
+* Add wz to the tire network features.
+I think this might improve rotation accuracy with sharp
+rotation
+* Go back to 8 hidden units
+Check the accuracy. 32 hidden might not be necessary.
+It's going a lot slower which is incovenient.
+* Maybe an atan based slip angle was necessary?
+Slip angle changing depending on Vx might be necessary
+to get better performance at low Vx, which would cause a higher
+slip angle.
+* Try training with Vx instead of diff?
+Can check this with pretraining. This informs the network
+directly about Vx which could address the above point as well.
+
+
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code
 * DONE Preprocess test data sets
