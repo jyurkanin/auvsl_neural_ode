@@ -131,7 +131,7 @@ void Trainer::train()
 	m_cnt++;
       }
       
-      if(m_cnt == 20)
+      if(m_cnt == 100)
       {
 	std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
 	std::flush(std::cout);

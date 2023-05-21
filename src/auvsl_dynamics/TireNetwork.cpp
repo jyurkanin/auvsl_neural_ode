@@ -78,8 +78,8 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix
   layer4_out = (weight4*layer2_out) + bias4;        
   
   // Sign change passivity haxx
-  out_vec[0] = relu_wrapper(layer4_out[0])*CppAD::tanh(1*diff);
-  out_vec[1] = relu_wrapper(layer4_out[1])*CppAD::tanh(-1*in_vec[1]);
+  out_vec[0] = relu_wrapper(layer4_out[0])*(1*diff);
+  out_vec[1] = relu_wrapper(layer4_out[1])*(-1*in_vec[1]);
   out_vec[2] = relu_wrapper(layer4_out[2])/(1 + CppAD::exp(-1*in_vec[3]));
   
   // Scale output
