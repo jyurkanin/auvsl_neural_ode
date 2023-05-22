@@ -46,7 +46,10 @@ out_features = "Fx Fy Fz".split()
 
 df = pd.read_csv("tire_data.csv")
 
+rand_wz = np.random.rand(len(df), 1)*.1
 data_x = np.array(df[in_features])
+data_x = np.concatenate((data_x,rand_wz),axis=1)
+
 data_y = np.array(df[out_features])
 
 # print("Mean: ", np.mean(temp_data_y, axis=0))
@@ -85,7 +88,6 @@ label_data = output_scaler.fit_transform(label_data)
 # plt.title("Vx vs Fx")
 # plt.show()
 
-
 train_data = torch.from_numpy(train_data).float()
 label_data = torch.from_numpy(label_data).float()
 
@@ -98,7 +100,7 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.in_size = 4 # sinkage, qd, vx, vy
+    self.in_size = 5 # sinkage, qd, vx, vy, wz
     self.hidden_size = 8
     self.out_size = 3
     
@@ -110,8 +112,8 @@ class TireNet(nn.Module):
       nn.Tanh(),
       nn.Linear(self.hidden_size, self.hidden_size),
       nn.Tanh(),
-      nn.Linear(self.hidden_size, self.out_size)
-      #nn.ReLU()
+      nn.Linear(self.hidden_size, self.out_size),
+      nn.ReLU()
     )
 
   def compute_bekker_input_scaler(self, x):
@@ -124,13 +126,14 @@ class TireNet(nn.Module):
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|
                              slip_lat[:,None], # vy
+                             x[:,4][:,None]
                              ), 1)
     
     self.in_mean = torch.mean(bekker_args, 0)
     temp = bekker_args - self.in_mean
     self.in_std = torch.sqrt(torch.var(temp, 0))
     
-  # vx,vy,qd,zr 5 bekker params, x is (9, batch_size)
+  # vx,vy,qd,zr,wz (batch_size,5)
   def forward(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
@@ -141,6 +144,7 @@ class TireNet(nn.Module):
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|
                              slip_lat[:,None], # vy
+                             x[:,4][:,None]
                              ), 1)
     
     bekker_args = (bekker_args - self.in_mean) / self.in_std
@@ -195,7 +199,7 @@ def get_evaluation_loss(test_x, test_y):
 
 
 def fx_plot():
-    test = np.zeros((1000,4))
+    test = np.zeros((1000,5))
     test[:,0] = 0                      # vx
     test[:,1] = 0;                     # vy
     test[:,2] = np.linspace(-5,5,1000) # diff
@@ -214,7 +218,7 @@ def fx_plot():
     plt.show()    
 
 def fy_plot():
-    test = np.zeros((1000,9))
+    test = np.zeros((1000,5))
     test[:,0] = 0.2                    # vx
     test[:,1] = np.linspace(-1,1,1000) # vy
     test[:,2] = 0.1                    # w
@@ -233,7 +237,7 @@ def fy_plot():
     plt.show()
 
 def fz_plot():
-    test = np.zeros((1000,9))
+    test = np.zeros((1000,5))
     test[:,0] = 0.2                    # vx
     test[:,1] = 0                      # vy
     test[:,2] = 0.1                    # w
@@ -254,16 +258,13 @@ def fz_plot():
     
 
 model_name = "train_no_ratio1.net"
-#md = torch.load(model_name)
-#model.load_state_dict(md)
+# md = torch.load(model_name)
+# model.load_state_dict(md)
 
 fit(1e-3, 5000, 100)
 plt.show()
 get_evaluation_loss(test_data, test_labels)
 fit(1e-3, 50, 10)
-#fit(1e-4, 50000, 1000)
-#fit(1e-4, 50, 100)
-#fit(1e-4, 50, 10000)
 plt.show()
 
 md = model.state_dict()

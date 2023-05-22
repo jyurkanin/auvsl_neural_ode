@@ -326,10 +326,10 @@ for each tire. This is because, a positive Wz would result in
 a different Fx and Fy for each tire. And each tire is getting
 the abs of Vx and Vy so it has no idea how to correctly respond
 to Wz.
-** TODO Go back to 8 hidden units
+** DONE Go back to 8 hidden units
 Check the accuracy. 32 hidden might not be necessary.
 It's going a lot slower which is incovenient.
-** TODO Remove the Tanh.
+** DONE Remove the Tanh.
 The tanh was used as a soft sign function. I'm not sure it was
 a good idea. Using just diff or vy allows the Fx or Fy to
 grow as diff or vy grow. Pretraining shows slightly better
@@ -342,6 +342,12 @@ CV3 avg loss: 0.121087
 
 Maybe this would have gotten better if I let it run longer
 but I don't think so.
+
+I removed the tanh and went down to 8 hidden units.
+We hit a wall at 12.97% CV3 error. So the 32 unit network gets
+down to about 12%. Not great.
+
+
 
 ** DONE Maybe an atan based slip angle was necessary?
 Slip angle changing depending on Vx might be necessary
@@ -359,8 +365,6 @@ But this still might translate to a decreased validation test
 level. Not really worth exploring.
 
 Big brain thoughts incoming:
-
-
 ** TODO 4 networks, one for each tire.
 Unlikely, but perhaps the added parameters will help.
 And maybe there is a significant different between tires.
