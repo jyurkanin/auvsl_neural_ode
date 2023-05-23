@@ -318,7 +318,7 @@ CV3 avg loss: 0.117482
 Not significant.
 
 * Ways forward from here (Good ideas are first):
-** TODO Add wz to the tire network features.
+** DONE Add wz to the tire network features.
 I think this might improve rotation accuracy with sharp
 rotation. This seems the most promising, tbh.
 unfortunately, this would also require using a different network
@@ -326,9 +326,43 @@ for each tire. This is because, a positive Wz would result in
 a different Fx and Fy for each tire. And each tire is getting
 the abs of Vx and Vy so it has no idea how to correctly respond
 to Wz.
+
+Okay, I did this and got the error down to 10.3% for CV3
+and 6.8% for LD3. Still not good enough.
+
+Continued training at 10 steps.
+CV3 error is down to 9.64%
+ITS HAPPENING OH FUCK
+Started training at 30 steps:
+CV3 Error sort of stalled around 9.4%
+Pretty lame
+
+So now CV3 performance is reaching the linear model's level of
+error. But the linear model's LD3 performance is 3.55%.
+And our model has 6.3% error on LD3
+
+Forward:
+** DONE Add the tanh back and see how performance is affected.
+Not as good.
+Plateauing at 11.5% which sucks. Getting rid of tanh bought us
+1.5% performance. I am literally killing myself for tiny
+improvements.
+
+** TODO Next, go up to 16 hidden units
+Enough said
+** TODO Experiment with another network for predicting Fx based on Vx.
+It has to be separate because the current network only takes diff
+and this one needs to take Vx.
+** TODO What if you got rid of zr (probably wont do this)
+I don't think there is a significant variation in sinkage
+for the jackal.
+You could have one network that maps zr->sinkage
+And then another network that does [Vx,Vy,Wz]->[Fx,Fy]
+
 ** DONE Go back to 8 hidden units
 Check the accuracy. 32 hidden might not be necessary.
 It's going a lot slower which is incovenient.
+
 ** DONE Remove the Tanh.
 The tanh was used as a soft sign function. I'm not sure it was
 a good idea. Using just diff or vy allows the Fx or Fy to
@@ -365,7 +399,7 @@ But this still might translate to a decreased validation test
 level. Not really worth exploring.
 
 Big brain thoughts incoming:
-** TODO 4 networks, one for each tire.
+** DONE 4 networks, one for each tire.
 Unlikely, but perhaps the added parameters will help.
 And maybe there is a significant different between tires.
 ** DONE Only use zr and diff feature. Only return Fz,Fx

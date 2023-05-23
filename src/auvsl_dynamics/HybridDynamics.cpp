@@ -233,11 +233,10 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
   
   Eigen::Matrix<Scalar,9,1> features;
   Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> forces;
-  features[4] = bekker_params[0];
-  features[5] = bekker_params[1];
-  features[6] = bekker_params[2];
-  features[7] = bekker_params[3];
-  features[8] = bekker_params[4];
+  features[5] = 0;
+  features[6] = 0;
+  features[7] = 0;
+  features[8] = 0;
   
   
   for(int ii = 0; ii < 4; ii++){    
@@ -262,8 +261,9 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     features[1] = cpt_vels[ii][1];
     features[2] = X[17+ii];
     features[3] = sinkages[ii];
+    features[4] = X[13];
 
-    TireNetwork::forward(features, forces);
+    TireNetwork::forward(features, forces, ii);
     
     //forces[0] = CppAD::CondExpGt(vel_x_tan, literally_zero, forces[0], -forces[0]);
     //forces[1] = CppAD::CondExpGt(cpt_vels[ii][1], literally_zero, -CppAD::abs(forces[1]), CppAD::abs(forces[1]));
@@ -278,7 +278,7 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     lin_force[2] = forces[2];
     
     ang_force[0] = 0;
-    ang_force[1] = 0; //forces[3];
+    ang_force[1] = 0;
     ang_force[2] = 0;
     
     //Convert from world orientation to tire_cpt orientation
