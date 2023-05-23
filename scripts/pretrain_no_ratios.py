@@ -102,6 +102,7 @@ class TireNet(nn.Module):
     super().__init__()
     self.in_size = 5 # sinkage, qd, vx, vy, wz
     self.hidden_size = 8
+    self.hidden_size2 = 4
     self.out_size = 3
     
     self.tire_radius = .098
@@ -116,6 +117,16 @@ class TireNet(nn.Module):
       nn.ReLU()
     )
 
+    self.model_vx_fx = nn.Sequential(
+      nn.Linear(1, self.hidden_size2),
+      nn.Tanh(),
+      nn.Linear(self.hidden_size2, self.hidden_size2),
+      nn.Tanh(),
+      nn.Linear(self.hidden_size2, 1),
+      nn.ReLU()
+    )
+    
+    
   def compute_bekker_input_scaler(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
@@ -130,8 +141,12 @@ class TireNet(nn.Module):
                              ), 1)
     
     self.in_mean = torch.mean(bekker_args, 0)
-    temp = bekker_args - self.in_mean
-    self.in_std = torch.sqrt(torch.var(temp, 0))
+    self.in_std = torch.sqrt(torch.var(bekker_args - self.in_mean, 0))
+
+    vx = torch.abs(x[:,0][:,None])
+    self.vx_mean = torch.mean(vx, 0)
+    self.vx_std = torch.sqrt(torch.var(vx - self.vx_mean, 0))
+    
     
   # vx,vy,qd,zr,wz (batch_size,5)
   def forward(self, x):
@@ -148,13 +163,18 @@ class TireNet(nn.Module):
                              ), 1)
     
     bekker_args = (bekker_args - self.in_mean) / self.in_std
-    
     yhat = self.model.forward(bekker_args)
+    fx_bekker = (yhat[:,0] * (1*diff))[:,None]
+    
+    vx_features = (torch.abs(x[:,0][:,None]) - self.vx_mean) / self.vx_std
+    yhat2 = self.model_vx_fx.forward(vx_features)
+    fx_add = yhat2*(-x[:,0])[:,None]
     
     yhat_sign_corrected = torch.cat((
-      (yhat[:,0] * torch.tanh(1*diff))[:,None],
-      (yhat[:,1] * torch.tanh(-1*x[:,1]))[:,None],
+      fx_bekker + fx_add,
+      (yhat[:,1] * (-1*x[:,1]))[:,None],
       (yhat[:,2] / (1 + torch.exp(-1*x[:,3])))[:,None]), 1)
+    
     return yhat_sign_corrected
     
 model = TireNet()
