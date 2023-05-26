@@ -348,12 +348,12 @@ Plateauing at 11.5% which sucks. Getting rid of tanh bought us
 1.5% performance. I am literally killing myself for tiny
 improvements.
 
-** TODO Next, go up to 16 hidden units
-Enough said
-** TODO Experiment with another network for predicting Fx based on Vx.
+** DONE Next, go up to 16 hidden units
+Enough said. Didn't really help. Hmm.
+** DONE Experiment with another network for predicting Fx based on Vx.
 It has to be separate because the current network only takes diff
 and this one needs to take Vx.
-** TODO What if you got rid of zr (probably wont do this)
+** DONE What if you got rid of zr (probably wont do this)
 I don't think there is a significant variation in sinkage
 for the jackal.
 You could have one network that maps zr->sinkage
@@ -408,6 +408,13 @@ But, the linear model just maps [vl,vr]->[vx,vy,wz]
 So in my opinion, this shows that the model is almost completely
 kinematic. So maybe simpler is better. Wait no, this is a dumb
 idea. It would be able to slide laterally whicih would be bad.
+
+** TODO Forward: modify loss function to include relative error
+This will cause the loss function to focus on the small paths
+and hopefully it will increase CV3 performance.
+
+** TODO MULTITHREAD FINALLY
+You've got 16 cores, use them all.
 
 
 * DONE Rotate Initial quaternion according to yaw

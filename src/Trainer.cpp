@@ -5,18 +5,26 @@
 #include <iostream>
 #include <assert.h>
 #include <cmath>
+#include <thread>
+#include <chrono>
 #include <stdlib.h>
 
 namespace plt = matplotlibcpp;
 
 
-Trainer::Trainer()
+Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
 {
   m_system_adf = std::make_shared<VehicleSystem<ADF>>();
- 
+
+  m_thread_status_vec.resize(m_num_threads);
+  for(int i = 0; i < m_thread_status; i++)
+  {
+    m_thread_status_vec[i] = false;
+  }
+  
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
-  m_squared_grad = VectorAD::Ones(m_system_adf->getNumParams());
+  m_squared_grad = VectorAD::Zero(m_system_adf->getNumParams());
   m_system_adf->getDefaultParams(m_params);
 
   computeEqState();
@@ -129,20 +137,88 @@ void Trainer::train()
 	std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
 	std::flush(std::cout);
 	m_cnt++;
-      }
-      
-      if(m_cnt == 100)
-      {
-	std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
-	std::flush(std::cout);
-	updateParams(m_batch_grad / m_cnt);
-	m_cnt = 0;
-	avg_loss = 0;
-      }
+      }      
     }
-
+    
     save();
   }
+  
+  std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
+  std::flush(std::cout);
+  updateParams(m_batch_grad / m_cnt);
+  m_cnt = 0;
+  avg_loss = 0;
+}
+
+void Trainer::trainThreads()
+{
+  auto training_worker_lambda = [this](std::vector<DataRow> &traj,
+				       VectorF &traj_grad,
+				       std::vector<VectorAD> &x_list,
+				       double &loss,
+				       std::atomic<bool> &status
+				       )
+  {
+    trainTrajectory(traj, x_list, traj_grad, loss);
+    status = false;
+  };
+  
+  // List of worker threads threads
+  std::vector<std::thread> worker_threads();
+  
+  m_system_adf->setNumSteps(m_train_steps);
+  
+  int traj_len = m_train_steps;
+  double avg_loss = 0;
+  char fn_array[100];
+  
+  for(int i = 1; i <= 17; i++)
+  {
+    memset(fn_array, 0, 100);
+    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
+    
+    std::string fn(fn_array);
+    loadDataFile(fn);
+    
+    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_train_steps)
+    {
+      // Create new variables for each thread.
+      std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
+      VectorF traj_grad(m_system_adf->getNumParams());
+      std::vector<VectorAD> x_list(m_train_steps);
+      double loss;
+
+      assignWork();
+      
+      while(true)
+      {
+	for(int i = 0; i < m_thread_status_vec.size(); i++)
+	{
+	  if()
+	  {
+	    break outer_loop;
+	  }
+	}
+	worker_threads.push_back();
+	
+	std::this_thread::sleep_for(std::chrono::milliseconds(1));
+      }
+
+      if(combineResults())
+    }
+    
+    save();
+  }
+  
+  std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
+  std::flush(std::cout);
+  updateParams(m_batch_grad / m_cnt);
+  m_cnt = 0;
+  avg_loss = 0;
+}
+
+void Trainer::assignWork()
+{
   
 }
 
@@ -381,6 +457,8 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
   x_list[0] = xk;
   loss_ad[0] = 0;
   
+  ADF traj_len = 0;
+  
   VectorAD gt_vec;
   for(int i = 1; i < x_list.size(); i++)
   {
@@ -395,13 +473,22 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
     gt_vec[3] = ADF(traj[i].yaw);
     gt_vec[4] = ADF(traj[i].x);
     gt_vec[5] = ADF(traj[i].y);
+
+    ADF dx = traj[i].x - traj[i-1].x;
+    ADF dy = traj[i].y - traj[i-1].y;
     
-    loss_ad[0] += m_system_adf->loss(gt_vec, x_list[i]);
+    traj_len += CppAD::sqrt(dx*dx + dy*dy);
+    //loss_ad[0] += m_system_adf->loss(gt_vec, x_list[i]);
   }
 
-  loss_ad[0] /= x_list.size();
+  //loss_ad[0] /= x_list.size();
   
-  //loss_ad[0] = m_system_adf->loss(gt_vec, x_list.back());
+  if(traj_len == 0)
+  {
+    traj_len = 1; //dont let a divide by zero happen.
+  }
+  
+  loss_ad[0] = m_system_adf->loss(gt_vec, x_list.back()) / traj_len;
   CppAD::ADFun<double> func(m_params, loss_ad);
   
   VectorF y0(1);
@@ -410,6 +497,37 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
   gradient = func.Reverse(1, y0);
   loss = CppAD::Value(loss_ad[0]);
 }
+
+bool Trainer::combineResults(VectorF &batch_grad,
+			     const VectorF &sample_grad,
+			     double &batch_loss,
+			     const double &sample_loss)
+{
+  bool has_explosion = false;
+  for(int i = 0; i < m_params.size(); i++)
+  {
+    if(fabs(sample_grad[i]) > 100.0)
+    {
+      has_explosion = true;
+      std::cout << "Explosion " << i << ":" << sample_grad[i] << "\n";
+      break;
+    }
+  }
+  
+  if(!has_explosion)
+  {
+    batch_grad += sample_grad;
+    batch_loss += sample_loss;
+    
+    std::cout << "Loss: " << sample_loss << "\tdParams: " << sample_grad[0] << "\n";
+    std::flush(std::cout);
+    return true;
+  }
+  
+  return false;
+}
+
+
 
 void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
 {
@@ -464,7 +582,6 @@ void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
 
 void Trainer::save()
 {
-  m_system_adf->getParams(m_params);
   saveVec(m_params, m_param_file);
 }
 bool Trainer::saveVec(const VectorAD &params, const std::string &file_name)
