@@ -317,6 +317,11 @@ CV3 avg loss: 0.117482
 
 Not significant.
 
+
+
+
+
+
 * Ways forward from here (Good ideas are first):
 ** DONE Add wz to the tire network features.
 I think this might improve rotation accuracy with sharp
@@ -353,6 +358,34 @@ Enough said
 ** TODO Experiment with another network for predicting Fx based on Vx.
 It has to be separate because the current network only takes diff
 and this one needs to take Vx.
+WE're trying this one out. Idk. I hope I implemented it correctly.
+The error was suspiciously high for the first CV3 test
+Hopefully it's not unstable or something.
+Error rates plummeted. Maybe I just forgot to delete tire.net?
+
+You had the num_hidden_nodes2 = 8 when it should have been 4.
+So it was initializing with garbage.
+Sir! we are at 10.7% CV3 and dropping
+It got stuck and it's oscillating around 11%
+
+It's so over.
+
+After oscillating around 11% it eventually came down to 10%
+after running all night. I wonder if it would go even lwoer
+if I just ran it for many days.
+
+We got it down to 9.2%
+The LD3 performance is at 4%
+
+Holy fuck we are close.
+8.99% on CV3 Oh shidddd
+Okay. The path forward is to implement multithreading, and train
+for a long ass time with full batch size.
+
+Forward: Merge some of this into main? No.
+
+
+
 ** TODO What if you got rid of zr (probably wont do this)
 I don't think there is a significant variation in sinkage
 for the jackal.

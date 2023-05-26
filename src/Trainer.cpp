@@ -16,7 +16,7 @@ Trainer::Trainer()
  
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
-  m_squared_grad = VectorAD::Ones(m_system_adf->getNumParams());
+  m_squared_grad = VectorAD::Zero(m_system_adf->getNumParams());
   m_system_adf->getDefaultParams(m_params);
 
   computeEqState();
@@ -130,20 +130,17 @@ void Trainer::train()
 	std::flush(std::cout);
 	m_cnt++;
       }
-      
-      if(m_cnt == 100)
-      {
-	std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
-	std::flush(std::cout);
-	updateParams(m_batch_grad / m_cnt);
-	m_cnt = 0;
-	avg_loss = 0;
-      }
     }
-
-    save();
   }
-  
+
+  //if(m_cnt == 1000)
+  {
+    std::cout << "Avg Loss: " << avg_loss / m_cnt << "\n";
+    std::flush(std::cout);
+    updateParams(m_batch_grad / m_cnt);
+    m_cnt = 0;
+    avg_loss = 0;
+  }
 }
 
 void Trainer::evaluate_cv3()
@@ -214,6 +211,9 @@ void Trainer::updateParams(const VectorF &grad)
 {
   ADF norm = 0;
   float grad_idx;
+
+  ADF first_update;
+  std::cout << " Param[0]: " << CppAD::Value(m_params[0]);
   
   for(int i = 0; i < m_params.size(); i++)
   {
@@ -230,11 +230,20 @@ void Trainer::updateParams(const VectorF &grad)
     }
     
     m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad_idx*grad_idx);
-    m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
-    norm += CppAD::abs(m_params[i]);
+    ADF update = (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
+    m_params[i] -= update;
+    norm += CppAD::abs(update);
+
+    if(i == 0)
+    {
+      first_update = update;
+    }
   }
   
-  std::cout << "Param norm: " << CppAD::Value(norm) << " Param[0]: " << CppAD::Value(m_params[0]) << "\n";
+  std::cout << " Param norm: " << CppAD::Value(norm)
+	    << " Param[0]: " << CppAD::Value(m_params[0])
+    	    << " update[0]: " << CppAD::Value(first_update)
+	    << " m_squared[0]: " << CppAD::Value(m_squared_grad[0]) << "\n";
   for(int i = 0; i < m_params.size(); i++)
   {
     
@@ -464,7 +473,6 @@ void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
 
 void Trainer::save()
 {
-  m_system_adf->getParams(m_params);
   saveVec(m_params, m_param_file);
 }
 bool Trainer::saveVec(const VectorAD &params, const std::string &file_name)

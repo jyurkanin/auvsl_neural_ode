@@ -21,6 +21,8 @@ public:
   ~TireNetwork();
 
   static const int num_hidden_nodes = 8;
+  static const int num_hidden_nodes2 = 4;
+  
   static const int num_in_features = 5;
   static const int num_out_features = 3;
   static const int num_networks = 4;
@@ -42,11 +44,20 @@ public:
     Eigen::Matrix<Scalar,num_hidden_nodes,1> bias2;
     Eigen::Matrix<Scalar,num_out_features,num_hidden_nodes> weight4;
     Eigen::Matrix<Scalar,num_out_features,1> bias4;
+
+    Eigen::Matrix<Scalar,num_hidden_nodes2,1> vx_weight0;
+    Eigen::Matrix<Scalar,num_hidden_nodes2,1> vx_bias0;
+    Eigen::Matrix<Scalar,num_hidden_nodes2,num_hidden_nodes2> vx_weight2;
+    Eigen::Matrix<Scalar,num_hidden_nodes2,1> vx_bias2;
+    Eigen::Matrix<Scalar,1,num_hidden_nodes2> vx_weight4;
+    Eigen::Matrix<Scalar,1,1> vx_bias4;
   };
 
   static Params m_params[4];
   
 private:
+  static Scalar vx_std;
+  static Scalar vx_mean;
   static Eigen::Matrix<Scalar,num_out_features,1> out_std;
   static Eigen::Matrix<Scalar,num_in_features,1>  in_mean;
   static Eigen::Matrix<Scalar,num_in_features,1>  in_std_inv; //inverse of in_std. Because multiply is faster than divide.
