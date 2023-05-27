@@ -7,15 +7,56 @@
 #include <cmath>
 #include <thread>
 #include <chrono>
+#include <mutex>
 #include <stdlib.h>
 
 namespace plt = matplotlibcpp;
 
 
+bool g_parallel_mode;
+bool give_me_parallel_mode()
+{
+  return g_parallel_mode;
+}
+
+
+std::vector<std::thread::id> g_id_map;
+std::mutex g_map_mutex;
+void put_id_in_map(int id_num)
+{
+  std::scoped_lock lock(g_map_mutex); //protect the map
+  g_id_map[id_num] = std::this_thread::get_id();
+}
+
+
+size_t give_me_thread_id()
+{
+  std::scoped_lock lock(g_map_mutex);
+  for(int i = 0; i < g_id_map.size(); i++)
+  {
+    if(g_id_map[i] == std::this_thread::get_id())
+    {
+      return (size_t) i;
+    }
+  }
+
+  std::cout << "No bueno aqui!\n";
+  return 100; //bad.
+}
+
 Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
 {
-  m_system_adf = std::make_shared<VehicleSystem<ADF>>();
+  // Enable CppAD multithreading. Sucky.
+  g_id_map.resize(num_threads+1);
+  put_id_in_map(num_threads);
 
+  g_parallel_mode = false;
+  CppAD::thread_alloc::parallel_setup(m_num_threads+1, give_me_parallel_mode, give_me_thread_id);
+  
+  g_parallel_mode = false; // "O.K." - Saitama
+  CppAD::parallel_ad<ADF>();
+  
+  m_system_adf = std::make_shared<VehicleSystem<ADF>>();
   // m_thread_status_vec.resize(m_num_threads, std::atomic<bool>(false));
   // for(int i = 0; i < m_thread_status_vec.size(); i++)
   // {
@@ -152,24 +193,22 @@ void Trainer::train()
 
 void Trainer::trainThreads()
 {
-  auto training_worker_lambda = [this](std::vector<DataRow> &traj,
-				       VectorF &traj_grad,
-				       std::vector<VectorAD> &x_list,
-				       double &loss,
-				       std::atomic<bool> &status
-				       )
+  m_workers.clear();
+  m_workers.resize(m_num_threads);
+    
+  for(int i = 0; i < m_workers.size(); i++)
   {
-    trainTrajectory(traj, x_list, traj_grad, loss);
-    status = false;
-  };
-  
-  // List of worker threads threads
-  std::vector<std::thread> worker_threads();
+    m_workers[i] = Worker(this);
+    m_workers[i].m_id = i;
+  }
   
   m_system_adf->setNumSteps(m_train_steps);
+
+  m_cnt = 0;
+  m_batch_loss = 0;
+  m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
   
   int traj_len = m_train_steps;
-  double avg_loss = 0;
   char fn_array[100];
   
   for(int i = 1; i <= 17; i++)
@@ -182,44 +221,61 @@ void Trainer::trainThreads()
     
     for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_train_steps)
     {
-      // Create new variables for each thread.
       std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
-      VectorF traj_grad(m_system_adf->getNumParams());
-      std::vector<VectorAD> x_list(m_train_steps);
-      double loss;
-
-      assignWork();
-      
-      while(true)
-      {
-	for(int i = 0; i < m_workers.size(); i++)
-	{
-	  if(true)
-	  {
-	    break;
-	  }
-	}
-	//worker_threads.push_back();
-	
-	std::this_thread::sleep_for(std::chrono::milliseconds(1));
-      }
-
-      //if(combineResults()){}
+      assignWork(traj);
     }
     
     save();
   }
   
-  std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
+  finishWork();
+  
+  std::cout << "Avg Loss: " << m_batch_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
   std::flush(std::cout);
   updateParams(m_batch_grad / m_cnt);
-  m_cnt = 0;
-  avg_loss = 0;
 }
 
-void Trainer::assignWork()
-{
+void Trainer::assignWork(const std::vector<DataRow> &traj)
+{  
+  auto worker_lambda = [](Trainer::Worker *worker)
+  {
+    worker->work();
+  };
   
+  // Create new variables for each thread.
+  while(true)
+  {
+    for(int i = 0; i < m_workers.size(); i++)
+    {
+      if((!m_workers[i].m_running) && m_workers[i].m_collected)
+      {
+	m_workers[i].m_traj = traj;
+	m_workers[i].m_collected = false;
+	m_workers[i].m_running = true;
+	m_workers[i].m_thread = std::thread(worker_lambda, &m_workers[i]);
+	break;
+      }
+      else if((!m_workers[i].m_running) && (!m_workers[i].m_collected))
+      {
+	combineResults(m_batch_grad, m_workers[i].m_grad,
+		       m_batch_loss, m_workers[i].m_loss);
+	m_workers[i].m_collected = true;
+      }
+    }
+    
+    std::this_thread::sleep_for(std::chrono::milliseconds(1));
+  }
+}
+
+void Trainer::finishWork()
+{
+  for(int i = 0; i < m_workers.size(); i++)
+  {
+    m_workers[i].m_thread.join();
+    combineResults(m_batch_grad, m_workers[i].m_grad,
+		   m_batch_loss, m_workers[i].m_loss);
+    m_workers[i].m_collected = true;
+  }
 }
 
 void Trainer::evaluate_cv3()
@@ -442,6 +498,8 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
 
 void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<VectorAD> &x_list, VectorF &gradient, double& loss)
 {
+  std::shared_ptr<VehicleSystem<ADF>> system_adf = std::make_shared<VehicleSystem<ADF>>();
+  
   VectorAD loss_ad(1);
   VectorAD xk(m_system_adf->getStateDim());
   VectorAD xk1(m_system_adf->getStateDim());
@@ -519,6 +577,7 @@ bool Trainer::combineResults(VectorF &batch_grad,
   {
     batch_grad += sample_grad;
     batch_loss += sample_loss;
+    m_cnt++;
     
     std::cout << "Loss: " << sample_loss << "\tdParams: " << sample_grad[0] << "\n";
     std::flush(std::cout);
@@ -625,4 +684,59 @@ bool Trainer::loadVec(VectorAD &params, const std::string &file_name)
   }
   
   return false;
+}
+
+
+
+Trainer::Worker::Worker()
+{
+  
+}
+
+Trainer::Worker::~Worker()
+{
+  std::cout << "Should be no latency:\n";
+  if(m_thread.joinable()) { m_thread.join(); }
+  std::cout << "Thread joined\n";
+}
+
+
+Trainer::Worker::Worker(const Worker& other)
+{
+  m_running = other.m_running.load();
+  m_collected = other.m_collected.load();
+  //m_thread = other.m_thread;
+
+  m_grad = other.m_grad;
+  m_loss = other.m_loss;
+
+  m_trainer = other.m_trainer;
+
+  std::cout << "Copy constructor\n";
+}
+
+Trainer::Worker::Worker(Trainer* trainer) : m_trainer{trainer}
+{
+  
+}
+
+void Trainer::Worker::work()
+{
+  std::cout << "Work\n";
+  put_id_in_map(m_id);
+  
+  std::vector<VectorAD> x_list(m_trainer->m_train_steps);
+  m_trainer->trainTrajectory(m_traj, x_list, m_grad, m_loss);
+  m_running = false;
+}
+
+const Trainer::Worker& Trainer::Worker::operator=(const Trainer::Worker& worker)
+{
+  this->m_running = worker.m_running.load();
+  this->m_collected = worker.m_collected.load();
+  this->m_grad = worker.m_grad;
+  this->m_loss = worker.m_loss;
+  this->m_trainer = worker.m_trainer;
+  
+  return *this;
 }

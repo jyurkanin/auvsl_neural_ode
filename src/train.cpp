@@ -7,7 +7,9 @@
 
 int main()
 {
-  Trainer train;
+  int num_threads = 2;
+    
+  Trainer train(num_threads);
   std::cout << "Default Performance:\n";
   
   train.load();
@@ -21,7 +23,7 @@ int main()
     train.save();
     
 
-    if((i % 3) == 0)
+    if((i % 20) == 0)
     {
       train.evaluate_cv3();
       train.evaluate_ld3();

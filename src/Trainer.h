@@ -25,7 +25,9 @@ struct DataRow
 class Trainer
 {
 public:
-  Trainer(int num_threads = 1);
+  friend class Worker;
+  
+  Trainer(int num_threads = 2);
   ~Trainer();
 
   void updateParams(const VectorF &grad);
@@ -44,23 +46,39 @@ public:
   void load();
 
   void trainThreads();
-  void assignWork();
+  void assignWork(const std::vector<DataRow> &traj);
+  void finishWork();
   bool combineResults(VectorF &batch_grad,
 		      const VectorF &sample_grad,
 		      double &batch_loss,
 		      const double &sample_loss);
   
-  struct Worker
+  class Worker
   {
+  public:
+    Worker();
+    Worker(const Worker& other);
+    Worker(Trainer* trainer);
+    ~Worker();
+
+    const Worker& operator=(const Worker& worker);
+    void work();
+    
     // Worker State:
-    std::atomic<bool> m_status;
+    std::atomic<bool> m_running{false};
+    std::atomic<bool> m_collected{true};
+    std::thread m_thread;
+    int m_id;
     
     // Problem Definition:
-    std::vector<DataRow> &traj;
+    std::vector<DataRow> m_traj;
     
     // results:
     VectorF m_grad;
     double m_loss;
+
+  private:
+    Trainer* m_trainer;
   };
 
   std::vector<Worker> m_workers;
@@ -82,5 +100,6 @@ private:
   VectorAD m_params;
   VectorAD m_squared_grad;
   VectorF m_batch_grad;
+  double m_batch_loss;
   std::shared_ptr<VehicleSystem<ADF>> m_system_adf;
 };

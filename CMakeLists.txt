@@ -5,11 +5,19 @@ find_package(Eigen3 REQUIRED NO_MODULE)
 find_package(PythonLibs 3.8)
 
 
-set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -g")
-set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall -Ofast -mtune=native -march=native -DNDEBUG")
+#set(CMAKE_CXX_FLAGS_DEBUG_INIT "-Wall -g")
+#set(CMAKE_CXX_FLAGS_RELEASE_INIT "-Wall -Ofast -mtune=native -march=native -DNDEBUG")
+
+SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-pthread")
+
+#add_compile_options(
+#  "-Wall" "-Ofast" "-mtune=native" "-march=native" "-DNDEBUG"
+#)
 
 add_compile_options(
-  "-Wall" "-Ofast" "-mtune=native" "-march=native" "-DNDEBUG"
+  "-Wall"
+  "$<$<CONFIG:Debug>:-O0;-g3;-ggdb>"
+  "$<$<CONFIG:Release>:-Ofast;-mtune=native;-march=native;-DNDEBUG>"
 )
 
 set(CMAKE_CXX_STANDARD 20)

@@ -25,13 +25,13 @@ public:
   static const int num_out_features = 3;
   static const int num_networks = 4;
   
-  static int  getNumParams();
-  static void setParams(const VectorS &params, int idx);
-  static void getParams(VectorS &params, int idx);
-  static void forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix<Scalar,num_out_features,1> &out_vec, int ii);
+  int  getNumParams();
+  void setParams(const VectorS &params, int idx);
+  void getParams(VectorS &params, int idx);
+  void forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix<Scalar,num_out_features,1> &out_vec, int ii);
   
-  static int is_loaded;
-  static int load_model();
+  int is_loaded;
+  int load_model();
   
 
   struct Params
@@ -44,11 +44,11 @@ public:
     Eigen::Matrix<Scalar,num_out_features,1> bias4;
   };
 
-  static Params m_params[4];
+  Params m_params[4];
   
 private:
-  static Eigen::Matrix<Scalar,num_out_features,1> out_std;
-  static Eigen::Matrix<Scalar,num_in_features,1>  in_mean;
-  static Eigen::Matrix<Scalar,num_in_features,1>  in_std_inv; //inverse of in_std. Because multiply is faster than divide.
+  Eigen::Matrix<Scalar,num_out_features,1> out_std;
+  Eigen::Matrix<Scalar,num_in_features,1>  in_mean;
+  Eigen::Matrix<Scalar,num_in_features,1>  in_std_inv; //inverse of in_std. Because multiply is faster than divide.
 
 };
