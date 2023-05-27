@@ -409,9 +409,13 @@ So in my opinion, this shows that the model is almost completely
 kinematic. So maybe simpler is better. Wait no, this is a dumb
 idea. It would be able to slide laterally whicih would be bad.
 
-** TODO Forward: modify loss function to include relative error
+** DONE Forward: modify loss function to include relative error
 This will cause the loss function to focus on the small paths
 and hopefully it will increase CV3 performance.
+CV3 performance is at 8.66%
+LD3 is around 6% so not great.
+Continuiing training at 60 steps.
+
 
 ** TODO MULTITHREAD FINALLY
 You've got 16 cores, use them all.

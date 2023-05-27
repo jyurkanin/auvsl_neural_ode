@@ -16,11 +16,11 @@ Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
 {
   m_system_adf = std::make_shared<VehicleSystem<ADF>>();
 
-  m_thread_status_vec.resize(m_num_threads);
-  for(int i = 0; i < m_thread_status; i++)
-  {
-    m_thread_status_vec[i] = false;
-  }
+  // m_thread_status_vec.resize(m_num_threads, std::atomic<bool>(false));
+  // for(int i = 0; i < m_thread_status_vec.size(); i++)
+  // {
+  //   m_thread_status_vec[i] = false;
+  // }
   
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
@@ -105,7 +105,7 @@ void Trainer::train()
   std::vector<VectorAD> x_list(m_train_steps);
   char fn_array[100];
   
-  for(int i = 1; i <= 17; i++)
+  for(int i = 1; i <= 1; i++)
   {
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -192,19 +192,19 @@ void Trainer::trainThreads()
       
       while(true)
       {
-	for(int i = 0; i < m_thread_status_vec.size(); i++)
+	for(int i = 0; i < m_workers.size(); i++)
 	{
-	  if()
+	  if(true)
 	  {
-	    break outer_loop;
+	    break;
 	  }
 	}
-	worker_threads.push_back();
+	//worker_threads.push_back();
 	
 	std::this_thread::sleep_for(std::chrono::milliseconds(1));
       }
 
-      if(combineResults())
+      //if(combineResults()){}
     }
     
     save();
@@ -478,17 +478,18 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj, std::vector<Vect
     ADF dy = traj[i].y - traj[i-1].y;
     
     traj_len += CppAD::sqrt(dx*dx + dy*dy);
-    //loss_ad[0] += m_system_adf->loss(gt_vec, x_list[i]);
+    loss_ad[0] += m_system_adf->loss(gt_vec, x_list[i]);
   }
 
-  //loss_ad[0] /= x_list.size();
+  loss_ad[0] /= x_list.size();
   
   if(traj_len == 0)
   {
     traj_len = 1; //dont let a divide by zero happen.
   }
   
-  loss_ad[0] = m_system_adf->loss(gt_vec, x_list.back()) / traj_len;
+  //loss_ad[0] = m_system_adf->loss(gt_vec, x_list.back())
+  loss_ad[0] = loss_ad[0] / traj_len;
   CppAD::ADFun<double> func(m_params, loss_ad);
   
   VectorF y0(1);

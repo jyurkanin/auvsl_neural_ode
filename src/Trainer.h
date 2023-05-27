@@ -43,13 +43,32 @@ public:
   void save();
   void load();
 
+  void trainThreads();
+  void assignWork();
+  bool combineResults(VectorF &batch_grad,
+		      const VectorF &sample_grad,
+		      double &batch_loss,
+		      const double &sample_loss);
+  
+  struct Worker
+  {
+    // Worker State:
+    std::atomic<bool> m_status;
+    
+    // Problem Definition:
+    std::vector<DataRow> &traj;
+    
+    // results:
+    VectorF m_grad;
+    double m_loss;
+  };
 
-  std::vector<std::atomic<bool>> m_thread_status_vec;
+  std::vector<Worker> m_workers;
 private:
   const double m_gt_sample_period = 10.0;
-  const int m_train_steps = 10;
+  const int m_train_steps = 20;
   const int m_eval_steps = 60;
-  const int m_inc_train_steps = 10;
+  const int m_inc_train_steps = 20;
   const int m_inc_eval_steps = 60;
   
   const int m_num_threads;
