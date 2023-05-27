@@ -354,6 +354,41 @@ Enough said. Didn't really help. Hmm.
 It has to be separate because the current network only takes diff
 and this one needs to take Vx.
 ** DONE What if you got rid of zr (probably wont do this)
+Enough said
+CV3 avg loss: 0.1091
+CV3 avg loss: 0.109098
+CV3 avg loss: 0.109075
+CV3 avg loss: 0.108971
+CV3 avg loss: 0.108526
+CV3 avg loss: 0.107223
+CV3 avg loss: 0.105589
+CV3 avg loss: 0.104644
+CV3 avg loss: 0.104284
+CV3 avg loss: 0.104204
+CV3 avg loss: 0.104175
+CV3 avg loss: 0.103811
+CV3 avg loss: 0.103686
+CV3 avg loss: 0.103726
+CV3 avg loss: 0.10362
+CV3 avg loss: 0.103338
+CV3 avg loss: 0.103114
+CV3 avg loss: 0.103125
+CV3 avg loss: 0.103313
+CV3 avg loss: 0.103355
+CV3 avg loss: 0.103554
+CV3 avg loss: 0.103843
+CV3 avg loss: 0.104375
+CV3 avg loss: 0.105802
+CV3 avg loss: 0.107157
+CV3 avg loss: 0.10913
+CV3 avg loss: 0.110054
+CV3 avg loss: 0.112307
+This is fucking bullshit.
+
+** (NAH) Experiment with another network for predicting Fx based on Vx.
+It has to be separate because the current network only takes diff
+and this one needs to take Vx.
+** (STUPID) What if you got rid of zr (probably wont do this)
 I don't think there is a significant variation in sinkage
 for the jackal.
 You could have one network that maps zr->sinkage
@@ -380,7 +415,6 @@ but I don't think so.
 I removed the tanh and went down to 8 hidden units.
 We hit a wall at 12.97% CV3 error. So the 32 unit network gets
 down to about 12%. Not great.
-
 
 
 ** DONE Maybe an atan based slip angle was necessary?
@@ -420,6 +454,11 @@ Continuiing training at 60 steps.
 ** TODO MULTITHREAD FINALLY
 You've got 16 cores, use them all.
 
+* A new way Forward: <2023-05-22 Mon 18:07>
+Shit is enfuckulated.
+I think you need to add the physical parameters to the model. Or, add another network
+to apply an external force to the body of the vehicle to give us the extra params needed
+to hack this fucking shit. I would prefer to use the physical params.
 
 * DONE Rotate Initial quaternion according to yaw
 * DONE Testing C++ code

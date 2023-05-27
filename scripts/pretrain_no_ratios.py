@@ -101,7 +101,7 @@ class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
     self.in_size = 5 # sinkage, qd, vx, vy, wz
-    self.hidden_size = 8
+    self.hidden_size = 16
     self.out_size = 3
     
     self.tire_radius = .098

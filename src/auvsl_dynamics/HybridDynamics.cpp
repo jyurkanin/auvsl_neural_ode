@@ -425,6 +425,8 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   gravity_b[4] = gravity_lin[1];
   gravity_b[5] = gravity_lin[2];
   
+  //ext_forces[orderedLinkIDs[ii+1]] = wrench;
+  
   //this calculates base_acc and qdd.
   fwd_dynamics->fd(qdd, base_acc, base_vel, gravity_b, q, qd, tau, ext_forces);
   
