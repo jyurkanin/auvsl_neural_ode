@@ -551,3 +551,31 @@ Diff network has bad behavior (too much turning)
 I fixed the ratio network by clamping the slip ratio.
 Still seeing occasional massive gradient explosions. Usually at the
 beginning of a test when tire velocities are zero
+
+
+
+* <2023-05-27 Sat 16:23>
+Okay, the plan is to fix multi threading, then add another
+network that applies an external force to the robot's base.
+
+Currently, as far as multithreading goes, you've realized you just
+need to make sure you copy m_params for each thread because
+CppAD is too stupid to operate on the same CppAD::vector in
+multiple threads.
+
+* TODO Okay, but what if we fixed zr?
+This dataset is 2d. Fz doesn't really matter, it just has to keep
+us from sinking into the ground.
+
+So, how much is the zr noise affecting training? Would it be better
+to just ignore that and restrict motion to 2D during training?
+And then do fine tuning pass where 3D motion is reactivated?
+
+It would be easy to implement, why not try it?
+
+* DONE Bugfix for computeEqState
+You fucked up. The eq state is only initialized once in the
+constructor. So if you intiialize your params to something
+retarded, you will be stuck with a retarded initial state for the
+rest of your training. Shit. This could have been having a small
+effect on loss. or big idk. Actually this is not a big deal.

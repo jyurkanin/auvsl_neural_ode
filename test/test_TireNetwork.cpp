@@ -3,6 +3,7 @@
 
 #include "gtest/gtest.h"
 #include "TireNetwork.h"
+#include "VehicleSystem.h"
 #include "generated/model_constants.h"
 
 namespace plt = matplotlibcpp;
@@ -23,6 +24,24 @@ namespace{
     y[0] = y1;
     y[1] = y2;
     plt::plot(x, y, "b");    
+  }
+
+  TEST(TireNetwork, check_params)
+  {
+    VehicleSystem<ADF> system1;
+    VehicleSystem<ADF> system2;
+    
+    VectorAD params1(system1.getNumParams());
+    VectorAD params2(system1.getNumParams());
+    
+    system1.getDefaultParams(params1);
+    system2.setParams(params1);
+    system2.getParams(params2);
+    
+    for(int i = 0; i < params1.size(); i++)
+    {
+      EXPECT_EQ(params1[i], params2[i]);  
+    }
   }
   
   TEST(TireNetwork, vx_fx_plot)
@@ -56,7 +75,7 @@ namespace{
 	features[0] = tire_vx;
 	features[2] = tire_tangent_vel/.098;
 	
-	tire_network.forward(features, forces);
+	tire_network.forward(features, forces, 0);
 	
 	vx_vec[i] = CppAD::Value(tire_tangent_vel - tire_vx);
 	fx_vec[i] = CppAD::Value(forces[0]);
@@ -102,7 +121,7 @@ namespace{
 	features[0] = vx;
 	features[1] = vy;
 	
-	tire_network.forward(features, forces);
+	tire_network.forward(features, forces, 0);
 	
 	tanh_vec[i] = CppAD::Value(40*CppAD::tanh(100*vy));
 	vy_vec[i] = CppAD::Value(vy);
@@ -146,7 +165,7 @@ namespace{
 	ADF zr = 0.1 * ADF((2.0*i/(float)len) - 1.0);
 	features[3] = zr;
 	
-	tire_network.forward(features, forces);
+	tire_network.forward(features, forces, 0);
 	
 	sinkage_vec[i] = CppAD::Value(zr);
 	fz_vec[i] = CppAD::Value(forces[2]);

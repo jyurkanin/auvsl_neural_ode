@@ -16,9 +16,12 @@ SET(CMAKE_CXX_FLAGS ${CMAKE_CXX_FLAGS} "-pthread")
 
 add_compile_options(
   "-Wall"
-  "$<$<CONFIG:Debug>:-O0;-g3;-ggdb>"
-  "$<$<CONFIG:Release>:-Ofast;-mtune=native;-march=native;-DNDEBUG>"
+  "$<$<CONFIG:Debug>:-O0;-g3;-ggdb3>"
+  "$<$<CONFIG:Release>:-Ofast;-mtune=native;-march=native;-DNDEBUG;-flto>"
 )
+
+add_compile_options(-fsanitize=undefined)
+add_link_options(-fsanitize=undefined -static-libasan)
 
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_RUNTIME_OUTPUT_DIRECTORY ${CMAKE_BINARY_DIR})

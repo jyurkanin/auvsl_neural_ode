@@ -6,10 +6,12 @@
 
 
 
-TireNetwork::TireNetwork(){
-  if(!is_loaded){
-    load_model();
-  }
+TireNetwork::TireNetwork()
+{
+  out_std << 44.45929437637364, 44.319044796830426, 55.11481922955709;
+  in_mean << 0.005049827974289656, 0.5013627409934998, 0.49966344237327576, 0.5000784397125244, 0.05001185089349747;
+  in_std_inv << 0.0028585679829120636, 0.2916049659252167, 0.2884257733821869, 0.288765013217926, 0.02888154424726963;
+  in_std_inv = in_std_inv.cwiseInverse();  
 }
 TireNetwork::~TireNetwork(){}
 
@@ -83,8 +85,8 @@ int TireNetwork::getNumParams()
 void TireNetwork::setParams(const VectorS &params, int idx)
 {
   assert(params.size() == getNumParams());
-
-  for(int kk = 0; kk < 4; kk++)
+  
+  for(int kk = 0; kk < num_networks; kk++)
   {
     for(int i = 0; i < m_params[kk].weight0.rows(); i++)
     {
@@ -185,8 +187,6 @@ void TireNetwork::getParams(VectorS &params, int idx)
 int TireNetwork::load_model(){
   std::cout << "Loading Model\n";
     
-  is_loaded = 1;
-
   for(int kk = 0; kk < num_networks; kk++)
   {
     m_params[kk].weight0 <<  2.4305e-01, -6.5279e-01, -2.6631e-01,  5.6838e-01,  6.4865e-03,
@@ -270,12 +270,7 @@ int TireNetwork::load_model(){
     m_params[kk].bias4 << 1.0153, 0.9995, 0.7845;
 
   }
-  
-  out_std << 44.45929437637364, 44.319044796830426, 55.11481922955709;
-  in_mean << 0.005049827974289656, 0.5013627409934998, 0.49966344237327576, 0.5000784397125244, 0.05001185089349747;
-  in_std_inv << 0.0028585679829120636, 0.2916049659252167, 0.2884257733821869, 0.288765013217926, 0.02888154424726963;
-  in_std_inv = in_std_inv.cwiseInverse();
-  
+    
   return 0;
 }
 
