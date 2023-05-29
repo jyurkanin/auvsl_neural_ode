@@ -451,7 +451,7 @@ LD3 is around 6% so not great.
 Continuiing training at 60 steps.
 
 
-** TODO MULTITHREAD FINALLY
+** DONE MULTITHREAD FINALLY
 You've got 16 cores, use them all.
 
 * A new way Forward: <2023-05-22 Mon 18:07>
