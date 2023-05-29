@@ -119,9 +119,9 @@ class TireNet(nn.Module):
   def compute_bekker_input_scaler(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_lon = torch.abs(diff)
-    slip_lat = torch.abs(x[:,1])
-    tire_abs = torch.abs(x[:,2])
+    slip_lon = (diff)
+    slip_lat = (x[:,1])
+    tire_abs = (x[:,2])
     bekker_args = torch.cat((x[:,3][:,None], # zr
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|

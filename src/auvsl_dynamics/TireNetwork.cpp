@@ -54,7 +54,7 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix
   
   // Apply scaling after calculating the bekker features from kinematics
   scaled_features = (bekker_vec - in_mean).cwiseProduct(in_std_inv);
-
+  
   // Actual NN math
   layer0_out = (m_params[ii].weight0*scaled_features) + m_params[ii].bias0;
   layer0_out = layer0_out.unaryExpr(&tanh_scalar_wrapper);

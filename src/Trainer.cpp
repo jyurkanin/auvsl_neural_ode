@@ -608,12 +608,17 @@ void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
   yaw_quat[3] = std::cos(gt_state.yaw / 2.0); // https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
   
   // m_quat_stable * yaw_quat
-  xk[0] = m_quat_stable[3]*yaw_quat[0] + m_quat_stable[0]*yaw_quat[3] + m_quat_stable[1]*yaw_quat[2] - m_quat_stable[2]*yaw_quat[1];
-  xk[1] = m_quat_stable[3]*yaw_quat[1] + m_quat_stable[1]*yaw_quat[3] + m_quat_stable[2]*yaw_quat[0] - m_quat_stable[0]*yaw_quat[2];
-  xk[2] = m_quat_stable[3]*yaw_quat[2] + m_quat_stable[2]*yaw_quat[3] + m_quat_stable[0]*yaw_quat[1] - m_quat_stable[1]*yaw_quat[0];
-  xk[3] = m_quat_stable[3]*yaw_quat[3] - m_quat_stable[0]*yaw_quat[0] - m_quat_stable[1]*yaw_quat[1] - m_quat_stable[2]*yaw_quat[2];
+  // xk[0] = m_quat_stable[3]*yaw_quat[0] + m_quat_stable[0]*yaw_quat[3] + m_quat_stable[1]*yaw_quat[2] - m_quat_stable[2]*yaw_quat[1];
+  // xk[1] = m_quat_stable[3]*yaw_quat[1] + m_quat_stable[1]*yaw_quat[3] + m_quat_stable[2]*yaw_quat[0] - m_quat_stable[0]*yaw_quat[2];
+  // xk[2] = m_quat_stable[3]*yaw_quat[2] + m_quat_stable[2]*yaw_quat[3] + m_quat_stable[0]*yaw_quat[1] - m_quat_stable[1]*yaw_quat[0];
+  // xk[3] = m_quat_stable[3]*yaw_quat[3] - m_quat_stable[0]*yaw_quat[0] - m_quat_stable[1]*yaw_quat[1] - m_quat_stable[2]*yaw_quat[2];
+
+  xk[0] = yaw_quat[0]; // Quaternion. Sets initial yaw.
+  xk[1] = yaw_quat[1];
+  xk[2] = yaw_quat[2];
+  xk[3] = yaw_quat[3];
   
-  xk[4] = gt_state.x; //position
+  xk[4] = gt_state.x; // Position
   xk[5] = gt_state.y;
   xk[6] = m_z_stable;
 

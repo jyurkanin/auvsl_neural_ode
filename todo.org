@@ -563,7 +563,21 @@ need to make sure you copy m_params for each thread because
 CppAD is too stupid to operate on the same CppAD::vector in
 multiple threads.
 
-* TODO Okay, but what if we fixed zr?
+Currently doing a test run with multithreading to make sure it
+works and can reach the same performance that single threading
+does.
+Then: Remove quaternion initialization and fix the input scalers.
+
+Okay multithreading completed. What else is needed for the final
+run?
+
+1. Multithreading
+2. 2D training
+3. No initial Quaternion
+4. Base Link network.
+   
+
+** TODO Okay, but what if we fixed zr?
 This dataset is 2d. Fz doesn't really matter, it just has to keep
 us from sinking into the ground.
 
@@ -572,6 +586,23 @@ to just ignore that and restrict motion to 2D during training?
 And then do fine tuning pass where 3D motion is reactivated?
 
 It would be easy to implement, why not try it?
+
+Actually, why not train and evaluate in 2D?
+The other models are 2D, so it would be a fair comparison.
+I don't see why not.
+
+** TODO Get rid of initial quaternion?
+The initial quaternion determined by natural settling into the
+ground. It has some close to zero pitch and roll but the yaw
+component is .3 degrees. No bueno. Probably should delete.
+
+** DONE THe fucking input scalers are biased
+You took the scaled the absolute value of the inputs, not the actual
+inputs. Fuck. This causes a non zero bias term. Shid. Will fix this
+and see how much it actually affects performance. Pretraining shows
+a small improvement in evaluation loss. OKay, yeah you will copy
+that shit in.
+
 
 * DONE Bugfix for computeEqState
 You fucked up. The eq state is only initialized once in the

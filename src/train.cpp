@@ -23,7 +23,7 @@ int main()
     train.save();
     
 
-    if((i % 20) == 0)
+    if((i % 5) == 4)
     {
       train.evaluate_cv3();
       train.evaluate_ld3();
