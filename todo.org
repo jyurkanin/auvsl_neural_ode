@@ -571,10 +571,15 @@ Then: Remove quaternion initialization and fix the input scalers.
 Okay multithreading completed. What else is needed for the final
 run?
 
+First figure out if we should ignore zr.
+Then evaluate the benefit of L1 regularization.
+
 1. Multithreading
-2. 2D training
+2. No Zr? (maybe)
 3. No initial Quaternion
-4. Base Link network.
+4. Base Link network. Why not.
+   Helps demonstrate my genius idea of articulated body algorithm + nonlinear disturbances on every body
+5. Probably need regularization. L1. Super easy to implement.
    
 
 ** TODO Okay, but what if we fixed zr?
@@ -591,12 +596,19 @@ Actually, why not train and evaluate in 2D?
 The other models are 2D, so it would be a fair comparison.
 I don't see why not.
 
+** TODO L1 Regularization
+I think this could be big.
+I think it explains why the training loss is decreasing but the
+test loss is shit for larger tire-network sizes.
+Seriously, I think the 16 and 32 size networks are just
+overfitting and thats why theyre so shitty. Makes sense.
+
 ** TODO Get rid of initial quaternion?
 The initial quaternion determined by natural settling into the
 ground. It has some close to zero pitch and roll but the yaw
 component is .3 degrees. No bueno. Probably should delete.
 
-** DONE THe fucking input scalers are biased
+** TODO THe fucking input scalers are biased
 You took the scaled the absolute value of the inputs, not the actual
 inputs. Fuck. This causes a non zero bias term. Shid. Will fix this
 and see how much it actually affects performance. Pretraining shows
