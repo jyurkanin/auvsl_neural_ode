@@ -618,6 +618,16 @@ that shit in.
 ** DONE Get rid of Wz
 It hasn't done anything for me.
 
+* DONE You profiled the multithreaded code
+You spent 94% of your time waiting to lock and unlock mutexes
+so that was bad you fucking idiot.
+So you deleted the mutex. But it turns out you needed that because
+of race conditions it can cause a crash when reading and writing
+to the g_map_id vector.
+2 Solutions:
+1. Join all workers after they have been assigned tasks. (simple, slower)
+2. Rewrite workers so that they have a while loop and they wait
+   for new data to run on instead of exiting. (fancy, faster)
 
 * DONE Bugfix for computeEqState
 You fucked up. The eq state is only initialized once in the

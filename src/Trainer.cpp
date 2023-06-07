@@ -204,7 +204,7 @@ void Trainer::trainThreads()
   int traj_len = m_train_steps;
   char fn_array[100];
   
-  for(int i = 1; i <= 3; i++)
+  for(int i = 1; i <= 17; i++)
   {
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -650,7 +650,7 @@ void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
 
 void Trainer::save()
 {
-  //saveVec(m_params, m_param_file);
+  saveVec(m_params, m_param_file);
 }
 bool Trainer::saveVec(const VectorAD &params, const std::string &file_name)
 {
