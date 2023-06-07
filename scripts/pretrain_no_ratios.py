@@ -45,11 +45,7 @@ in_features = "vx vy w zr".split()
 out_features = "Fx Fy Fz".split()
 
 df = pd.read_csv("tire_data.csv")
-
-rand_wz = np.random.rand(len(df), 1)*.1
 data_x = np.array(df[in_features])
-data_x = np.concatenate((data_x,rand_wz),axis=1)
-
 data_y = np.array(df[out_features])
 
 # print("Mean: ", np.mean(temp_data_y, axis=0))
@@ -100,7 +96,7 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.in_size = 5 # sinkage, qd, vx, vy, wz
+    self.in_size = 4 # sinkage, qd, vx, vy
     self.hidden_size = 16
     self.out_size = 3
     
@@ -122,18 +118,17 @@ class TireNet(nn.Module):
     slip_lon = (diff)
     slip_lat = (x[:,1])
     tire_abs = (x[:,2])
-    bekker_args = torch.cat((x[:,3][:,None], # zr
+    bekker_args = torch.cat((x[:,3][:,None],   # zr
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|
-                             slip_lat[:,None], # vy
-                             x[:,4][:,None]
+                             slip_lat[:,None]  # vy
                              ), 1)
     
     self.in_mean = torch.mean(bekker_args, 0)
     temp = bekker_args - self.in_mean
     self.in_std = torch.sqrt(torch.var(temp, 0))
     
-  # vx,vy,qd,zr,wz (batch_size,5)
+  # vx,vy,qd,zr (batch_size,5)
   def forward(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
@@ -143,8 +138,7 @@ class TireNet(nn.Module):
     bekker_args = torch.cat((x[:,3][:,None],   # zr
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|
-                             slip_lat[:,None], # vy
-                             x[:,4][:,None]
+                             slip_lat[:,None]  # vy
                              ), 1)
     
     bekker_args = (bekker_args - self.in_mean) / self.in_std

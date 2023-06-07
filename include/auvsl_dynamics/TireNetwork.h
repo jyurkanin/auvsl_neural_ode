@@ -21,14 +21,14 @@ public:
   ~TireNetwork();
 
   static const int num_hidden_nodes = 16;
-  static const int num_in_features = 5;
+  static const int num_in_features = 4;
   static const int num_out_features = 3;
   static const int num_networks = 4;
   
   int  getNumParams();
   void setParams(const VectorS &params, int idx);
   void getParams(VectorS &params, int idx);
-  void forward(const Eigen::Matrix<Scalar,9,1> &in_vec, Eigen::Matrix<Scalar,num_out_features,1> &out_vec, int ii);
+  void forward(const Eigen::Matrix<Scalar,8,1> &in_vec, Eigen::Matrix<Scalar,num_out_features,1> &out_vec, int ii);
   
   int is_loaded;
   int load_model();

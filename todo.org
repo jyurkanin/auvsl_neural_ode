@@ -582,7 +582,7 @@ Then evaluate the benefit of L1 regularization.
 5. Probably need regularization. L1. Super easy to implement.
    
 
-** TODO Okay, but what if we fixed zr?
+** Okay, but what if we fixed zr?
 This dataset is 2d. Fz doesn't really matter, it just has to keep
 us from sinking into the ground.
 
@@ -603,17 +603,20 @@ test loss is shit for larger tire-network sizes.
 Seriously, I think the 16 and 32 size networks are just
 overfitting and thats why theyre so shitty. Makes sense.
 
-** TODO Get rid of initial quaternion?
+* We're gonna do these tasks:
+** DONE Get rid of initial quaternion?
 The initial quaternion determined by natural settling into the
 ground. It has some close to zero pitch and roll but the yaw
 component is .3 degrees. No bueno. Probably should delete.
 
-** TODO THe fucking input scalers are biased
+** DONE THe fucking input scalers are biased
 You took the scaled the absolute value of the inputs, not the actual
 inputs. Fuck. This causes a non zero bias term. Shid. Will fix this
 and see how much it actually affects performance. Pretraining shows
 a small improvement in evaluation loss. OKay, yeah you will copy
 that shit in.
+** DONE Get rid of Wz
+It hasn't done anything for me.
 
 
 * DONE Bugfix for computeEqState

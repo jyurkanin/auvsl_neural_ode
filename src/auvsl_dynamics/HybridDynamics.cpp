@@ -231,12 +231,12 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
   //We're doing it: Joint positions are set to zero.
   //Transform is needed to tire frame because joints are oriented so that z is the joint axis.
   
-  Eigen::Matrix<Scalar,9,1> features;
+  Eigen::Matrix<Scalar,8,1> features;
   Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> forces;
+  features[4] = 0;
   features[5] = 0;
   features[6] = 0;
   features[7] = 0;
-  features[8] = 0;
   
   
   for(int ii = 0; ii < 4; ii++){    
@@ -261,7 +261,6 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     features[1] = cpt_vels[ii][1];
     features[2] = X[17+ii];
     features[3] = sinkages[ii];
-    features[4] = X[13];
 
     tire_network.forward(features, forces, ii);
     

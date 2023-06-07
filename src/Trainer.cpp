@@ -21,17 +21,14 @@ bool give_me_parallel_mode()
 
 
 std::vector<std::thread::id> g_id_map;
-std::mutex g_map_mutex;
 void put_id_in_map(int id_num)
 {
-  std::scoped_lock lock(g_map_mutex); //protect the map
   g_id_map[id_num] = std::this_thread::get_id();
 }
 
 
 size_t give_me_thread_id()
 {
-  std::scoped_lock lock(g_map_mutex);
   for(int i = 0; i < g_id_map.size(); i++)
   {
     if(g_id_map[i] == std::this_thread::get_id())
@@ -207,7 +204,7 @@ void Trainer::trainThreads()
   int traj_len = m_train_steps;
   char fn_array[100];
   
-  for(int i = 1; i <= 17; i++)
+  for(int i = 1; i <= 3; i++)
   {
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -653,7 +650,7 @@ void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
 
 void Trainer::save()
 {
-  saveVec(m_params, m_param_file);
+  //saveVec(m_params, m_param_file);
 }
 bool Trainer::saveVec(const VectorAD &params, const std::string &file_name)
 {

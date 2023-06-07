@@ -17,7 +17,7 @@ int main()
   // train.evaluate_ld3();
   
 
-  for(int i = 0; i < 10000; i++)
+  for(int i = 0; i < 1; i++)
   {
     train.trainThreads();
     train.save();

@@ -64,7 +64,7 @@ add_executable(train
 	src/auvsl_dynamics/generated/miscellaneous.cpp
 	src/auvsl_dynamics/generated/transforms.cpp
 )
-target_link_libraries(train cpp_bptt)
+target_link_libraries(train cpp_bptt profiler)
 target_include_directories(train PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(train ${PYTHON_LIBRARIES})
 
