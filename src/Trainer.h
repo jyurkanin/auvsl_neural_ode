@@ -47,6 +47,7 @@ public:
 
   void trainThreads();
   void assignWork(const std::vector<DataRow> &traj);
+  void assignWorker(const std::vector<DataRow> &traj, int &cnt_workers);
   void finishWork();
   bool combineResults(VectorF &batch_grad,
 		      const VectorF &sample_grad,
@@ -84,9 +85,9 @@ public:
   std::vector<Worker> m_workers;
 private:
   const double m_gt_sample_period = 10.0;
-  const int m_train_steps = 2;
+  const int m_train_steps = 10;
   const int m_eval_steps = 60;
-  const int m_inc_train_steps = 2;
+  const int m_inc_train_steps = 10;
   const int m_inc_eval_steps = 60;
   
   const int m_num_threads;

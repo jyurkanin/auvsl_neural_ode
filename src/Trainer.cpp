@@ -50,8 +50,8 @@ Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
   g_parallel_mode = false;
   CppAD::thread_alloc::parallel_setup(m_num_threads+1, give_me_parallel_mode, give_me_thread_id);
   
-  g_parallel_mode = false; // "O.K." - Saitama
   CppAD::parallel_ad<ADF>();
+  g_parallel_mode = true; // "O.K." - Saitama
   
   m_system_adf = std::make_shared<VehicleSystem<ADF>>();  
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
@@ -124,7 +124,9 @@ void Trainer::loadDataFile(std::string fn)
     
     m_data.push_back(row);
   }
-  
+
+  std::cout << "Finished Reading: " << fn << "\n";
+  std::flush(std::cout);
 }
 
 void Trainer::train()
@@ -203,7 +205,8 @@ void Trainer::trainThreads()
   
   int traj_len = m_train_steps;
   char fn_array[100];
-  
+
+  int cnt_workers = 0;
   for(int i = 1; i <= 17; i++)
   {
     memset(fn_array, 0, 100);
@@ -216,6 +219,14 @@ void Trainer::trainThreads()
     {
       std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
       assignWork(traj);
+
+      // assignWorker(traj, cnt_workers);
+
+      // if(cnt_workers == m_num_threads)
+      // {
+      // 	finishWork();
+      // 	cnt_workers = 0;
+      // }
     }
     
     save();
@@ -228,13 +239,29 @@ void Trainer::trainThreads()
   updateParams(m_batch_grad / m_cnt);
 }
 
+void Trainer::assignWorker(const std::vector<DataRow> &traj, int &cnt_workers)
+{
+  auto worker_lambda = [](Trainer::Worker *worker)
+  {
+    worker->work();
+  };
+
+  // We are going to assume that these workers are ready.
+  m_workers[cnt_workers].m_traj = traj;
+  m_workers[cnt_workers].m_running = true;
+  m_workers[cnt_workers].m_collected = false;
+  
+  m_workers[cnt_workers].m_thread = std::thread(worker_lambda, &m_workers[cnt_workers]);
+  cnt_workers++;
+}
+
 void Trainer::assignWork(const std::vector<DataRow> &traj)
 {  
   auto worker_lambda = [](Trainer::Worker *worker)
   {
     worker->work();
   };
-  
+
   // Create new variables for each thread.
   while(true)
   {
@@ -250,6 +277,7 @@ void Trainer::assignWork(const std::vector<DataRow> &traj)
 	{
 	  m_workers[i].m_thread.join();
 	}
+
 	m_workers[i].m_thread = std::thread(worker_lambda, &m_workers[i]);
 	return;
       }
@@ -260,8 +288,10 @@ void Trainer::assignWork(const std::vector<DataRow> &traj)
 	m_workers[i].m_collected = true;
       }
     }
-    
+
+    //std::cout << "Here 5\n"; std::flush(std::cout);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
+    //std::cout << "Here 6\n"; std::flush(std::cout);
   }
 }
 
@@ -269,10 +299,14 @@ void Trainer::finishWork()
 {
   for(int i = 0; i < m_workers.size(); i++)
   {
-    m_workers[i].m_thread.join();
-    combineResults(m_batch_grad, m_workers[i].m_grad,
-		   m_batch_loss, m_workers[i].m_loss);
-    m_workers[i].m_collected = true;
+    if(m_workers[i].m_thread.joinable())
+    {
+      m_workers[i].m_thread.join();
+      m_workers[i].m_running = false;
+      combineResults(m_batch_grad, m_workers[i].m_grad,
+		     m_batch_loss, m_workers[i].m_loss);
+      m_workers[i].m_collected = true;
+    }
   }
 }
 
