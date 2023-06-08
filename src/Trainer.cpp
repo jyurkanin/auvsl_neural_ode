@@ -288,7 +288,7 @@ void Trainer::assignWork(const std::vector<DataRow> &traj)
 	m_workers[i].m_collected = true;
       }
     }
-
+    
     //std::cout << "Here 5\n"; std::flush(std::cout);
     std::this_thread::sleep_for(std::chrono::milliseconds(1));
     //std::cout << "Here 6\n"; std::flush(std::cout);

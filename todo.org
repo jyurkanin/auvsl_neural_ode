@@ -539,7 +539,7 @@ Still getting gradient explosions, but much smaller magnitude.
 ~|1|
 You could still just retrain the network to avoid dividing.
 
-* DONE OH NO I was stupid
+* DONE OH FUCK I WAS RETARDED AND MADE IT disCONTINUOUS OH SHIDDDDD
 This will probably not solve the gradient-splosions.
 Need to remove the discontinuity where Fz == 0 when zr < 0
 
@@ -617,6 +617,10 @@ a small improvement in evaluation loss. OKay, yeah you will copy
 that shit in.
 ** DONE Get rid of Wz
 It hasn't done anything for me.
+
+* TODO Okay so there is definitely a data race
+But fortunately its rare and it doesn't seem to be
+causing problems so you can ignore it until it causes a problem.
 
 * DONE You profiled the multithreaded code
 You spent 94% of your time waiting to lock and unlock mutexes
