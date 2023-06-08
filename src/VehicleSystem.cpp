@@ -122,7 +122,7 @@ void VehicleSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
   }
   
   
-  const int num_steps = 100; // 100*.001 = .1
+  const int num_steps = 10; // 10*.001 = .01
   for(int ii = 0; ii < num_steps; ii++)
   {
     model_x0[17] = model_x0[19] = model_u[0];

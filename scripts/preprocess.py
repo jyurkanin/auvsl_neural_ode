@@ -37,7 +37,7 @@ def readIMUFile(name, ii):
     return df
     
 def readFiles(name, num_files):
-    timestep = .1
+    timestep = .01
     
     for ii in range(1, num_files+1):
         df_odom = readOdomFile(name, ii)
@@ -82,17 +82,17 @@ def plot_train3_w():
         print("Filename", fn)
         w = (df["vel_left"] - df["vel_right"])/2
         
-        plt.plot(w)
+        plt.plot(df["time"], w)
         
     plt.show()
 
 def plot_cv3_w():
-    for i in range(1,145):
+    for i in range(55,56):
         fn = "CV3_data{0:02d}.csv".format(i)
         df = pd.read_csv(fn)
         print("Filename", fn)
         w = (df["vel_left"] - df["vel_right"])/2
-        plt.plot(w)
+        plt.plot(df["time"], w)
         
     plt.show()
 
@@ -100,7 +100,7 @@ def plot_ld3_w():
     fn = "LD3_data01.csv"
     df = pd.read_csv(fn)
     w = (df["vel_left"] - df["vel_right"])/2
-    plt.plot(w)
+    plt.plot(df["time"], w)
     plt.show()
 
 
@@ -111,7 +111,7 @@ def plot_train3_vx():
         df = pd.read_csv(fn)
         print("Filename", fn)
         w = (df["vel_left"] + df["vel_right"])/2
-        plt.plot(w)
+        plt.plot(df["time"], w)
         
     plt.show()
 
@@ -121,7 +121,7 @@ def plot_cv3_vx():
         df = pd.read_csv(fn)
         print("Filename", fn)
         w = (df["vel_left"] + df["vel_right"])/2
-        plt.plot(w)
+        plt.plot(df["time"], w)
         
     plt.show()
 
@@ -129,7 +129,7 @@ def plot_ld3_vx():
     fn = "LD3_data01.csv"
     df = pd.read_csv(fn)
     w = (df["vel_left"] + df["vel_right"])/2
-    plt.plot(w)
+    plt.plot(df["time"], w)
     plt.show()
 
     
@@ -141,7 +141,7 @@ readFiles("CV3", 144)
 readFiles("LD3", 1)
 
 # plot_train3_w()
-# plot_cv3_w()
+# plot_cv3_w()            
 # plot_ld3_w()
 
 # plot_train3_vx()

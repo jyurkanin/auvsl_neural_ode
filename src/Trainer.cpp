@@ -437,7 +437,7 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
     gt_y[i] = traj[i].y;
     gt_yaw[i] = traj[i].yaw;
 
-    x_axis[i] = .1*i;
+    x_axis[i] = .01*i;
   }
 
   std::vector<double> aspect_ratio_hack_x(2);
