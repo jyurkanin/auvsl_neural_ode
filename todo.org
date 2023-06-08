@@ -621,6 +621,23 @@ It hasn't done anything for me.
 * TODO Okay so there is definitely a data race
 But fortunately its rare and it doesn't seem to be
 causing problems so you can ignore it until it causes a problem.
+Here's the state of the worker over time:
+1. Initial: Idle is set to true.
+2. Main: A trajectory is loaded, then m_ready is set true,
+3. Worker: if m_ready, then:
+   set m_ready false
+   process data
+   set m_waiting true
+4. Main: if m_waiting, then:
+   combine results
+   set m_waiting false
+   set m_idle true
+
+In both threads, if anything is true, it is then set false.
+
+idle->ready->(all false)->waiting->idle
+   
+   
 
 * DONE You profiled the multithreaded code
 You spent 94% of your time waiting to lock and unlock mutexes

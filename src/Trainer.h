@@ -47,7 +47,6 @@ public:
 
   void trainThreads();
   void assignWork(const std::vector<DataRow> &traj);
-  void assignWorker(const std::vector<DataRow> &traj, int &cnt_workers);
   void finishWork();
   bool combineResults(VectorF &batch_grad,
 		      const VectorF &sample_grad,
@@ -66,8 +65,11 @@ public:
     void work();
     
     // Worker State:
-    std::atomic<bool> m_running{false};
-    std::atomic<bool> m_collected{true};
+    std::atomic<bool> m_keep_alive{false};
+
+    std::atomic<bool> m_idle{true};
+    std::atomic<bool> m_ready{true};
+    std::atomic<bool> m_waiting{true};
     std::thread m_thread;
     int m_id;
     

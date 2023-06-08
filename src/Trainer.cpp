@@ -188,13 +188,25 @@ void Trainer::train()
 
 void Trainer::trainThreads()
 {
+  auto worker_lambda = [](Trainer::Worker *worker)
+  {
+    worker->work();
+  };
+  
   m_workers.clear();
   m_workers.resize(m_num_threads);
     
   for(int i = 0; i < m_workers.size(); i++)
   {
     m_workers[i] = Worker(this);
+    m_workers[i].m_idle.store(true);
+    m_workers[i].m_ready.store(false);
+    m_workers[i].m_waiting.store(false);
+    
+    m_workers[i].m_keep_alive.store(true);
+    
     m_workers[i].m_id = i;
+    m_workers[i].m_thread = std::thread(worker_lambda, &m_workers[i]);
   }
   
   m_system_adf->setNumSteps(m_train_steps);
@@ -219,14 +231,6 @@ void Trainer::trainThreads()
     {
       std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
       assignWork(traj);
-
-      // assignWorker(traj, cnt_workers);
-
-      // if(cnt_workers == m_num_threads)
-      // {
-      // 	finishWork();
-      // 	cnt_workers = 0;
-      // }
     }
     
     save();
@@ -239,60 +243,34 @@ void Trainer::trainThreads()
   updateParams(m_batch_grad / m_cnt);
 }
 
-void Trainer::assignWorker(const std::vector<DataRow> &traj, int &cnt_workers)
-{
-  auto worker_lambda = [](Trainer::Worker *worker)
-  {
-    worker->work();
-  };
-
-  // We are going to assume that these workers are ready.
-  m_workers[cnt_workers].m_traj = traj;
-  m_workers[cnt_workers].m_running = true;
-  m_workers[cnt_workers].m_collected = false;
-  
-  m_workers[cnt_workers].m_thread = std::thread(worker_lambda, &m_workers[cnt_workers]);
-  cnt_workers++;
-}
-
 void Trainer::assignWork(const std::vector<DataRow> &traj)
-{  
-  auto worker_lambda = [](Trainer::Worker *worker)
-  {
-    worker->work();
-  };
-
-  // Create new variables for each thread.
+{
   while(true)
   {
     for(int i = 0; i < m_workers.size(); i++)
     {
-      if((!m_workers[i].m_running) && m_workers[i].m_collected)
+      if(m_workers[i].m_idle.load())
       {
+	// std::cout << "Was Idle\n"; std::flush(std::cout);
 	m_workers[i].m_traj = traj;
-	m_workers[i].m_collected = false;
-	m_workers[i].m_running = true;
-	
-	if(m_workers[i].m_thread.joinable())
-	{
-	  m_workers[i].m_thread.join();
-	}
-
-	m_workers[i].m_thread = std::thread(worker_lambda, &m_workers[i]);
+	m_workers[i].m_idle.store(false);
+	m_workers[i].m_ready.store(true);
 	return;
       }
-      else if((!m_workers[i].m_running) && (!m_workers[i].m_collected))
+      else if(m_workers[i].m_waiting.load())
       {
+	// std::cout << "Was Waiting\n"; std::flush(std::cout);
 	combineResults(m_batch_grad, m_workers[i].m_grad,
 		       m_batch_loss, m_workers[i].m_loss);
-	m_workers[i].m_collected = true;
+	
+	m_workers[i].m_waiting.store(false);
+	m_workers[i].m_idle.store(true);
       }
     }
-    
-    //std::cout << "Here 5\n"; std::flush(std::cout);
-    std::this_thread::sleep_for(std::chrono::milliseconds(1));
-    //std::cout << "Here 6\n"; std::flush(std::cout);
+
+    std::this_thread::sleep_for(std::chrono::milliseconds(100));
   }
+  
 }
 
 void Trainer::finishWork()
@@ -301,11 +279,10 @@ void Trainer::finishWork()
   {
     if(m_workers[i].m_thread.joinable())
     {
+      m_workers[i].m_keep_alive.store(false);
       m_workers[i].m_thread.join();
-      m_workers[i].m_running = false;
       combineResults(m_batch_grad, m_workers[i].m_grad,
 		     m_batch_loss, m_workers[i].m_loss);
-      m_workers[i].m_collected = true;
     }
   }
 }
@@ -730,6 +707,9 @@ bool Trainer::loadVec(VectorAD &params, const std::string &file_name)
 
 
 
+
+
+// Worker Definition
 Trainer::Worker::Worker()
 {
   
@@ -743,8 +723,11 @@ Trainer::Worker::~Worker()
 
 Trainer::Worker::Worker(const Worker& other)
 {
-  m_running = other.m_running.load();
-  m_collected = other.m_collected.load();
+  m_idle = other.m_idle.load();
+  m_ready = other.m_ready.load();
+  m_waiting = other.m_waiting.load();
+  m_keep_alive = other.m_keep_alive.load();
+  
   m_grad = other.m_grad;
   m_loss = other.m_loss;
   m_trainer = other.m_trainer;
@@ -759,18 +742,35 @@ void Trainer::Worker::work()
 {
   put_id_in_map(m_id);
   
-  std::vector<VectorAD> x_list(m_trainer->m_train_steps);
-  m_trainer->trainTrajectory(m_traj, x_list, m_grad, m_loss);
-  m_running = false;
+  while(m_keep_alive)
+  {
+    if(m_ready.load())
+    {
+      // std::cout << "Was Ready\n"; std::flush(std::cout);
+      m_ready.store(false);
+      
+      std::vector<VectorAD> x_list(m_trainer->m_train_steps);
+      m_trainer->trainTrajectory(m_traj, x_list, m_grad, m_loss);
+      
+      m_waiting.store(true);
+    }
+    else
+    {
+      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    }
+  }
 }
 
-const Trainer::Worker& Trainer::Worker::operator=(const Trainer::Worker& worker)
+const Trainer::Worker& Trainer::Worker::operator=(const Trainer::Worker& other)
 {
-  this->m_running = worker.m_running.load();
-  this->m_collected = worker.m_collected.load();
-  this->m_grad = worker.m_grad;
-  this->m_loss = worker.m_loss;
-  this->m_trainer = worker.m_trainer;
+  this->m_idle = other.m_idle.load();
+  this->m_ready = other.m_ready.load();
+  this->m_waiting = other.m_waiting.load();
+  this->m_keep_alive = other.m_keep_alive.load();
+  
+  this->m_grad = other.m_grad;
+  this->m_loss = other.m_loss;
+  this->m_trainer = other.m_trainer;
   
   return *this;
 }
