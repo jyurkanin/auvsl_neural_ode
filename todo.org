@@ -618,7 +618,7 @@ that shit in.
 ** DONE Get rid of Wz
 It hasn't done anything for me.
 
-* TODO Okay so there is definitely a data race
+* DONE Okay so there is definitely a data race
 But fortunately its rare and it doesn't seem to be
 causing problems so you can ignore it until it causes a problem.
 Here's the state of the worker over time:
@@ -656,3 +656,9 @@ constructor. So if you intiialize your params to something
 retarded, you will be stuck with a retarded initial state for the
 rest of your training. Shit. This could have been having a small
 effect on loss. or big idk. Actually this is not a big deal.
+
+* <2023-06-07 Wed>
+Main Issue: training loss is low and validation loss is high.
+** TODO Try with zr fixed. Idk lets see what happens
+** TODO Implement Regularization.
+** TODO If ^ Doesnt improve performance, implement a base network
