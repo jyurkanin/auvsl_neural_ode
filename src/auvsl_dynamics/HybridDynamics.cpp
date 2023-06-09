@@ -30,7 +30,7 @@ using Jackal::rcg::tz_rear_right_wheel;
 using Jackal::rcg::orderedJointIDs;
 
 
-const Scalar HybridDynamics::timestep = 1e-3;
+const Scalar HybridDynamics::timestep = 5.0e-3;
 const Acceleration HybridDynamics::GRAVITY_VEC = (Acceleration() << 0,0,0,0,0,-9.81).finished();
 //const Acceleration HybridDynamics::GRAVITY_VEC = (Acceleration() << 0,0,0,0,0,0).finished();
 
@@ -260,7 +260,7 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     features[0] = cpt_vels[ii][0];
     features[1] = cpt_vels[ii][1];
     features[2] = X[17+ii];
-    features[3] = sinkages[ii];
+    features[3] = .0605; // sinkages[ii]; // NO_Z
 
     tire_network.forward(features, forces, ii);
     
@@ -435,20 +435,21 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   //ROS_INFO("Acc %f %f %f %f %f %f", base_acc[0], base_acc[1], base_acc[2], base_acc[3], base_acc[4], base_acc[5]);
   //ROS_INFO("Vel %f %f %f %f %f %f", com_vel[0], com_vel[1], com_vel[2], com_vel[3], com_vel[4], com_vel[5]);
   
-  Eigen::Matrix<Scalar,3,1> ang_vel(base_vel[0], base_vel[1], base_vel[2]);
+  //Eigen::Matrix<Scalar,3,1> ang_vel(base_vel[0], base_vel[1], base_vel[2]);
+  Eigen::Matrix<Scalar,3,1> ang_vel(0,0, base_vel[2]);
   Eigen::Matrix<Scalar,3,1> lin_vel(base_vel[3], base_vel[4], base_vel[5]);
   Eigen::Matrix<Scalar,4,1> quat_dot = calcQuatDot(quat, ang_vel);
   
   lin_vel = rot*lin_vel; //converts from base to world frame.
   
-  Xd[0] = quat_dot[0];
-  Xd[1] = quat_dot[1];
-  Xd[2] = quat_dot[2];
-  Xd[3] = quat_dot[3];
+  Xd[0] = quat_dot[0]; // NO_Z
+  Xd[1] = quat_dot[1]; // NO_Z
+  Xd[2] = quat_dot[2]; // NO_Z
+  Xd[3] = quat_dot[3]; // NO_Z
   
   Xd[4] = lin_vel[0];
   Xd[5] = lin_vel[1];
-  Xd[6] = lin_vel[2];
+  Xd[6] = 0; //lin_vel[2]; // NO_Z
   
   Xd[7] = u[0]; //X[17];
   Xd[8] = u[1]; //X[18];

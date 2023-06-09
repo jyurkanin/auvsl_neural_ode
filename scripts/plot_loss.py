@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import pandas as pd
 import re
 
-f = open("../build/train_output.txt")
+f = open("../build/avg.txt")
 
 
 training_loss = []

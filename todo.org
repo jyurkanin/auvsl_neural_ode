@@ -659,6 +659,15 @@ effect on loss. or big idk. Actually this is not a big deal.
 
 * <2023-06-07 Wed>
 Main Issue: training loss is low and validation loss is high.
-** TODO Try with zr fixed. Idk lets see what happens
+** DONE Try with zr fixed. Idk lets see what happens
+Running. Will run a long training thing and investigate the resulting
+CV3 performance. Error was weirdly high, so thats not good.
+CV3 error is now down to 12%.
+Nothing game changing here.
+It trains 5x faster because you were able to up the timestep
+but thats the only benefit.
+The training loss is reaching a flat line and the validation
+loss is oscillating around 12-13%
+
 ** TODO Implement Regularization.
 ** TODO If ^ Doesnt improve performance, implement a base network

@@ -124,9 +124,6 @@ void Trainer::loadDataFile(std::string fn)
     
     m_data.push_back(row);
   }
-
-  std::cout << "Finished Reading: " << fn << "\n";
-  std::flush(std::cout);
 }
 
 void Trainer::train()
@@ -167,12 +164,12 @@ void Trainer::train()
 
       if(!has_explosion)
       {
-	m_batch_grad += traj_grad;
-	avg_loss += loss;
-	//plotTrajectory(traj, x_list);      
-	std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
-	std::flush(std::cout);
-	m_cnt++;
+		  m_batch_grad += traj_grad;
+		  avg_loss += loss;
+		  plotTrajectory(traj, x_list);      
+		  std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
+		  std::flush(std::cout);
+		  m_cnt++;
       }      
     }
     
@@ -268,7 +265,7 @@ void Trainer::assignWork(const std::vector<DataRow> &traj)
       }
     }
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
+    std::this_thread::sleep_for(std::chrono::milliseconds(10));
   }
   
 }
@@ -756,7 +753,7 @@ void Trainer::Worker::work()
     }
     else
     {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }
 }

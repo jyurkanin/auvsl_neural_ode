@@ -10,7 +10,7 @@ VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics
   this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
   this->setNumSteps(10);
   this->setTimestep(0.001);  //unused
-  this->setLearningRate(1e-4f);
+  this->setLearningRate(1e-3f);
 }
 
 template<typename Scalar>
@@ -121,8 +121,8 @@ void VehicleSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
     model_u[i] = Xk[i+model_x0.size()];
   }
   
-  
-  const int num_steps = 10; // 10*.001 = .01
+  const int num_steps = 2; // 1*.01 = .01 //2D
+  //const int num_steps = 10; // 10*.001 = .01 //3D
   for(int ii = 0; ii < num_steps; ii++)
   {
     model_x0[17] = model_x0[19] = model_u[0];
