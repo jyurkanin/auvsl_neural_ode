@@ -125,65 +125,63 @@ void Trainer::loadDataFile(std::string fn)
     m_data.push_back(row);
   }
 
-  std::cout << "Finished Reading: " << fn << "\n";
-  std::flush(std::cout);
 }
 
 void Trainer::train()
 {
-  m_system_adf->setNumSteps(m_train_steps);
+	m_system_adf->setNumSteps(m_train_steps);
   
-  VectorF traj_grad(m_system_adf->getNumParams());
-  int traj_len = m_train_steps;
-  double loss;
-  double avg_loss = 0;
-  std::vector<VectorAD> x_list(m_train_steps);
-  char fn_array[100];
+	VectorF traj_grad(m_system_adf->getNumParams());
+	int traj_len = m_train_steps;
+	double loss;
+	double avg_loss = 0;
+	std::vector<VectorAD> x_list(m_train_steps);
+	char fn_array[100];
   
-  for(int i = 1; i <= 1; i++)
-  {
-    memset(fn_array, 0, 100);
-    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
-    
-    std::string fn(fn_array);
-    loadDataFile(fn);
-    
-    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_train_steps)
-    {
-      std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
-      
-      trainTrajectory(traj, x_list, traj_grad, loss);
-      
-      bool has_explosion = false;
-      for(int i = 0; i < m_params.size(); i++)
-      {
-	if(fabs(traj_grad[i]) > 100.0)
+	for(int i = 1; i <= 1; i++)
 	{
-	  has_explosion = true;
-	  std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
-	  break;
-	}
-      }
-
-      if(!has_explosion)
-      {
-	m_batch_grad += traj_grad;
-	avg_loss += loss;
-	//plotTrajectory(traj, x_list);      
-	std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
-	std::flush(std::cout);
-	m_cnt++;
-      }      
-    }
+		memset(fn_array, 0, 100);
+		sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
     
-    save();
-  }
+		std::string fn(fn_array);
+		loadDataFile(fn);
+    
+		for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_train_steps)
+		{
+			std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
+      
+			trainTrajectory(traj, x_list, traj_grad, loss);
+      
+			bool has_explosion = false;
+			for(int i = 0; i < m_params.size(); i++)
+			{
+				if(fabs(traj_grad[i]) > 100.0)
+				{
+					has_explosion = true;
+					std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
+					break;
+				}
+			}
+
+			if(!has_explosion)
+			{
+				m_batch_grad += traj_grad;
+				avg_loss += loss;
+				//plotTrajectory(traj, x_list);      
+				std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
+				std::flush(std::cout);
+				m_cnt++;
+			}      
+		}
+    
+		save();
+	}
   
-  std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
-  std::flush(std::cout);
-  updateParams(m_batch_grad / m_cnt);
-  m_cnt = 0;
-  avg_loss = 0;
+	std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
+	std::flush(std::cout);
+	updateParams(m_batch_grad / m_cnt);
+	m_cnt = 0;
+	avg_loss = 0;
 }
 
 void Trainer::trainThreads()
@@ -226,7 +224,7 @@ void Trainer::trainThreads()
     
     std::string fn(fn_array);
     loadDataFile(fn);
-    
+	
     for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_train_steps)
     {
       std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
@@ -238,39 +236,38 @@ void Trainer::trainThreads()
   
   finishWork();
   
-  std::cout << "Avg Loss: " << m_batch_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
+  std::cout << "Avg Loss: " << m_batch_loss / m_cnt << "\n";
   std::flush(std::cout);
   updateParams(m_batch_grad / m_cnt);
 }
 
 void Trainer::assignWork(const std::vector<DataRow> &traj)
 {
-  while(true)
-  {
-    for(int i = 0; i < m_workers.size(); i++)
-    {
-      if(m_workers[i].m_idle.load())
-      {
-	// std::cout << "Was Idle\n"; std::flush(std::cout);
-	m_workers[i].m_traj = traj;
-	m_workers[i].m_idle.store(false);
-	m_workers[i].m_ready.store(true);
-	return;
-      }
-      else if(m_workers[i].m_waiting.load())
-      {
-	// std::cout << "Was Waiting\n"; std::flush(std::cout);
-	combineResults(m_batch_grad, m_workers[i].m_grad,
-		       m_batch_loss, m_workers[i].m_loss);
+	while(true)
+	{
+		for(int i = 0; i < m_workers.size(); i++)
+		{
+			if(m_workers[i].m_idle.load())
+			{
+				// std::cout << "Was Idle\n"; std::flush(std::cout);
+				m_workers[i].m_traj = traj;
+				m_workers[i].m_idle.store(false);
+				m_workers[i].m_ready.store(true);
+				return;
+			}
+			else if(m_workers[i].m_waiting.load())
+			{
+				// std::cout << "Was Waiting\n"; std::flush(std::cout);
+				combineResults(m_batch_grad, m_workers[i].m_grad,
+							   m_batch_loss, m_workers[i].m_loss);
 	
-	m_workers[i].m_waiting.store(false);
-	m_workers[i].m_idle.store(true);
-      }
-    }
+				m_workers[i].m_waiting.store(false);
+				m_workers[i].m_idle.store(true);
+			}
+		}
 
-    std::this_thread::sleep_for(std::chrono::milliseconds(100));
-  }
-  
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}  
 }
 
 void Trainer::finishWork()
@@ -372,10 +369,15 @@ void Trainer::updateParams(const VectorF &grad)
     
     m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad_idx*grad_idx);
     m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
+	m_params[i] -= m_l1_weight*m_params[i];
     norm += CppAD::abs(m_params[i]);
   }
-  
-  std::cout << "Param norm: " << CppAD::Value(norm) << " Param[0]: " << CppAD::Value(m_params[0]) << "\n";
+
+  ADF update0 = (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[0]) + 1e-6))*ADF(grad[0]);
+  std::cout << "Param norm: " << CppAD::Value(norm)
+			<< " Param[0]: " << CppAD::Value(m_params[0])
+			<< " dParams[0]: " << CppAD::Value(update0)
+			<< " l1_update[0]: " << CppAD::Value(m_l1_weight*m_params[0]) << "\n";
   for(int i = 0; i < m_params.size(); i++)
   {
     
@@ -756,7 +758,7 @@ void Trainer::Worker::work()
     }
     else
     {
-      std::this_thread::sleep_for(std::chrono::milliseconds(100));
+      std::this_thread::sleep_for(std::chrono::milliseconds(10));
     }
   }
 }

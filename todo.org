@@ -596,7 +596,7 @@ Actually, why not train and evaluate in 2D?
 The other models are 2D, so it would be a fair comparison.
 I don't see why not.
 
-** TODO L1 Regularization
+** DONE L1 Regularization
 I think this could be big.
 I think it explains why the training loss is decreasing but the
 test loss is shit for larger tire-network sizes.
@@ -669,5 +669,10 @@ but thats the only benefit.
 The training loss is reaching a flat line and the validation
 loss is oscillating around 12-13%
 
-** TODO Implement Regularization.
+** DONE Implement Regularization.
+Simple L1 reg should solve all of my problems.
+This brought CV3 error down from ~16% to a minimum of 10.3%
+I will see what happens if I apply regularization to the pretraining network.
+
+
 ** TODO If ^ Doesnt improve performance, implement a base network
