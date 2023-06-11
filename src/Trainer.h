@@ -37,6 +37,7 @@ public:
   void initializeState(const DataRow &gt_state, VectorAD &xk_robot);
   void loadDataFile(std::string string);
   void train();
+  void evaluate_train3();
   void evaluate_cv3();
   void evaluate_ld3();
   void computeEqState();

@@ -284,6 +284,41 @@ void Trainer::finishWork()
   }
 }
 
+void Trainer::evaluate_train3()
+{
+  m_system_adf->setNumSteps(m_eval_steps);
+  
+  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
+  int traj_len = m_system_adf->getNumSteps();
+  char fn_array[100];
+  
+  double loss_avg = 0;
+  double loss = 0;
+  int cnt = 0;
+  
+  for(int i = 1; i <= 17; i++)
+  {
+    memset(fn_array, 0, 100);
+    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
+    
+    std::string fn(fn_array);
+    loadDataFile(fn);
+    
+    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
+    {
+      std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
+      evaluateTrajectory(traj, x_list, loss);
+      // plotTrajectory(traj, x_list);
+      
+      loss_avg += loss;
+      cnt++;
+    }
+  }
+  
+  std::cout << "Train3 avg loss: " << loss_avg/cnt << "\n";
+}
+
+
 void Trainer::evaluate_cv3()
 {
   m_system_adf->setNumSteps(m_eval_steps);
@@ -308,7 +343,7 @@ void Trainer::evaluate_cv3()
     {
       std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
       evaluateTrajectory(traj, x_list, loss);
-      //plotTrajectory(traj, x_list);
+      // plotTrajectory(traj, x_list);
       
       loss_avg += loss;
       cnt++;
@@ -339,7 +374,7 @@ void Trainer::evaluate_ld3()
   {
     std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
     evaluateTrajectory(traj, x_list, loss);
-    //plotTrajectory(traj, x_list);
+    // plotTrajectory(traj, x_list);
     
     loss_avg += loss;
     cnt++;

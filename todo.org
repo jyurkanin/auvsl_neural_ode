@@ -704,5 +704,31 @@ These are kinda noisey. Maybe it's throwing off the model.
 Bro IDK. Maybe give the model both unfiltered and filtered
 tire velocity. Bro, IDK
 
-** TODO Penalize angular errors harder?
+** DONE Penalize angular errors harder?
 Okay, sounds good
+Meh.
+
+** DONE Compute Evaluation loss on the training sets.
+It's at 8% which is surprising.
+So it's not my generalization that is an issue.
+
+** DONE Analyze performance on the LD3 set
+No conclusion. SOmetimes the problem is longitudinal error,
+lateral error, and sometimes angular error.
+
+
+
+
+* <2023-06-11 Sun 12:20>
+So you thought generalization was bad, but the loss function
+was actually different from the true evaluation loss.
+So it turns out the training loss is actually not that good.
+I changed the loss function.
+
+** DONE Modify loss function
+This didn't help that much.
+Still same performance levels.
+
+
+** TODO Okay bro, we are gonna have to do the
+base network thing and hope it works out.
