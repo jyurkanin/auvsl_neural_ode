@@ -5,7 +5,9 @@
 #include <assert.h>
 
 template<typename Scalar>
-VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics::STATE_DIM + HybridDynamics::CNTRL_DIM, 0)
+VehicleSystem<Scalar>::VehicleSystem() :
+	cpp_bptt::System<Scalar>(HybridDynamics::STATE_DIM + HybridDynamics::CNTRL_DIM, 0),
+	m_random_gen(1337)
 {
   this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
   this->setNumSteps(10);
@@ -69,24 +71,20 @@ void VehicleSystem<Scalar>::forward(const VectorS &X, VectorS &Xd)
 template<typename Scalar>
 Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
 {
-  Scalar x_err = gt_vec[4] - vec[4];
-  Scalar y_err = gt_vec[5] - vec[5];
-  Scalar lin_err = (x_err*x_err) + (y_err*y_err);
-
-  Scalar roll, pitch, yaw;
-  toEulerAngles(vec[3], vec[0], vec[1], vec[2],
-		roll, pitch, yaw);
+	std::uniform_real_distribution<double> rand(-1e-1, 1e-1);
+	Scalar x_err = gt_vec[4] - vec[4] + rand(m_random_gen);
+	Scalar y_err = gt_vec[5] - vec[5] + rand(m_random_gen);
+	Scalar lin_err = (x_err*x_err) + (y_err*y_err);
+	
+	Scalar roll, pitch, yaw;
+	toEulerAngles(vec[3], vec[0], vec[1], vec[2],
+				  roll, pitch, yaw);
   
-  Scalar yaw_err = yaw - gt_vec[3];
-  yaw_err = CppAD::atan2(CppAD::sin(yaw_err), CppAD::cos(yaw_err));
-  Scalar ang_err = yaw_err*yaw_err;
-  
-  // std::cout << "gt Yaw " << CppAD::Value(gt_vec[3]);
-  // std::cout << " yaw " << CppAD::Value(yaw);
-  // std::cout << " Yaw err " << CppAD::Value(yaw_err);
-  // std::cout << "\n";
-      
-  return ang_err + lin_err;
+	Scalar yaw_err = yaw - gt_vec[3];
+	yaw_err = CppAD::atan2(CppAD::sin(yaw_err), CppAD::cos(yaw_err));
+	Scalar ang_err = yaw_err*yaw_err;
+	
+	return ang_err + lin_err;
 }
 
 template<typename Scalar>

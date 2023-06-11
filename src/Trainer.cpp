@@ -185,7 +185,7 @@ void Trainer::train()
 }
 
 void Trainer::trainThreads()
-{
+{	
   auto worker_lambda = [](Trainer::Worker *worker)
   {
     worker->work();
@@ -663,7 +663,7 @@ void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
 
 void Trainer::save()
 {
-  saveVec(m_params, m_param_file);
+	// saveVec(m_params, m_param_file);
 }
 bool Trainer::saveVec(const VectorAD &params, const std::string &file_name)
 {

@@ -14,41 +14,39 @@ using Jackal::rcg::Scalar;
 class TireNetwork
 {
 public:
-  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorS;
-  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixS;
+	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorS;
+	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixS;
   
-  TireNetwork();
-  ~TireNetwork();
+	TireNetwork();
+	~TireNetwork();
 
-  static const int num_hidden_nodes = 8;
-  static const int num_in_features = 4;
-  static const int num_out_features = 3;
-  static const int num_networks = 4;
+	static const int num_hidden_nodes = 8;
+	static const int num_in_features = 4;
+	static const int num_out_features = 3;
+	static const int num_networks = 4;
   
-  int  getNumParams();
-  void setParams(const VectorS &params, int idx);
-  void getParams(VectorS &params, int idx);
-  void forward(const Eigen::Matrix<Scalar,8,1> &in_vec, Eigen::Matrix<Scalar,num_out_features,1> &out_vec, int ii);
+	int  getNumParams();
+	void setParams(const VectorS &params, int idx);
+	void getParams(VectorS &params, int idx);
+	void forward(const Eigen::Matrix<Scalar,8,1> &in_vec, Eigen::Matrix<Scalar,num_out_features,1> &out_vec, int ii);
   
-  int is_loaded;
-  int load_model();
-  
+	int is_loaded;
+	int load_model();  
 
-  struct Params
-  {
-    Eigen::Matrix<Scalar,num_hidden_nodes,num_in_features> weight0;
-    Eigen::Matrix<Scalar,num_hidden_nodes,1> bias0;
-    Eigen::Matrix<Scalar,num_hidden_nodes,num_hidden_nodes> weight2;
-    Eigen::Matrix<Scalar,num_hidden_nodes,1> bias2;
-    Eigen::Matrix<Scalar,num_out_features,num_hidden_nodes> weight4;
-    Eigen::Matrix<Scalar,num_out_features,1> bias4;
-  };
+	struct Params
+	{
+		Eigen::Matrix<Scalar,num_hidden_nodes,num_in_features> weight0;
+		Eigen::Matrix<Scalar,num_hidden_nodes,1> bias0;
+		Eigen::Matrix<Scalar,num_hidden_nodes,num_hidden_nodes> weight2;
+		Eigen::Matrix<Scalar,num_hidden_nodes,1> bias2;
+		Eigen::Matrix<Scalar,num_out_features,num_hidden_nodes> weight4;
+		Eigen::Matrix<Scalar,num_out_features,1> bias4;
+	};
 
-  Params m_params[4];
+	Params m_params[4];
   
 private:
-  Eigen::Matrix<Scalar,num_out_features,1> out_std;
-  Eigen::Matrix<Scalar,num_in_features,1>  in_mean;
-  Eigen::Matrix<Scalar,num_in_features,1>  in_std_inv; //inverse of in_std. Because multiply is faster than divide.
-
+	Eigen::Matrix<Scalar,num_out_features,1> out_std;
+	Eigen::Matrix<Scalar,num_in_features,1>  in_mean;
+	Eigen::Matrix<Scalar,num_in_features,1>  in_std_inv; //inverse of in_std. Because multiply is faster than divide.
 };

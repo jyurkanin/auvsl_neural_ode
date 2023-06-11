@@ -3,7 +3,7 @@
 #include <cmath>
 #include <cppad/cppad.hpp>
 #include <iostream>
-
+#include <cstdlib>
 
 
 TireNetwork::TireNetwork()
@@ -11,7 +11,7 @@ TireNetwork::TireNetwork()
   out_std << 44.45929437637364, 44.319044796830426, 55.11481922955709;
   in_mean << 0.005, 0.0, 0.0, 0.0;
   in_std_inv << 0.0028585679829120636, 0.5799984931945801, 0.576934278011322, 0.5774632096290588;
-  in_std_inv = in_std_inv.cwiseInverse();  
+  in_std_inv = in_std_inv.cwiseInverse();
 }
 TireNetwork::~TireNetwork(){}
 
@@ -53,7 +53,7 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec, Eigen::Matrix
   
   // Apply scaling after calculating the bekker features from kinematics
   scaled_features = (bekker_vec - in_mean).cwiseProduct(in_std_inv);
-  
+    
   // Actual NN math
   layer0_out = (m_params[ii].weight0*scaled_features) + m_params[ii].bias0;
   layer0_out = layer0_out.unaryExpr(&tanh_scalar_wrapper);

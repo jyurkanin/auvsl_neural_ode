@@ -2,6 +2,7 @@
 
 #include <cpp_bptt.h>
 #include "HybridDynamics.h"
+#include <random>
 
 // I believe this is ready.
 // This represents an ODE and loss function
@@ -25,8 +26,8 @@ public:
   
   void evaluate(const VectorS &gt_vec, const VectorS &vec, Scalar &ang_err, Scalar &lin_err);
   void integrate(const VectorS &X0, VectorS &X1);  
-
   
   MatrixS m_params;
   HybridDynamics m_hybrid_dynamics;
+  std::mt19937 m_random_gen;
 };
