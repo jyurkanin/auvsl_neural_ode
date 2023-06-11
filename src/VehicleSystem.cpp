@@ -31,6 +31,7 @@ void VehicleSystem<Scalar>::getParams(VectorS &params)
 {
   int idx = 0;
   m_hybrid_dynamics.tire_network.getParams(params, idx);
+  
 }
 
 template<typename Scalar>

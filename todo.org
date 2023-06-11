@@ -673,6 +673,13 @@ loss is oscillating around 12-13%
 Simple L1 reg should solve all of my problems.
 This brought CV3 error down from ~16% to a minimum of 10.3%
 I will see what happens if I apply regularization to the pretraining network.
+Nothing really. It doesn't improve performance on the eval dataset.
 
+Let's test L1 regularization with 8 hidden nodes.
+Since 8 hidden nodes gave the best results, L1 + 8 Hidden
+should be like, really good.
+
+It's reaching 9.18% CV3 accuracy
 
 ** TODO If ^ Doesnt improve performance, implement a base network
+Alright we're doing this
