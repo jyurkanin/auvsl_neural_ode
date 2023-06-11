@@ -682,4 +682,27 @@ should be like, really good.
 It's reaching 9.18% CV3 accuracy
 
 ** TODO If ^ Doesnt improve performance, implement a base network
-Alright we're doing this
+Not sure if this will help.
+Also, it's cheating.
+can't be pretrained either.
+
+* <2023-06-10 Sat>
+The above changes weren't enough. It improved 16 node performance
+down to 11% on CV3. Didn't affect 8 node performance.
+I think the generalization is the main issue.
+Training loss is amazing.
+Validation loss is not great.
+
+** DONE Add Noise to the model inputs
+Improve generalization. PLEASE GOD.
+Starting with a relatively large amount: 1e-2
+Yeah, this did not help at all. CV3 error slowly climbed up
+to 9.8%
+
+** TODO Smooth the left and right tire velocities???
+These are kinda noisey. Maybe it's throwing off the model.
+Bro IDK. Maybe give the model both unfiltered and filtered
+tire velocity. Bro, IDK
+
+** TODO Penalize angular errors harder?
+Okay, sounds good
