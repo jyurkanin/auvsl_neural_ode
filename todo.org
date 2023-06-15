@@ -769,7 +769,13 @@ Fancy network with 8 nodes gets down to 0.068
 16 nodes gets us down to 6.0% error.
 32 nodes gets down to like 6.2% error.
 
-I think it is not fucking working you idiot
+I think it is not fucking working you idiot.
+I think the first change to the tire network helped,
+but this is still not a way forward because we can't
+drive the training loss to zero.
+
+** TODO Try without zr
+Still not convinced it isnt fucking the training.
 
 ** TODO Okay bro, we are gonna have to do the
 base network thing and hope it works out.
