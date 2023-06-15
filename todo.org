@@ -725,10 +725,51 @@ was actually different from the true evaluation loss.
 So it turns out the training loss is actually not that good.
 I changed the loss function.
 
+Okay. So training loss is not great, pretraining loss
+is not great either. Perhaps a new tire model will solve
+all my problems.
+
 ** DONE Modify loss function
 This didn't help that much.
 Still same performance levels.
 
+** TODO Fancier tire network model
+Okay bro, how about a second additive non passive neural network
+that uses a tanh on the output to limit the max contribution?
+Okay. I think it would be better to use a base network.
+
+It could be like this:
+[Vx,Vy,ql,qr]-->FF-->[Fx,Fy]
+
+This is retarded.
+
+You removed the diff and just used vx,vy,qd,zr and the
+pretraining loss decreased a lot. The actual neural ode loss
+doesn't seem to be doing any better unfortunately. You might
+be able to improve with more nodes. You also removed the abs()
+functions but you might want to add those back in since they
+could improve generalization.
+
+But pretraining loss is down bigly, so I dont think a fancier
+network model is needed.
+
+Also, before, adding hidden nodes had no effect on the pretraining
+loss, but here, adding hidden nodes reduces it as one would expect
+
+Might need to fix loss function?
+
+Okay, despite adding these changes, CV3 loss is actually higher.
+About 17%
+
+LD3 error is down to 5.9% so thats good.
+
+** TODO Will a fancier network with 16 nodes reach a lower
+training loss? Train on just the 1st training file.
+Fancy network with 8 nodes gets down to 0.068
+16 nodes gets us down to 6.0% error.
+32 nodes gets down to like 6.2% error.
+
+I think it is not fucking working you idiot
 
 ** TODO Okay bro, we are gonna have to do the
 base network thing and hope it works out.

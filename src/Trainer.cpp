@@ -217,7 +217,7 @@ void Trainer::trainThreads()
   char fn_array[100];
 
   int cnt_workers = 0;
-  for(int i = 1; i <= 17; i++)
+  for(int i = 1; i <= 1; i++)
   {
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
