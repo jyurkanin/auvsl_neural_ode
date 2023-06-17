@@ -733,7 +733,7 @@ all my problems.
 This didn't help that much.
 Still same performance levels.
 
-** TODO Fancier tire network model
+** DONE Fancier tire network model
 Okay bro, how about a second additive non passive neural network
 that uses a tanh on the output to limit the max contribution?
 Okay. I think it would be better to use a base network.
@@ -781,6 +781,13 @@ fair. I am upset.
 Lower training loss however? So maybe it's just a lack of data
 that's killing me here.
 
+What if I just reduced the number of params to like 2 hidden units
+Fuck it
+
+** DONE 2 Fucking hidden units
+Pretraining loss was trash, CV3 performance was 13%
+which is actually better than with 8 nodes. Hmmm?
+
 ** DONE Try without zr
 Still not convinced it isnt fucking the training.
 Nevermind this didnt do shit. Performance was actually worse,
@@ -791,4 +798,5 @@ Parameterize the fucking physical parameters. Every single one? yes.
 Don't pull any punches. You have a ton of parameters, you're going to
 use every parameter.
 
-** TODO Go back to 8 nodes.
+** DONE Go back to 8 nodes.
+Still not great.

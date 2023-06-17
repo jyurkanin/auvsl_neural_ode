@@ -98,7 +98,7 @@ class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
     self.in_size = 4 # sinkage, qd, vx, vy
-    self.hidden_size = 8
+    self.hidden_size = 2
     self.out_size = 3
     
     self.tire_radius = .098
@@ -269,7 +269,7 @@ model_name = "train_no_ratio1.net"
 # md = torch.load(model_name)
 # model.load_state_dict(md)
 
-fit(1e-3, 5000, 100)
+fit(1e-2, 5000, 100)
 plt.show()
 get_evaluation_loss(test_data, test_labels)
 fit(1e-3, 50, 10)
