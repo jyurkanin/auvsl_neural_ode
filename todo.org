@@ -732,3 +732,15 @@ Still same performance levels.
 
 ** TODO Okay bro, we are gonna have to do the
 base network thing and hope it works out.
+
+** DONE 2 Hidden Nodes baby
+Oh shit waddup
+.08 L1 training loss
+9.7% CV3 test loss
+
+Virtually equivalent to the 8 node network.
+Training with bigger networks gave worse error.
+This tells me we don't have enough data and we are overfitting
+with bigger networks. Huge RIP.
+
+Welp, nothing I can do about that.
