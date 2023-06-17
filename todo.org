@@ -763,7 +763,7 @@ About 17%
 
 LD3 error is down to 5.9% so thats good.
 
-** TODO Will a fancier network with 16 nodes reach a lower
+** DONE Will a fancier network with 16 nodes reach a lower
 training loss? Train on just the 1st training file.
 Fancy network with 8 nodes gets down to 0.068
 16 nodes gets us down to 6.0% error.
@@ -774,8 +774,21 @@ I think the first change to the tire network helped,
 but this is still not a way forward because we can't
 drive the training loss to zero.
 
-** TODO Try without zr
-Still not convinced it isnt fucking the training.
+The fancier network with the lower pretraining does worse on
+CV3. I can't fucking believe it. This is bullshit. It's not
+fair. I am upset.
 
-** TODO Okay bro, we are gonna have to do the
-base network thing and hope it works out.
+Lower training loss however? So maybe it's just a lack of data
+that's killing me here.
+
+** DONE Try without zr
+Still not convinced it isnt fucking the training.
+Nevermind this didnt do shit. Performance was actually worse,
+strange.
+
+** TODO WE NEED MORE PARAMS
+Parameterize the fucking physical parameters. Every single one? yes.
+Don't pull any punches. You have a ton of parameters, you're going to
+use every parameter.
+
+** TODO Go back to 8 nodes.

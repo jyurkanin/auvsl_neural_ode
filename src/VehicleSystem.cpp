@@ -71,7 +71,7 @@ Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
 {
   Scalar x_err = gt_vec[4] - vec[4];
   Scalar y_err = gt_vec[5] - vec[5];
-  Scalar lin_err = CppAD::sqrt((x_err*x_err) + (y_err*y_err));
+  Scalar lin_err = ((x_err*x_err) + (y_err*y_err));
 
   Scalar roll, pitch, yaw;
   toEulerAngles(vec[3], vec[0], vec[1], vec[2],
@@ -79,7 +79,7 @@ Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
   
   Scalar yaw_err = yaw - gt_vec[3];
   yaw_err = CppAD::atan2(CppAD::sin(yaw_err), CppAD::cos(yaw_err));
-  Scalar ang_err = CppAD::abs(yaw_err);
+  Scalar ang_err = (yaw_err*yaw_err);
   
   return ang_err + lin_err;
 }

@@ -23,11 +23,11 @@ int main()
     train.trainThreads();
     train.save();    
 	
-    // if((i % 20) == 19)
-    // {
-    //   train.evaluate_cv3();
-    //   train.evaluate_ld3();
-    // }
+    if((i % 20) == 19)
+    {
+      train.evaluate_cv3();
+      train.evaluate_ld3();
+    }
   }
     
 }
