@@ -59,7 +59,7 @@ namespace rcg {
   const Scalar tz_fr_navsat_link{0.18150000274181366};
   const Scalar tx_fr_rear_mount{-0.11999999731779099};
   const Scalar tz_fr_rear_mount{0.18400000035762787};
-  const Scalar m_base_link{16.52400016784668};
+	extern Scalar m_base_link;
   
   const Scalar comx_base_link{0.011999273672699928};
   const Scalar comy_base_link{0.0019998790230602026};

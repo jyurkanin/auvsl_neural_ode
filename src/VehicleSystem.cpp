@@ -34,6 +34,7 @@ void VehicleSystem<Scalar>::setParams(const VectorS &params)
   Jackal::rcg::iy_base_link  = params[idx+3];
   Jackal::rcg::iyz_base_link = params[idx+4];
   Jackal::rcg::iz_base_link  = params[idx+5];
+  Jackal::rcg::m_base_link   = params[idx+6];
 
   // Sad
   Jackal::rcg::InertiaProperties* inert_props = m_hybrid_dynamics.fwd_dynamics->getInertiaProperties();
@@ -53,6 +54,7 @@ void VehicleSystem<Scalar>::getParams(VectorS &params)
   params[idx+3] = Jackal::rcg::iy_base_link;
   params[idx+4] = Jackal::rcg::iyz_base_link;
   params[idx+5] = Jackal::rcg::iz_base_link;
+  params[idx+6] = Jackal::rcg::m_base_link;
 }
 
 template<typename Scalar>
@@ -173,9 +175,11 @@ void VehicleSystem<Scalar>::getDefaultParams(VectorS &params)
 	Jackal::rcg::ix_base_link  = 0.38783785700798035;
 	Jackal::rcg::ixy_base_link = 0.0011965520679950714;
 	Jackal::rcg::ixz_base_link = -0.003115505911409855;
-	Jackal::rcg::iy_base_link = 0.46875107288360596;
+	Jackal::rcg::iy_base_link  = 0.46875107288360596;
 	Jackal::rcg::iyz_base_link = 0.0031140821520239115;
-	Jackal::rcg::iz_base_link = 0.4509454071521759;
+	Jackal::rcg::iz_base_link  = 0.4509454071521759;
+	Jackal::rcg::m_base_link   = 16.52400016784668;
+	
 	
 	m_hybrid_dynamics.tire_network.load_model();
 	getParams(params);

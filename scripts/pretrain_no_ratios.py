@@ -146,8 +146,8 @@ class TireNet(nn.Module):
     yhat = self.model.forward(bekker_args)
     
     yhat_sign_corrected = torch.cat((
-      (yhat[:,0] * torch.tanh(1*diff))[:,None],
-      (yhat[:,1] * torch.tanh(-1*x[:,1]))[:,None],
+      (yhat[:,0] * (1*diff))[:,None],
+      (yhat[:,1] * (-1*x[:,1]))[:,None],
       (yhat[:,2] / (1 + torch.exp(-1*x[:,3])))[:,None]), 1)
     return yhat_sign_corrected
     

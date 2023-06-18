@@ -26,7 +26,7 @@ public:
   void evaluate(const VectorS &gt_vec, const VectorS &vec, Scalar &ang_err, Scalar &lin_err);
   void integrate(const VectorS &X0, VectorS &X1);  
 
-  static constexpr int m_num_physical_params = 6;
+  static constexpr int m_num_physical_params = 7;
   MatrixS m_params;
   HybridDynamics m_hybrid_dynamics;
 };

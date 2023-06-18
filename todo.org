@@ -730,5 +730,16 @@ This didn't help that much.
 Still same performance levels.
 
 
-** TODO Okay bro, we are gonna have to do the
-base network thing and hope it works out.
+** TODO Training the inertia params of the base link
+We're down to 9.8% CV3 error.
+So whatever.
+Training loss is down to 7.65%
+
+Adding in the mass of the base link
+Didn't help, training loss stalled at 13.457%
+Validation loss was trash at 20%.
+Fuck it.
+
+** TODO Is there any way we can augment the training datasets
+COuld use the linear model to generate circular trajectories
+to improve CV3 performance. I guess.

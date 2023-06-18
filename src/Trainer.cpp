@@ -416,6 +416,16 @@ void Trainer::updateParams(const VectorF &grad)
 			<< " Param[0]: " << CppAD::Value(m_params[0])
 			<< " dParams[0]: " << CppAD::Value(update0)
 			<< " l1_update[0]: " << CppAD::Value(m_l1_weight*m_params[0]) << "\n";
+  
+  std::cout << "Inertias: "
+			<< m_params[m_params.size()-1] << ", "
+			<< m_params[m_params.size()-2] << ","
+			<< m_params[m_params.size()-3] << ","
+			<< m_params[m_params.size()-4] << ","
+			<< m_params[m_params.size()-5] << ","
+			<< m_params[m_params.size()-6] << ","
+			<< m_params[m_params.size()-7] << "\n";
+  
   for(int i = 0; i < m_params.size(); i++)
   {
     
