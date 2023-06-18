@@ -47,17 +47,18 @@ Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
   g_id_map.resize(num_threads+1);
   put_id_in_map(num_threads);
 
-  g_parallel_mode = false;
-  CppAD::thread_alloc::parallel_setup(m_num_threads+1, give_me_parallel_mode, give_me_thread_id);
+  // g_parallel_mode = false;
+  // CppAD::thread_alloc::parallel_setup(m_num_threads+1, give_me_parallel_mode, give_me_thread_id);
   
-  CppAD::parallel_ad<ADF>();
-  g_parallel_mode = true; // "O.K." - Saitama
+  // CppAD::parallel_ad<ADF>();
+  // g_parallel_mode = true; // "O.K." - Saitama
   
   m_system_adf = std::make_shared<VehicleSystem<ADF>>();  
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
   m_squared_grad = VectorAD::Zero(m_system_adf->getNumParams());
   m_system_adf->getDefaultParams(m_params);
+  m_system_adf->setParams(m_params);
   
   computeEqState();
   
@@ -74,7 +75,7 @@ void Trainer::computeEqState()
 {
   m_system_adf->m_hybrid_dynamics.initState(); //set start pos to 0,0,.16 and orientation to 0,0,0,1
   m_system_adf->m_hybrid_dynamics.settle();     //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
-
+  
   m_quat_stable = VectorAD::Zero(4);
   m_quat_stable[0] = m_system_adf->m_hybrid_dynamics.state_[0];
   m_quat_stable[1] = m_system_adf->m_hybrid_dynamics.state_[1];
@@ -83,6 +84,7 @@ void Trainer::computeEqState()
   
   m_z_stable = m_system_adf->m_hybrid_dynamics.state_[6];
   std::cout << "z_stable " << m_z_stable << "\n";
+  std::cout << m_quat_stable[0] << std::setw(20) << m_quat_stable[1] << std::setw(20) << m_quat_stable[2] << std::setw(20) << m_quat_stable[3] << std::endl;
 }
 
 // ,time,vel_left,vel_right,x,y,yaw,wx,wy,wz
@@ -137,8 +139,10 @@ void Trainer::train()
 	double avg_loss = 0;
 	std::vector<VectorAD> x_list(m_train_steps);
 	char fn_array[100];
-  
-	for(int i = 1; i <= 1; i++)
+	
+	std::cout << "Intertia Param: " << CppAD::Value(m_params[0]) << "\n";
+	
+	for(int i = 1; i <= 17; i++)
 	{
 		memset(fn_array, 0, 100);
 		sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -167,7 +171,7 @@ void Trainer::train()
 			{
 				m_batch_grad += traj_grad;
 				avg_loss += loss;
-				//plotTrajectory(traj, x_list);      
+				plotTrajectory(traj, x_list);      
 				std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
 				std::flush(std::cout);
 				m_cnt++;

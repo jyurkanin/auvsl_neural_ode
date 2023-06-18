@@ -1,5 +1,6 @@
 #include "VehicleSystem.h"
 #include "utils.h"
+#include "generated/model_constants.h"
 
 #include <iostream>
 #include <assert.h>
@@ -7,7 +8,8 @@
 template<typename Scalar>
 VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics::STATE_DIM + HybridDynamics::CNTRL_DIM, 0)
 {
-  this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
+  this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams() +
+					 m_num_physical_params);
   this->setNumSteps(10);
   this->setTimestep(0.001);  //unused
   this->setLearningRate(1e-3f);
@@ -24,6 +26,14 @@ void VehicleSystem<Scalar>::setParams(const VectorS &params)
 {
   int idx = 0;
   m_hybrid_dynamics.tire_network.setParams(params, idx);
+  idx += m_hybrid_dynamics.tire_network.getNumParams();
+  
+  Jackal::rcg::ix_base_link  = params[idx+0];
+  Jackal::rcg::ixy_base_link = params[idx+1];
+  Jackal::rcg::ixz_base_link = params[idx+2];
+  Jackal::rcg::iy_base_link  = params[idx+3];
+  Jackal::rcg::iyz_base_link = params[idx+4];
+  Jackal::rcg::iz_base_link  = params[idx+5];
 }
 
 template<typename Scalar>
@@ -31,7 +41,14 @@ void VehicleSystem<Scalar>::getParams(VectorS &params)
 {
   int idx = 0;
   m_hybrid_dynamics.tire_network.getParams(params, idx);
+  idx += m_hybrid_dynamics.tire_network.getNumParams();
   
+  params[idx+0] = Jackal::rcg::ix_base_link;
+  params[idx+1] = Jackal::rcg::ixy_base_link;
+  params[idx+2] = Jackal::rcg::ixz_base_link;
+  params[idx+3] = Jackal::rcg::iy_base_link;
+  params[idx+4] = Jackal::rcg::iyz_base_link;
+  params[idx+5] = Jackal::rcg::iz_base_link;
 }
 
 template<typename Scalar>
@@ -150,8 +167,15 @@ void VehicleSystem<Scalar>::getDefaultInitialState(VectorS &state)
 template<typename Scalar>
 void VehicleSystem<Scalar>::getDefaultParams(VectorS &params)
 {
-  m_hybrid_dynamics.tire_network.load_model();
-  getParams(params);
+	Jackal::rcg::ix_base_link  = 0.38783785700798035;
+	Jackal::rcg::ixy_base_link = 0.0011965520679950714;
+	Jackal::rcg::ixz_base_link = -0.003115505911409855;
+	Jackal::rcg::iy_base_link = 0.46875107288360596;
+	Jackal::rcg::iyz_base_link = 0.0031140821520239115;
+	Jackal::rcg::iz_base_link = 0.4509454071521759;
+	
+	m_hybrid_dynamics.tire_network.load_model();
+	getParams(params);
 }
 
 template class VehicleSystem<ADF>;

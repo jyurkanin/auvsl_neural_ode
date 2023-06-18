@@ -3,6 +3,7 @@
 
 #include "rbd_types.h"
 
+
 /**
  * \file
  * This file contains the definitions of all the non-zero numerical
@@ -63,20 +64,13 @@ namespace rcg {
   const Scalar comx_base_link{0.011999273672699928};
   const Scalar comy_base_link{0.0019998790230602026};
   const Scalar comz_base_link{0.06699594855308533};
-  
-  //const Scalar comx_base_link = 0.;
-  //const Scalar comy_base_link = 0.;
-  //const Scalar comz_base_link = 0.;
-  
-  const Scalar ix_base_link{0.38783785700798035};
-  const Scalar ixy_base_link{0.0011965520679950714};
-  const Scalar ixz_base_link{-0.003115505911409855};
-  //const Scalar ixy_base_link = 0.;
-  //const Scalar ixz_base_link = 0.;
-  const Scalar iy_base_link{0.46875107288360596};
-  const Scalar iyz_base_link{0.0031140821520239115};
-  //const Scalar iyz_base_link = 0.;
-  const Scalar iz_base_link{0.4509454071521759};
+    
+	extern Scalar ix_base_link;
+	extern Scalar ixy_base_link;
+	extern Scalar ixz_base_link;
+	extern Scalar iy_base_link;
+	extern Scalar iyz_base_link;
+	extern Scalar iz_base_link;
   
   const Scalar m_front_left_wheel_link{0.47699999809265137};
   const Scalar ix_front_left_wheel_link{0.0013000000035390258};
