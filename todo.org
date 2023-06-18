@@ -730,7 +730,7 @@ This didn't help that much.
 Still same performance levels.
 
 
-** TODO Training the inertia params of the base link
+** DONE Training the inertia params of the base link
 We're down to 9.8% CV3 error.
 So whatever.
 Training loss is down to 7.65%
