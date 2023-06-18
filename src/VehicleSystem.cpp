@@ -34,6 +34,10 @@ void VehicleSystem<Scalar>::setParams(const VectorS &params)
   Jackal::rcg::iy_base_link  = params[idx+3];
   Jackal::rcg::iyz_base_link = params[idx+4];
   Jackal::rcg::iz_base_link  = params[idx+5];
+
+  // Sad
+  Jackal::rcg::InertiaProperties* inert_props = m_hybrid_dynamics.fwd_dynamics->getInertiaProperties();
+  (*inert_props) = Jackal::rcg::InertiaProperties();
 }
 
 template<typename Scalar>
@@ -133,8 +137,7 @@ void VehicleSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
   {
     model_u[i] = Xk[i+model_x0.size()];
   }
-  
-  
+    
   const int num_steps = 10; // 10*.001 = .01
   for(int ii = 0; ii < num_steps; ii++)
   {

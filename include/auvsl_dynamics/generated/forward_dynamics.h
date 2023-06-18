@@ -61,7 +61,9 @@ public:
         const Velocity& base_link_v, const Acceleration& g,
         const JointState& qd, const JointState& tau, const ExtForces& fext = zeroExtForces);
     ///@}
-
+	
+	InertiaProperties* getInertiaProperties() {return inertiaProps;}
+	
     /** Updates all the kinematics transforms used by this instance. */
     void setJointStatus(const JointState& q) const;
 

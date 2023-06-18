@@ -73,18 +73,17 @@ Trainer::~Trainer()
 
 void Trainer::computeEqState()
 {
-  m_system_adf->m_hybrid_dynamics.initState(); //set start pos to 0,0,.16 and orientation to 0,0,0,1
-  m_system_adf->m_hybrid_dynamics.settle();     //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
+	m_system_adf->m_hybrid_dynamics.initState(); //set start pos to 0,0,.16 and orientation to 0,0,0,1
+	m_system_adf->m_hybrid_dynamics.settle();     //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
+	
+	m_quat_stable = VectorAD::Zero(4);
+	m_quat_stable[0] = m_system_adf->m_hybrid_dynamics.state_[0];
+	m_quat_stable[1] = m_system_adf->m_hybrid_dynamics.state_[1];
+	m_quat_stable[2] = m_system_adf->m_hybrid_dynamics.state_[2];
+	m_quat_stable[3] = m_system_adf->m_hybrid_dynamics.state_[3];
   
-  m_quat_stable = VectorAD::Zero(4);
-  m_quat_stable[0] = m_system_adf->m_hybrid_dynamics.state_[0];
-  m_quat_stable[1] = m_system_adf->m_hybrid_dynamics.state_[1];
-  m_quat_stable[2] = m_system_adf->m_hybrid_dynamics.state_[2];
-  m_quat_stable[3] = m_system_adf->m_hybrid_dynamics.state_[3];
-  
-  m_z_stable = m_system_adf->m_hybrid_dynamics.state_[6];
-  std::cout << "z_stable " << m_z_stable << "\n";
-  std::cout << m_quat_stable[0] << std::setw(20) << m_quat_stable[1] << std::setw(20) << m_quat_stable[2] << std::setw(20) << m_quat_stable[3] << std::endl;
+	m_z_stable = m_system_adf->m_hybrid_dynamics.state_[6];
+	std::cout << "z_stable " << m_z_stable << "\n";
 }
 
 // ,time,vel_left,vel_right,x,y,yaw,wx,wy,wz
@@ -171,7 +170,7 @@ void Trainer::train()
 			{
 				m_batch_grad += traj_grad;
 				avg_loss += loss;
-				plotTrajectory(traj, x_list);      
+				// plotTrajectory(traj, x_list);      
 				std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
 				std::flush(std::cout);
 				m_cnt++;
