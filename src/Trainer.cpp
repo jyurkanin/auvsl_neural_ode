@@ -138,7 +138,7 @@ void Trainer::train()
 	std::vector<VectorAD> x_list(m_train_steps);
 	char fn_array[100];
   
-	for(int i = 1; i <= 1; i++)
+	for(int i = 1; i <= 36; i++)
 	{
 		memset(fn_array, 0, 100);
 		sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -163,11 +163,11 @@ void Trainer::train()
 				}
 			}
 
+			plotTrajectory(traj, x_list);
 			if(!has_explosion)
 			{
 				m_batch_grad += traj_grad;
 				avg_loss += loss;
-				//plotTrajectory(traj, x_list);      
 				std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
 				std::flush(std::cout);
 				m_cnt++;
@@ -217,7 +217,7 @@ void Trainer::trainThreads()
   char fn_array[100];
 
   int cnt_workers = 0;
-  for(int i = 1; i <= 17; i++)
+  for(int i = 1; i <= 36; i++)
   {
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -229,16 +229,52 @@ void Trainer::trainThreads()
     {
       std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
       assignWork(traj);
+	  
+	  if(m_cnt == m_batch_size)
+	  {
+		  waitForAllWorkers();
+		  std::cout << "Avg Loss: " << m_batch_loss / m_cnt << "\n";
+		  std::flush(std::cout);
+		  updateParams(m_batch_grad / m_cnt);
+		  m_cnt = 0;
+	  }
     }
     
     save();
   }
   
   finishWork();
-  
   std::cout << "Avg Loss: " << m_batch_loss / m_cnt << "\n";
   std::flush(std::cout);
   updateParams(m_batch_grad / m_cnt);
+}
+
+void Trainer::waitForAllWorkers()
+{
+	bool done = false;
+	while(!done)
+	{
+		done = true;
+		for(int i = 0; i < m_workers.size(); i++)
+		{
+			
+			if(m_workers[i].m_idle.load()) {}
+			else if(m_workers[i].m_waiting.load())
+			{
+				combineResults(m_batch_grad, m_workers[i].m_grad,
+							   m_batch_loss, m_workers[i].m_loss);
+				
+				m_workers[i].m_waiting.store(false);
+				m_workers[i].m_idle.store(true);
+			}
+			else
+			{
+				done = false;
+				break;
+			}
+		}
+		std::this_thread::sleep_for(std::chrono::milliseconds(10));
+	}
 }
 
 void Trainer::assignWork(const std::vector<DataRow> &traj)
@@ -249,6 +285,7 @@ void Trainer::assignWork(const std::vector<DataRow> &traj)
 		{
 			if(m_workers[i].m_idle.load())
 			{
+				m_cnt++;
 				// std::cout << "Was Idle\n"; std::flush(std::cout);
 				m_workers[i].m_traj = traj;
 				m_workers[i].m_idle.store(false);
@@ -422,7 +459,8 @@ void Trainer::updateParams(const VectorF &grad)
       break;
     }
   }
-
+  
+  m_batch_loss = 0;
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
 }
 
@@ -628,7 +666,6 @@ bool Trainer::combineResults(VectorF &batch_grad,
   {
     batch_grad += sample_grad;
     batch_loss += sample_loss;
-    m_cnt++;
     
     std::cout << "Loss: " << sample_loss << "\tdParams: " << sample_grad[0] << "\n";
     std::flush(std::cout);

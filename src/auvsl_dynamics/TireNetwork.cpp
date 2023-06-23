@@ -31,7 +31,7 @@ inline Scalar relu_wrapper(Scalar x){
 }
 
 
-// vx vy w zr wz
+// vx vy w zr
 void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec, Eigen::Matrix<Scalar,num_out_features,1> &out_vec, int ii){
   Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> layer0_out;
   Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> layer2_out;

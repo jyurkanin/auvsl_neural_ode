@@ -24,7 +24,7 @@ def readGTFile(name, ii):
     elif(name == "Train3"):
         fn = "/mnt/home/justin/Downloads/{0}/localization_ground_truth/{1:04d}_Tr_grass_GT.txt".format(name, ii)
     else:
-        print("You fucking fucked up you fuckign idiot")
+        print("Bruh Moment")
         quit()
     
     df = pd.read_csv(fn, names = "time x y yaw".split())
@@ -36,7 +36,7 @@ def readIMUFile(name, ii):
     df = df["time wx wy wz".split()]
     return df
     
-def readFiles(name, num_files):
+def readFiles(name, num_files, augment=False):
     timestep = .01
     
     for ii in range(1, num_files+1):
@@ -57,7 +57,7 @@ def readFiles(name, num_files):
 
         yaw_unbounded = (np.interp(resample_times, df_gt["time"], np.unwrap(df_gt["yaw"]))).reshape(-1,1)
         yaw = np.arctan2(np.sin(yaw_unbounded), np.cos(yaw_unbounded))
-        
+
         train_data = np.concatenate([resample_times.reshape(-1,1),
                                      np.interp(resample_times, df_odom["time"], df_odom["vel_left"]).reshape(-1,1),
                                      np.interp(resample_times, df_odom["time"], df_odom["vel_right"]).reshape(-1,1),
@@ -75,6 +75,36 @@ def readFiles(name, num_files):
         train_df = pd.DataFrame(train_data, columns="time vel_left vel_right x y yaw wx wy wz vx vy".split())
         train_df.to_csv("{0}_data{1:02d}.csv".format(name, ii))
 
+        # plt.subplot(1,2,1)
+        # plt.plot(train_df["x"], train_df["y"])
+        # plt.quiver(train_data[::10,3], train_data[::10,4], train_data[::10,9], train_data[::10,10], scale=10.0)
+        
+        # swap vl and vr, invert y, vy, yaw, wz
+        if(augment):
+            yaw = np.arctan2(np.sin(-yaw_unbounded), np.cos(-yaw_unbounded))
+            train_data = np.concatenate([resample_times.reshape(-1,1),
+                                         np.interp(resample_times, df_odom["time"], df_odom["vel_right"]).reshape(-1,1),
+                                         np.interp(resample_times, df_odom["time"], df_odom["vel_left"]).reshape(-1,1),
+                                         x_interp.reshape(-1,1),
+                                         -y_interp.reshape(-1,1),
+                                         yaw,
+                                         np.interp(resample_times, df_imu["time"], df_imu["wx"]).reshape(-1,1),
+                                         np.interp(resample_times, df_imu["time"], df_imu["wy"]).reshape(-1,1),
+                                         -np.interp(resample_times, df_imu["time"], df_imu["wz"]).reshape(-1,1),
+                                         vx_interp.reshape(-1,1),
+                                         -vy_interp.reshape(-1,1)
+                                         ],
+                                        axis=1)
+            
+            train_df = pd.DataFrame(train_data, columns="time vel_left vel_right x y yaw wx wy wz vx vy".split())
+            train_df.to_csv("{0}_data{1:02d}.csv".format(name, ii + num_files))
+
+            # plt.subplot(1,2,2)
+            # plt.plot(train_df["x"], train_df["y"])
+            # plt.quiver(train_data[::10,3], train_data[::10,4], train_data[::10,9], train_data[::10,10], scale=10.0)
+            # plt.show()
+
+        
 def plot_train3_w():
     for i in range(1,18):
         fn = "Train3_data{0:02d}.csv".format(i)
@@ -137,6 +167,7 @@ def plot_ld3_vx():
     
 # Training and validation datasets
 readFiles("Train3", 17)
+readFiles("Train3", 17, True)
 readFiles("CV3", 144)
 readFiles("LD3", 1)
 

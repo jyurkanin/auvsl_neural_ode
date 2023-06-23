@@ -48,6 +48,7 @@ public:
 
   void trainThreads();
   void assignWork(const std::vector<DataRow> &traj);
+  void waitForAllWorkers();
   void finishWork();
   bool combineResults(VectorF &batch_grad,
 		      const VectorF &sample_grad,
@@ -91,8 +92,9 @@ private:
   const int m_eval_steps = 600;
   const int m_inc_train_steps = 100;
   const int m_inc_eval_steps = 600;
-  const double m_l1_weight = 1e-4f;
-  
+  const double m_l1_weight = 1e-6f;
+  const int m_batch_size = 256;
+	
   const int m_num_threads;
   
   ADF m_z_stable;

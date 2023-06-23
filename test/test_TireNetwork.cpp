@@ -47,9 +47,11 @@ namespace{
   TEST(TireNetwork, vx_fx_plot)
   {
     TireNetwork tire_network;
-    Eigen::Matrix<ADF,9,1> features;
+    Eigen::Matrix<ADF,8,1> features;
     Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
-    
+	
+	tire_network.load_model();
+	
     features[0] = 0;
     features[1] = 0;
     features[2] = 0;
@@ -59,7 +61,6 @@ namespace{
     features[5] = 2083.0;
     features[6] = 1.197933;
     features[7] = 0.102483;
-    features[8] = 0.652405;
     
     int len = 10000;
     std::vector<float> vx_vec(len);
@@ -93,9 +94,11 @@ namespace{
   TEST(TireNetwork, vy_fy_plot)
   {
     TireNetwork tire_network;
-    Eigen::Matrix<ADF,9,1> features;
+    Eigen::Matrix<ADF,8,1> features;
     Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
-    
+	
+	tire_network.load_model();
+	
     features[0] = 0.2;
     features[1] = 0;
     features[2] = 0.1;
@@ -105,7 +108,6 @@ namespace{
     features[5] = 2083.0;
     features[6] = 0.8;
     features[7] = 0.0;
-    features[8] = 0.3927;
     
     int len = 10000;
     std::vector<float> vy_vec(len);
@@ -138,45 +140,46 @@ namespace{
 
   TEST(TireNetwork, vz_fz_plot)
   {
-    TireNetwork tire_network;
-    Eigen::Matrix<ADF,9,1> features;
-    Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
+	  TireNetwork tire_network;
+	  Eigen::Matrix<ADF,8,1> features;
+	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
+	
+	  tire_network.load_model();
+	
+	  features[0] = 0.0;
+	  features[1] = 0;
+	  features[2] = 0.0;
+	  features[3] = 0.005;
     
-    features[0] = 0.0;
-    features[1] = 0;
-    features[2] = 0.0;
-    features[3] = 0.005;
+	  features[4] = 29.76;
+	  features[5] = 2083.0;
+	  features[6] = 0.8;
+	  features[7] = 0.0;
     
-    features[4] = 29.76;
-    features[5] = 2083.0;
-    features[6] = 0.8;
-    features[7] = 0.0;
-    features[8] = 0.3927;
-    
-    int len = 10000;
-    std::vector<float> sinkage_vec(len);
-    std::vector<float> fz_vec(len);
+	  int len = 10000;
+	  std::vector<float> sinkage_vec(len);
+	  std::vector<float> fz_vec(len);
 
-    for(int j = 0; j < 8; j++)
-    {
-      features[0] = 0; //j/8.0;
-      for(int i = 0; i < len; i++)
-      {
-	ADF zr = 0.1 * ADF((2.0*i/(float)len) - 1.0);
-	features[3] = zr;
+	  for(int j = 0; j < 8; j++)
+	  {
+		  features[0] = 0; //j/8.0;
+		  for(int i = 0; i < len; i++)
+		  {
+			  ADF zr = 0.1 * ADF((2.0*i/(float)len) - 1.0);
+			  features[3] = zr;
 	
-	tire_network.forward(features, forces, 0);
+			  tire_network.forward(features, forces, 0);
 	
-	sinkage_vec[i] = CppAD::Value(zr);
-	fz_vec[i] = CppAD::Value(forces[2]);
-      }
+			  sinkage_vec[i] = CppAD::Value(zr);
+			  fz_vec[i] = CppAD::Value(forces[2]);
+		  }
       
-      //plot_cross(-1,1, -10,10);
-      plt::plot(sinkage_vec, fz_vec);
-    }
+		  //plot_cross(-1,1, -10,10);
+		  plt::plot(sinkage_vec, fz_vec);
+	  }
     
-    plt::title("Zr vs Fz");
-    plt::show();
+	  plt::title("Zr vs Fz");
+	  plt::show();
   }
 }
 

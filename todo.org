@@ -732,3 +732,57 @@ Still same performance levels.
 
 ** TODO Okay bro, we are gonna have to do the
 base network thing and hope it works out.
+
+** DONE Is there any way we can augment the training datasets
+Could use the linear model to generate circular trajectories
+to improve CV3 performance. I guess.
+
+Could generate the mirror image of the training data and pretend
+it's valid. This is currently running, I would be shocked if
+this had a major effect. But I wouldn't mind being pleasantly
+surprised. Meanwhile, I am implementing python code to generate
+fake data using the linear model.
+
+CV3 error is down to 10.9% and seems like it's still going down
+Training error was at 8.18% and going down.
+
+Training error hit 8.04%, CV3 error was up to 11.85%. RIP.
+Training error hit about 7.8% and plataued.
+CV3 error was increasing around 12.9%. Massive Rip.
+
+So I'm seeing a clear trend.
+Training error decreases continuously.
+Test error decreases, reaches a minimum, and then increases again.
+
+
+I think the linear model will be able to generate good straight
+line data. Which could bring the neural ode error down to
+competitive levels. Could also hopefully generate good
+curved path data which could bring CV3 error levels down a lot.
+
+
+Bro I'm feeling really good about this.
+
+I generated 19 fake training datasets using the linear model.
+The neural model shows a significant difference and I'm
+thinking that it will be able to learn some useful shit
+from the linear model. I'm actually feeling really
+good and I think this avenue of research might actually
+pan out which would be fucking sick.
+
+You should check the test vs the training datasets
+and see where we are lacking and generate fake data for it.
+Check the Wz, Vx, Vl, and Vr for the training data
+against the test data. I'm not sure the training data has
+any negative Vl/Vr so that could help.
+
+You tried the linear network, you tried the mirrored training
+data. You saw performance get down to 9.2% CV3 at one point,
+but I think you've seen it do that before without fake data.
+
+* DONE Add batch sizes back in
+Small batch size is supposed to be better than full batch size.
+DOesn't seem to help. If anything its worse.
+
+* TODO Double check zr -> Fz is continuous
+I think it's not which is bad.
