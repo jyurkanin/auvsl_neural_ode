@@ -543,9 +543,9 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
 }
 
 void Trainer::trainTrajectory(const std::vector<DataRow> &traj,
-			      std::vector<VectorAD> &x_list,
-			      VectorF &gradient,
-			      double& loss)
+							  std::vector<VectorAD> &x_list,
+							  VectorF &gradient,
+							  double& loss)
 {
   std::shared_ptr<VehicleSystem<ADF>> system_adf = std::make_shared<VehicleSystem<ADF>>();
   system_adf->setNumSteps(m_train_steps);
