@@ -808,3 +808,9 @@ This idea is kinda fucking lame and would require a lot of work.
 I could test drive this idea by going into the preprocessing
 script and I could apply a low-pass filtering on all the tire
 velocities and see what happens when I train with that.
+
+No improvement. After training all night, error reached a minimum
+of 9.7%
+* I Think the biggest problem is that Training error is not good
+Training Evaluation loss is 8.85%
+Which is fucked.

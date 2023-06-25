@@ -58,9 +58,16 @@ def readFiles(name, num_files):
         yaw_unbounded = (np.interp(resample_times, df_gt["time"], np.unwrap(df_gt["yaw"]))).reshape(-1,1)
         yaw = np.arctan2(np.sin(yaw_unbounded), np.cos(yaw_unbounded))
         
+        tire_vl = np.interp(resample_times, df_odom["time"], df_odom["vel_left"])
+        tire_vr = np.interp(resample_times, df_odom["time"], df_odom["vel_right"])
+
+        filter_size = 51
+        tire_vl = np.convolve(tire_vl, np.ones(filter_size)/filter_size, mode="same")
+        tire_vr = np.convolve(tire_vr, np.ones(filter_size)/filter_size, mode="same")
+        
         train_data = np.concatenate([resample_times.reshape(-1,1),
-                                     np.interp(resample_times, df_odom["time"], df_odom["vel_left"]).reshape(-1,1),
-                                     np.interp(resample_times, df_odom["time"], df_odom["vel_right"]).reshape(-1,1),
+                                     tire_vl.reshape(-1,1),
+                                     tire_vr.reshape(-1,1),
                                      x_interp.reshape(-1,1),
                                      y_interp.reshape(-1,1),
                                      yaw,
@@ -82,17 +89,17 @@ def plot_train3_w():
         print("Filename", fn)
         w = (df["vel_left"] - df["vel_right"])/2
         
-        plt.plot(df["time"], w)
+        plt.plot(w)
         
     plt.show()
 
 def plot_cv3_w():
-    for i in range(55,56):
+    for i in range(1,144):
         fn = "CV3_data{0:02d}.csv".format(i)
         df = pd.read_csv(fn)
         print("Filename", fn)
         w = (df["vel_left"] - df["vel_right"])/2
-        plt.plot(df["time"], w)
+        plt.plot(w)
         
     plt.show()
 
@@ -111,7 +118,7 @@ def plot_train3_vx():
         df = pd.read_csv(fn)
         print("Filename", fn)
         w = (df["vel_left"] + df["vel_right"])/2
-        plt.plot(df["time"], w)
+        plt.plot(w)
         
     plt.show()
 
@@ -141,9 +148,9 @@ readFiles("CV3", 144)
 readFiles("LD3", 1)
 
 # plot_train3_w()
-# plot_cv3_w()            
+plot_cv3_w()            
 # plot_ld3_w()
 
-# plot_train3_vx()
+#plot_train3_vx()
 # plot_cv3_vx()
 # plot_ld3_vx()
