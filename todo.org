@@ -803,3 +803,8 @@ Vl_s = .5*(Vl_s + Vl)
 
 So store smooth tire velocity as a state in VehicleSystem. And add
 some way to reset it.
+
+This idea is kinda fucking lame and would require a lot of work.
+I could test drive this idea by going into the preprocessing
+script and I could apply a low-pass filtering on all the tire
+velocities and see what happens when I train with that.
