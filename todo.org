@@ -795,7 +795,8 @@ do the base network bullshit. I guess. I think that's my only
 way forward at this point.
 
 * TODO Base Network :(
-* TODO Smooth Tire Velocities
+
+* DONE Smooth Tire Velocities
 Oh boy. Yeah we got to do this.
 So send in the current tire velocity and also a moving average of
 each tire velocity. Like:
@@ -814,3 +815,5 @@ of 9.7%
 * I Think the biggest problem is that Training error is not good
 Training Evaluation loss is 8.85%
 Which is fucked.
+Reduce training error.
+Just train on the first file to show you can do it.
