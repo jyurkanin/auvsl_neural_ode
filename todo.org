@@ -841,7 +841,7 @@ merge this shit into task/separate_z
 Idk it's taking a while. It stopped around 2.5%
 
 ** Lets Try with no haxx
-
+Complete shit. Not stable.
 
 ** Lets try with 1 layer and 3 layers
 Not worth it.
