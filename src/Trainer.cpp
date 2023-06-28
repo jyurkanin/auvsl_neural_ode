@@ -82,6 +82,7 @@ void Trainer::computeEqState()
   m_quat_stable[3] = m_system_adf->m_hybrid_dynamics.state_[3];
   
   m_z_stable = m_system_adf->m_hybrid_dynamics.state_[6];
+  m_z_stable = 0.0604554;
   std::cout << "z_stable " << m_z_stable << "\n";
 }
 
