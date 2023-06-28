@@ -73,9 +73,9 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec, Eigen::Matrix
 	// Changes features to cross the origin
 	Scalar tire_tangent_vel = in_vec[2] * Jackal::rcg::tire_radius;
 	Scalar diff = tire_tangent_vel - in_vec[0];
-	Scalar slip_lon = (diff);
-	Scalar slip_lat = (in_vec[1]);
-	Scalar tire_abs = (in_vec[2]);
+	Scalar slip_lon = CppAD::abs(diff);
+	Scalar slip_lat = CppAD::abs(in_vec[1]);
+	Scalar tire_abs = CppAD::abs(in_vec[2]);
   
 	bekker_vec[0] = in_vec[3];
 	bekker_vec[1] = slip_lon;
