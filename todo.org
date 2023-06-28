@@ -829,16 +829,16 @@ Probably the same. I stopped at
 asymptote. I jsut didn't want to wait around for it.
 Train3_1 Eval loss: 4.8% (undertrained)
 
+Lets try with a fucking ton of hidden units. Like 64. Fuck it.
+
 Try more shit. Anything to get the training loss lower.
 Ways to get the fucking loss down:
 More features.
 More parameters (shit).
-Different architecture.
+Different architecture. 
 
 ** So I'm trying without the CppAD::abs()
 Idk it's taking a while. It stopped around 2.5%
 
-** Lets try with 1 layer and 3 layers
-Not worth it.
-
-** 
+** Tried no Haxx
+And it was complete shit. As expected.

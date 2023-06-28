@@ -97,7 +97,7 @@ class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
     self.in_size = 3 # qd, vx, vy
-    self.hidden_size = 8
+    self.hidden_size = 64
     self.hidden_size2 = 8
     self.out_size = 2
     
@@ -263,11 +263,11 @@ def fz_plot():
     
 
 model_name = "train_no_ratio1.net"
-# md = torch.load(model_name)
-# model.load_state_dict(md)
+md = torch.load(model_name)
+model.load_state_dict(md)
 
-fit(1e-3, 5000, 100)
-plt.show()
+#fit(1e-3, 5000, 100)
+#plt.show()
 #get_evaluation_loss(test_data, test_labels)
 #fit(1e-3, 50, 10)
 #plt.show()
