@@ -835,6 +835,8 @@ More features.
 More parameters (shit).
 Different architecture.
 
+merge this shit into task/separate_z
+
 ** So I'm trying without the CppAD::abs()
 Idk it's taking a while. It stopped around 2.5%
 

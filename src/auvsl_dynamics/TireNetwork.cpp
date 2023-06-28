@@ -73,7 +73,7 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec, Eigen::Matrix
 	// Changes features to cross the origin
 	Scalar tire_tangent_vel = in_vec[2] * Jackal::rcg::tire_radius;
 	Scalar diff = tire_tangent_vel - in_vec[0];
-	Scalar slip_lon = (diff);
+	Scalar slip_lon = (in_vec[0]);
 	Scalar slip_lat = (in_vec[1]);
 	Scalar tire_abs = (in_vec[2]);
   
@@ -97,8 +97,8 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec, Eigen::Matrix
 	xy4_out = (m_params[ii].weight4*xy2_out) + m_params[ii].bias4;
   
 	// Sign change passivity haxx
-	out_vec[0] = relu_wrapper(xy4_out[0])*(1*diff);
-	out_vec[1] = relu_wrapper(xy4_out[1])*(-1*in_vec[1]);
+	out_vec[0] = (xy4_out[0]);
+	out_vec[1] = (xy4_out[1]);
 	//out_vec[0] = xy4_out[0];
 	//out_vec[1] = xy4_out[1];
   
