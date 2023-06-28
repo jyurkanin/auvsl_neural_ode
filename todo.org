@@ -817,3 +817,28 @@ Training Evaluation loss is 8.85%
 Which is fucked.
 Reduce training error.
 Just train on the first file to show you can do it.
+
+* TODO Separate Fz and Fx,Fy networks
+With 8 nodes:
+Train3_1 Eval Loss: 3.33%
+Train3_1 Train loss: 1.52%
+
+With 16 nodes:
+Probably the same. I stopped at
+1.8% training loss. But it was probably reaching the same
+asymptote. I jsut didn't want to wait around for it.
+Train3_1 Eval loss: 4.8% (undertrained)
+
+Try more shit. Anything to get the training loss lower.
+Ways to get the fucking loss down:
+More features.
+More parameters (shit).
+Different architecture.
+
+** So I'm trying without the CppAD::abs()
+Idk it's taking a while. It stopped around 2.5%
+
+** Lets try with 1 layer and 3 layers
+Not worth it.
+
+** 

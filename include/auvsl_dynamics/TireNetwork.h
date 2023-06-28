@@ -21,6 +21,7 @@ public:
   ~TireNetwork();
 
   static const int num_hidden_nodes = 8;
+  static const int num_hidden_nodes2 = 8;
   static const int num_in_features = 4;
   static const int num_out_features = 3;
   static const int num_networks = 4;
@@ -36,12 +37,19 @@ public:
 
   struct Params
   {
-    Eigen::Matrix<Scalar,num_hidden_nodes,num_in_features> weight0;
-    Eigen::Matrix<Scalar,num_hidden_nodes,1> bias0;
-    Eigen::Matrix<Scalar,num_hidden_nodes,num_hidden_nodes> weight2;
-    Eigen::Matrix<Scalar,num_hidden_nodes,1> bias2;
-    Eigen::Matrix<Scalar,num_out_features,num_hidden_nodes> weight4;
-    Eigen::Matrix<Scalar,num_out_features,1> bias4;
+	  Eigen::Matrix<Scalar,num_hidden_nodes,3> weight0;
+	  Eigen::Matrix<Scalar,num_hidden_nodes,1> bias0;
+	  Eigen::Matrix<Scalar,num_hidden_nodes,num_hidden_nodes> weight2;
+	  Eigen::Matrix<Scalar,num_hidden_nodes,1> bias2;
+	  Eigen::Matrix<Scalar,2,num_hidden_nodes> weight4;
+	  Eigen::Matrix<Scalar,2,1> bias4;
+
+	  Eigen::Matrix<Scalar,num_hidden_nodes2,1> z_weight0;
+	  Eigen::Matrix<Scalar,num_hidden_nodes2,1> z_bias0;
+	  Eigen::Matrix<Scalar,num_hidden_nodes2,num_hidden_nodes2> z_weight2;
+	  Eigen::Matrix<Scalar,num_hidden_nodes2,1> z_bias2;
+	  Eigen::Matrix<Scalar,1,num_hidden_nodes2> z_weight4;
+	  Eigen::Matrix<Scalar,1,1> z_bias4;
   };
 
   Params m_params[4];

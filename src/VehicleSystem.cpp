@@ -81,7 +81,7 @@ Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
   yaw_err = CppAD::atan2(CppAD::sin(yaw_err), CppAD::cos(yaw_err));
   Scalar ang_err = CppAD::abs(yaw_err);
   
-  return ang_err + lin_err;
+  return lin_err;
 }
 
 template<typename Scalar>

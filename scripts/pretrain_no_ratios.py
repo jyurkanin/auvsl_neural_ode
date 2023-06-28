@@ -96,9 +96,10 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.in_size = 4 # sinkage, qd, vx, vy
+    self.in_size = 3 # qd, vx, vy
     self.hidden_size = 8
-    self.out_size = 3
+    self.hidden_size2 = 8
+    self.out_size = 2
     
     self.tire_radius = .098
     
@@ -112,6 +113,15 @@ class TireNet(nn.Module):
       nn.ReLU()
     )
 
+    self.model_z = nn.Sequential(
+      nn.Linear(1, self.hidden_size2),
+      nn.Tanh(),
+      nn.Linear(self.hidden_size2, self.hidden_size2),
+      nn.Tanh(),
+      nn.Linear(self.hidden_size2, 1),
+      nn.ReLU()
+    )
+
   def compute_bekker_input_scaler(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
@@ -119,16 +129,16 @@ class TireNet(nn.Module):
     slip_lat = (x[:,1])
     tire_abs = (x[:,2])
     bekker_args = torch.cat((x[:,3][:,None],   # zr
-                             slip_lon[:,None], # diff
-                             tire_abs[:,None], # |qd|
-                             slip_lat[:,None]  # vy
-                             ), 1)
+                            slip_lon[:,None], # diff
+                            tire_abs[:,None], # |qd|
+                            slip_lat[:,None]  # vy
+                            ), 1)
     
     self.in_mean = torch.mean(bekker_args, 0)
     temp = bekker_args - self.in_mean
     self.in_std = torch.sqrt(torch.var(temp, 0))
     
-  # vx,vy,qd,zr (batch_size,5)
+  # vx,vy,qd, zr (batch_size,4)
   def forward(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
@@ -143,12 +153,14 @@ class TireNet(nn.Module):
     
     bekker_args = (bekker_args - self.in_mean) / self.in_std
     
-    yhat = self.model.forward(bekker_args)
+    yhat = self.model.forward(bekker_args[:,1:4])
+    yhat_z = self.model_z.forward(bekker_args[:,0][:,None])
     
     yhat_sign_corrected = torch.cat((
       (yhat[:,0] * torch.tanh(1*diff))[:,None],
       (yhat[:,1] * torch.tanh(-1*x[:,1]))[:,None],
-      (yhat[:,2] / (1 + torch.exp(-1*x[:,3])))[:,None]), 1)
+      (yhat_z[:,0] / (1 + torch.exp(-1*x[:,3])))[:,None]), 1)
+    
     return yhat_sign_corrected
     
 model = TireNet()
@@ -180,7 +192,6 @@ def fit(lr, batch_size, epochs):
 
 
 def get_evaluation_loss(test_x, test_y):
-    #input_vec = input_scaler.transform(test_x)
     input_vec = test_x
     predicted_force = model.forward(torch.from_numpy(input_vec).float()).detach().numpy()
     predicted_force = output_scaler.inverse_transform(predicted_force)
@@ -257,9 +268,9 @@ model_name = "train_no_ratio1.net"
 
 fit(1e-3, 5000, 100)
 plt.show()
-get_evaluation_loss(test_data, test_labels)
-fit(1e-3, 50, 10)
-plt.show()
+#get_evaluation_loss(test_data, test_labels)
+#fit(1e-3, 50, 10)
+#plt.show()
 
 md = model.state_dict()
 print_c_network(md, model.in_mean, model.in_std, output_scaler)
