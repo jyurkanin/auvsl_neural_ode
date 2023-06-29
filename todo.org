@@ -1,4 +1,25 @@
 Updates
+
+* <2023-06-29 Thu 00:29>
+Okay. You have 2 paths forward at this point.
+THe main issue is that the training loss is not actually
+going very low.
+
+Possible solutions:
+
+* TODO Better optimizer?
+Maybe. Possibly getting stuck in local minima.
+Lets run main_8 with a large step size all night and see where we
+get.
+
+* TODO augmented tire-network neural ode?
+Feedback. Gives more params and
+can reason about changes in the
+tire's velocity.
+
+* TODO Base network?
+Could work. Seems like cheating.
+
 * <2023-04-02 Sun 00:04>
 I trained a new network, it uses relu, tanh, and sigmoid to make sure everything
 crosses zero at zero and everything is continuous. Based.
