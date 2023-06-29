@@ -830,6 +830,8 @@ asymptote. I jsut didn't want to wait around for it.
 Train3_1 Eval loss: 4.8% (undertrained)
 
 Lets try with a fucking ton of hidden units. Like 64. Fuck it.
+Training was Very slow. Seemed to slow down around 9% but was
+still going down. Just to slow to be practical.
 
 Try more shit. Anything to get the training loss lower.
 Ways to get the fucking loss down:
