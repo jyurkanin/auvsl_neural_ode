@@ -7,7 +7,8 @@
 template<typename Scalar>
 VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics::STATE_DIM + HybridDynamics::CNTRL_DIM, 0)
 {
-  this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
+  this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams() +
+					 m_hybrid_dynamics.base_network.getNumParams());
   this->setNumSteps(10);
   this->setTimestep(0.001);  //unused
   this->setLearningRate(1e-3f);
@@ -24,6 +25,9 @@ void VehicleSystem<Scalar>::setParams(const VectorS &params)
 {
   int idx = 0;
   m_hybrid_dynamics.tire_network.setParams(params, idx);
+  idx += m_hybrid_dynamics.tire_network.getNumParams();
+  
+  m_hybrid_dynamics.base_network.setParams(params, idx);
 }
 
 template<typename Scalar>
@@ -31,7 +35,9 @@ void VehicleSystem<Scalar>::getParams(VectorS &params)
 {
   int idx = 0;
   m_hybrid_dynamics.tire_network.getParams(params, idx);
+  idx += m_hybrid_dynamics.tire_network.getNumParams();
   
+  m_hybrid_dynamics.base_network.getParams(params, idx);
 }
 
 template<typename Scalar>

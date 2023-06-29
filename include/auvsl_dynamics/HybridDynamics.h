@@ -9,6 +9,7 @@
 
 //My files
 #include "TireNetwork.h"
+#include "BaseNetwork.h"
 
 //using namespace iit::Fancy;
 using Jackal::rcg::Scalar;
@@ -56,7 +57,8 @@ public:
   const static Acceleration GRAVITY_VEC;
   
   Eigen::Matrix<Scalar,5,1> bekker_params;
-  TireNetwork tire_network; //holds the tire-soil model
+  TireNetwork tire_network; // holds the tire-soil model
+  BaseNetwork base_network; // Base Network
   
   Jackal::rcg::HomogeneousTransforms h_transforms; //not actually used
   Jackal::rcg::MotionTransforms      m_transforms;
