@@ -98,7 +98,7 @@ class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
     self.in_size = 3 # qd, vx, vy
-    self.hidden_size = 64
+    self.hidden_size = 8
     self.hidden_size2 = 8
     self.out_size = 2
     
