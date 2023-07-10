@@ -20,11 +20,14 @@ public:
 	static const int m_num_hidden_units = 8;
 	static const int m_num_inputs = 3;
 	static const int m_num_outputs = 3;
-
+	
+	int getNumInputs() const { return m_num_inputs; }
+	int getNumOutputs() const { return m_num_outputs; }
+	
 	int getNumParams();
 	void setParams(const VectorS &params, int idx);
 	void getParams( VectorS &params, int idx);
-	void forward(const Eigen::Matrix<Scalar,3,1> &in_vec, Eigen::Matrix<Scalar,3,1> &out_vec);
+	void forward(const Eigen::Matrix<Scalar,m_num_inputs,1> &in_vec, Eigen::Matrix<Scalar,m_num_outputs,1> &out_vec);
 
 	Eigen::Matrix<Scalar,m_num_hidden_units,m_num_inputs> m_weight0;
 	Eigen::Matrix<Scalar,m_num_hidden_units,1> m_bias0;
@@ -33,10 +36,10 @@ public:
 	Eigen::Matrix<Scalar,m_num_outputs,m_num_hidden_units> m_weight2;
 	Eigen::Matrix<Scalar,m_num_outputs,1> m_bias2;
 
-
-	Params m_params;
-
+	
 private:
-	Eigen::Matrix<Scalar,m_num_outputs> out_std;     //You're just going to guess this shit. Not gonna lie. Fuck it.
-	Eigen::Matrix<Scalar,m_num_inputs> in_std_inv;
+	// You're just going to guess this shit. Not gonna lie. Fuck it.
+	// Dont feel like doing a norm layer.
+	Eigen::Matrix<Scalar,m_num_outputs,1> out_std;
+	Eigen::Matrix<Scalar,m_num_inputs,1> in_std_inv;
 };

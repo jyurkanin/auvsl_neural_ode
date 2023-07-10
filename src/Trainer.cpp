@@ -278,8 +278,7 @@ void Trainer::finishWork()
     {
       m_workers[i].m_keep_alive.store(false);
       m_workers[i].m_thread.join();
-      combineResults(m_batch_grad, m_workers[i].m_grad,
-		     m_batch_loss, m_workers[i].m_loss);
+      combineResults(m_batch_grad, m_workers[i].m_grad, m_batch_loss, m_workers[i].m_loss);
     }
   }
 }
@@ -306,12 +305,12 @@ void Trainer::evaluate_train3()
     
     for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
     {
-      std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
-      evaluateTrajectory(traj, x_list, loss);
-      // plotTrajectory(traj, x_list);
-      
-      loss_avg += loss;
-      cnt++;
+		std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
+		evaluateTrajectory(traj, x_list, loss);
+		// plotTrajectory(traj, x_list);
+		
+		loss_avg += loss;
+		cnt++;
     }
   }
   

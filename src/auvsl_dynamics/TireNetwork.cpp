@@ -55,7 +55,9 @@ inline Scalar relu_wrapper(Scalar x){
 
 
 // vx vy w zr wz
-void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec, Eigen::Matrix<Scalar,num_out_features,1> &out_vec, int ii)
+void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec,
+						  Eigen::Matrix<Scalar,num_out_features,1> &out_vec,
+						  int ii)
 {	
 	Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> xy0_out;
 	Eigen::Matrix<Scalar,TireNetwork::num_hidden_nodes,1> xy2_out;
@@ -130,8 +132,6 @@ int TireNetwork::getNumParams()
 
 void TireNetwork::setParams(const VectorS &params, int idx)
 {
-	assert(params.size() == getNumParams());
-  
 	for(int kk = 0; kk < num_networks; kk++)
 	{
 		for(int i = 0; i < m_params[kk].weight0.rows(); i++)
@@ -147,7 +147,7 @@ void TireNetwork::setParams(const VectorS &params, int idx)
 			m_params[kk].bias0[j] = params[idx];
 			idx++;
 		}
-  
+		
 		for(int i = 0; i < m_params[kk].weight2.rows(); i++)
 		{
 			for(int j = 0; j < m_params[kk].weight2.cols(); j++)
@@ -180,8 +180,6 @@ void TireNetwork::setParams(const VectorS &params, int idx)
 
 void TireNetwork::getParams(VectorS &params, int idx)
 {
-	assert(params.size() == getNumParams());
-
 	for(int kk = 0; kk < num_networks; kk++)
 	{
 		for(int i = 0; i < m_params[kk].weight0.rows(); i++)

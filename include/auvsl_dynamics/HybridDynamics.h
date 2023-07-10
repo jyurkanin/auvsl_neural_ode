@@ -39,7 +39,9 @@ public:
   void Euler(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matrix<Scalar,STATE_DIM,1> &Xt1, Eigen::Matrix<Scalar,CNTRL_DIM,1> &u);
   void RK4(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matrix<Scalar,STATE_DIM,1> &Xt1, Eigen::Matrix<Scalar,CNTRL_DIM,1> &u);
   void ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matrix<Scalar,STATE_DIM,1> &Xd, Eigen::Matrix<Scalar,CNTRL_DIM,1> &u);
-  
+	
+  void get_base_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, LinkDataMap<Force> &ext_forces);
+	
   void get_tire_sinkages(const Eigen::Matrix<Scalar,3,1> *cpt_points, Scalar *sinkages);
   void get_tire_cpt_vels(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matrix<Scalar,3,1> *cpt_vels);
   void get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, LinkDataMap<Force> &ext_forces);
@@ -60,9 +62,9 @@ public:
   TireNetwork tire_network; // holds the tire-soil model
   BaseNetwork base_network; // Base Network
   
-  Jackal::rcg::HomogeneousTransforms h_transforms; //not actually used
+  Jackal::rcg::HomogeneousTransforms h_transforms; // Not actually used
   Jackal::rcg::MotionTransforms      m_transforms;
-  Jackal::rcg::ForceTransforms       f_transforms; //Used to convert external forces to the right frame. Oh wait
+  Jackal::rcg::ForceTransforms       f_transforms; // Used to convert external forces to the right frame. Oh wait
   Jackal::rcg::InertiaProperties     inertias;
   Jackal::rcg::ForwardDynamics      *fwd_dynamics;
 };

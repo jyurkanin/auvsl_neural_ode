@@ -53,6 +53,7 @@ add_executable(train
 	src/train.cpp
 	src/VehicleSystem.cpp
 	src/Trainer.cpp
+	src/BaseNetwork.cpp
  	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/TireNetwork.cpp
 	src/auvsl_dynamics/utils.cpp

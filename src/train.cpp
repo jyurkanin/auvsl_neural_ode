@@ -7,7 +7,7 @@
 
 int main()
 {
-	int num_threads = 3;
+	int num_threads = 1;
 	
 	Trainer train(num_threads);
 	std::cout << "Default Performance:\n";

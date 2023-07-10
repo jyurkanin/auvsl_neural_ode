@@ -7,18 +7,24 @@ going very low.
 
 Possible solutions:
 
-* TODO Better optimizer?
+* DONE Better optimizer?
 Maybe. Possibly getting stuck in local minima.
 Lets run main_8 with a large step size all night and see where we
-get.
+get. Nah. It's just no bueno.
 
 * TODO augmented tire-network neural ode?
 Feedback. Gives more params and
 can reason about changes in the
 tire's velocity.
 
-* TODO Base network?
+* DONE Base network?
 Could work. Seems like cheating.
+In progress.
+Forward pass implemented I guess.
+todo: replace cpt_vels with temp_vel (minor thing)
+
+It compiled. Fuck it.
+It's training so okay.
 
 * <2023-04-02 Sun 00:04>
 I trained a new network, it uses relu, tanh, and sigmoid to make sure everything

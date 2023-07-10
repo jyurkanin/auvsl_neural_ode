@@ -32,8 +32,6 @@ using Jackal::rcg::orderedJointIDs;
 
 const Scalar HybridDynamics::timestep = 1e-3;
 const Acceleration HybridDynamics::GRAVITY_VEC = (Acceleration() << 0,0,0,0,0,-9.81).finished();
-//const Acceleration HybridDynamics::GRAVITY_VEC = (Acceleration() << 0,0,0,0,0,0).finished();
-
 
 //std::ofstream HybridDynamics::log_file;
 //std::ofstream HybridDynamics::debug_file;
@@ -42,18 +40,6 @@ HybridDynamics::HybridDynamics(){
   fwd_dynamics = new Jackal::rcg::ForwardDynamics(inertias, m_transforms);
   
   //For more information on these, see TerrainMap.cpp and TerrainMap.h
-  
-  // bekker_params[0] = 29.76;           //kc
-  // bekker_params[1] = 2083;            //kphi
-  // bekker_params[2] = .8;              //n0
-  // bekker_params[3] = 0;               //n1
-  // bekker_params[4] = 22.5*M_PI/180.0; //phi
-  
-  // bekker_params[0] = 29.760084;
-  // bekker_params[1] = 2083.000000;
-  // bekker_params[2] = 0.917826;
-  // bekker_params[3] = 0.152998;
-  // bekker_params[4] = 0.471988;
   
   bekker_params[0] = 29.758547;
   bekker_params[1] = 2083.000000;
@@ -155,11 +141,11 @@ void HybridDynamics::get_tire_cpts(const Eigen::Matrix<Scalar,STATE_DIM,1> &X,
                                                    0,0,0,0,
                                                    -tire_radius,-tire_radius,-tire_radius,-tire_radius).finished();
   
-  //get the matrix that transforms from base to world frame
-  //THis matrix also expresses 
+  // get the matrix that transforms from base to world frame
+  // This matrix also expresses 
   Eigen::Matrix<Scalar,3,3> rot = toMatrixRotation(X[0],X[1],X[2],X[3]);
   
-  //this is like the end effector if it was a quadruped. 
+  // this is like the end effector if it was a quadruped. 
   const Eigen::Matrix<Scalar,3,4> end_pos_matrix = rot*(tire_translations + radius_matrix);
   
   for(int ii = 0; ii < 4; ii++){
@@ -189,10 +175,10 @@ void HybridDynamics::get_tire_cpt_vels(const Eigen::Matrix<Scalar,STATE_DIM,1> &
                                                    0,0,0,0,
                                                    -tire_radius,-tire_radius,-tire_radius,-tire_radius).finished();
   
-  //this is like the end effector if it was a quadruped. 
+  // This is like the end effector if it was a quadruped. 
   const Eigen::Matrix<Scalar,3,4> end_pos_matrix = tire_translations + radius_matrix;
   
-  //vel of base_link expressed in base link frame.
+  // vel of base_link expressed in base link frame.
   Eigen::Matrix<Scalar,3,1> lin_vel(X[14], X[15], X[16]);
   Eigen::Matrix<Scalar,3,1> ang_vel(X[11], X[12], X[13]);
 
@@ -205,110 +191,119 @@ void HybridDynamics::get_tire_cpt_vels(const Eigen::Matrix<Scalar,STATE_DIM,1> &
     cpt_vels[ii] = lin_vel - (r_ss*ang_vel);
   }
   
-  //Only interested in the linear velocities of the cpt points. Maybe we can include angular later.
+  // Only interested in the linear velocities of the cpt points. Maybe we can include angular later.
 }
-
 
 void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, LinkDataMap<Force> &ext_forces){
-  Eigen::Matrix<Scalar,3,1> cpt_points[4];  //world frame position of cpt frames
-  Eigen::Matrix<Scalar,3,3> cpt_rots[4];    //world orientation of cpt frames
-  get_tire_cpts(X, cpt_points, cpt_rots);
+	Eigen::Matrix<Scalar,3,1> cpt_points[4];  //world frame position of cpt frames
+	Eigen::Matrix<Scalar,3,3> cpt_rots[4];    //world orientation of cpt frames
+	get_tire_cpts(X, cpt_points, cpt_rots);
   
-  Scalar sinkages[4];
-  get_tire_sinkages(cpt_points, sinkages); //This is going to have to look things up in a map one day.
+	Scalar sinkages[4];
+	get_tire_sinkages(cpt_points, sinkages); //This is going to have to look things up in a map one day.
   
-  //get the velocity of each tire contact point expressed in the contact point frame
-  Eigen::Matrix<Scalar,3,1> cpt_vels[4];
-  get_tire_cpt_vels(X, cpt_vels);
+	//get the velocity of each tire contact point expressed in the contact point frame
+	Eigen::Matrix<Scalar,3,1> cpt_vels[4];
+	get_tire_cpt_vels(X, cpt_vels);
   
-  //We now have sinkage and velocity of each tire contact point
-  //Next we need to compute tire-soil reaction forces
-  //Then we will transform these forces into the body frame of each tire
-  //Due to the stupid way that the tire joint frame transforms are defined we
-  //will need a transform that undos the rotation of the tire.
-  //A smarter solution would be to permanently set the tire joint angles to zero
-  //because those values literally change nothing about the simulation.
-  //We're doing it: Joint positions are set to zero.
-  //Transform is needed to tire frame because joints are oriented so that z is the joint axis.
+	// We now have sinkage and velocity of each tire contact point
+	// Next we need to compute tire-soil reaction forces
+	// Then we will transform these forces into the body frame of each tire
+	// Due to the stupid way that the tire joint frame transforms are defined we
+	// will need a transform that undos the rotation of the tire.
+	// A smarter solution would be to permanently set the tire joint angles to zero
+	// because those values literally change nothing about the simulation.
+	// We're doing it: Joint positions are set to zero.
+	// Transform is needed to tire frame because joints are oriented so that z is the joint axis.
   
-  Eigen::Matrix<Scalar,8,1> features;
-  Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> forces;
-  features[4] = 0;
-  features[5] = 0;
-  features[6] = 0;
-  features[7] = 0;
+	Eigen::Matrix<Scalar,8,1> features;
+	Eigen::Matrix<Scalar,TireNetwork::num_out_features,1> forces;
+	features[4] = 0;
+	features[5] = 0;
+	features[6] = 0;
+	features[7] = 0;
   
-  
-  for(int ii = 0; ii < 4; ii++){    
-    Scalar slip_ratio;  //longitudinal slip
-    Scalar slip_angle;  //
+	for(int ii = 0; ii < 4; ii++){    
+		Scalar slip_ratio;  //longitudinal slip
+		Scalar slip_angle;  //
     
-    const Scalar small_val = 1e-3f;
-    const Scalar literally_zero = 0;
+		const Scalar small_val = 1e-3f;
+		const Scalar literally_zero = 0;
     
-    //17 is the idx that tire velocities start at.
-    //Scalar vel_x_tan = tire_radius*CppAD::CondExpEq(X[17+ii], literally_zero, small_val, X[17+ii]);
-    //Scalar tire_vx = CppAD::CondExpEq(cpt_vels[ii][0], literally_zero, small_val, cpt_vels[ii][0]);
-    
-    //slip_ratio = 1.0 - (tire_vx / vel_x_tan);
-    //slip_angle = CppAD::atan(cpt_vels[ii][1] / CppAD::abs(tire_vx));
-    
-    //features[0] = sinkages[ii];
-    //features[1] = slip_ratio;
-    //features[2] = slip_angle;
-    
-    features[0] = cpt_vels[ii][0];
-    features[1] = cpt_vels[ii][1];
-    features[2] = X[17+ii];
-    features[3] = sinkages[ii];
+		//17 is the idx that tire velocities start at.    
+		features[0] = cpt_vels[ii][0];
+		features[1] = cpt_vels[ii][1];
+		features[2] = X[17+ii];
+		features[3] = sinkages[ii];
 
-    tire_network.forward(features, forces, ii);
+		tire_network.forward(features, forces, ii);
     
-    //forces[0] = CppAD::CondExpGt(vel_x_tan, literally_zero, forces[0], -forces[0]);
-    //forces[1] = CppAD::CondExpGt(cpt_vels[ii][1], literally_zero, -CppAD::abs(forces[1]), CppAD::abs(forces[1]));
+		Eigen::Matrix<Scalar,3,1> lin_force;    
+		lin_force[0] = forces[0];
+		lin_force[1] = forces[1];
+		lin_force[2] = forces[2];
+	
+		// Convert from world orientation to tire_cpt orientation
+		// So that reaction forces are oriented with the surface normal
+		Eigen::Matrix<Scalar,3,1> temp_vel = cpt_rots[ii]*cpt_vels[ii];
     
-    //forces[2] = std::min(forces[2], 0); //Fz should never point up
-    
-    Eigen::Matrix<Scalar,3,1> lin_force;
-    Eigen::Matrix<Scalar,3,1> ang_force;
-    
-    lin_force[0] = forces[0];
-    lin_force[1] = forces[1];
-    lin_force[2] = forces[2];
-    
-    ang_force[0] = 0;
-    ang_force[1] = 0;
-    ang_force[2] = 0;
-    
-    //Convert from world orientation to tire_cpt orientation
-    //So that reaction forces are oriented with the surface normal
-    Eigen::Matrix<Scalar,3,1> temp_vel = cpt_rots[ii]*cpt_vels[ii];
-    
-    //ang_force = cpt_rots[ii].transpose()*ang_force;
-    //Numerical hack to help stabilize sinkage
-    //lin_force[2] = CppAD::CondExpGt(temp_vel[2], literally_zero, lin_force[2] * .1, lin_force[2]); //not continuous
-    //lin_force[2] = CppAD::CondExpGt(temp_vel[2], literally_zero, lin_force[2] * 0.1, lin_force[2]); //Continuous, but kinda dumb
-    //lin_force[2] = -10*CppAD::tanh(10*cpt_vels[ii][2]); //Continuous, much simpler, gets the job done
-    //lin_force[2] = lin_force[2] * CppAD::exp(-temp_vel[2]); //Continuous, much simpler, gets the job done
-    lin_force[2] += -200*cpt_vels[ii][2]; //dead simple, works fine.
-    
-    // Unfortunately, If we set lateral and longitudinal force to zero, then it becomes a discontinuity. Fuck.
-    // lin_force[0] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[0]);
-    // lin_force[1] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[1]);
-    // lin_force[2] = CppAD::CondExpLt(sinkages[ii], literally_zero, literally_zero, lin_force[2]);
-    
-    Force wrench;
-    wrench[0] = ang_force[0];
-    wrench[1] = -ang_force[2];
-    wrench[2] = ang_force[1];
-    wrench[3] = lin_force[0];  //the different indices here is due to a rotation in coordinate frame.
-    wrench[4] = -lin_force[2]; //normal force Fz maps to force in Y direction due to Robcogen's choice of coordinate frame for joints.
-    wrench[5] = lin_force[1];
-    
-    ext_forces[orderedLinkIDs[ii+1]] = wrench;  
-  }
+		// ang_force = cpt_rots[ii].transpose()*ang_force;
+		// Numerical hack to help stabilize sinkage
+		// todo: replace cpt_vels with temp_vel
+		lin_force[2] += -200*cpt_vels[ii][2]; //dead simple, works fine.
+	
+		Force wrench;
+		wrench[0] = 0;
+		wrench[1] = 0;
+		wrench[2] = 0;
+		wrench[3] = lin_force[0];  // the different indices here is due to a rotation in coordinate frame.
+		wrench[4] = -lin_force[2]; // normal force Fz maps to force in Y direction due to Robcogen's choice of coordinate frame for joints.
+		wrench[5] = lin_force[1];
+
+		// ext_forces are expressed in the frame of the link
+		// Double check this. Yeah it says so in forward_dynamics.h
+		ext_forces[orderedLinkIDs[ii+1]] = wrench;  
+	}
 }
 
+
+void HybridDynamics::get_base_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, LinkDataMap<Force> &ext_forces)
+{
+	// get the matrix that transforms from base to world frame
+	// This matrix also expresses 
+	Eigen::Matrix<Scalar,3,3> rot = toMatrixRotation(X[0],X[1],X[2],X[3]);
+	
+	Eigen::Matrix<Scalar,3,1> features;
+	Eigen::Matrix<Scalar,3,1> forces;
+
+	features[0] = X[13]; //wz
+	features[1] = X[14]; //vx
+	features[2] = X[15]; //vy
+	base_network.forward(features, forces);
+	
+	Eigen::Matrix<Scalar,3,1> ang_force;
+	ang_force[0] = 0;
+	ang_force[1] = 0;
+	ang_force[2] = forces[0]; //nz	
+	
+	Eigen::Matrix<Scalar,3,1> lin_force;
+	lin_force[0] = forces[1]; //fx
+	lin_force[1] = forces[2]; //fy
+	lin_force[2] = 0;
+	
+	Force wrench;
+	wrench[0] =  ang_force[0]; // 0
+	wrench[1] = -ang_force[2]; // nz
+	wrench[2] =  ang_force[1]; // 0
+	
+	wrench[3] =  lin_force[0]; // Fx
+	wrench[4] = -lin_force[2]; // Actually ignored
+	wrench[5] =  lin_force[1]; // Fy
+	
+	// 0 is the index corresponding to the base body
+	ext_forces[orderedLinkIDs[0]] = wrench;
+	
+}
 
 
 
@@ -408,7 +403,8 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   
   //Calculates ext forces
   get_tire_f_ext(X, ext_forces);
-
+  get_base_f_ext(X, ext_forces);
+  
   //rot is the rotation matrix that transforms vectors from the base frame to world frame.
   //The transpose converts the world frame gravity to a base frame gravity vector.
   Eigen::Matrix<Scalar,4,1> quat(X[0], X[1], X[2], X[3]);
@@ -424,22 +420,20 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   gravity_b[4] = gravity_lin[1];
   gravity_b[5] = gravity_lin[2];
   
-  //ext_forces[orderedLinkIDs[ii+1]] = wrench;
-  
   //this calculates base_acc and qdd.
   fwd_dynamics->fd(qdd, base_acc, base_vel, gravity_b, q, qd, tau, ext_forces);
   
   //Velocity com_vel = m_transforms.fr_base_link_COM_X_fr_base_link*base_vel;
   //Acceleration com_acc = m_transforms.fr_base_link_COM_X_fr_base_link*base_acc;
 
-  //ROS_INFO("Acc %f %f %f %f %f %f", base_acc[0], base_acc[1], base_acc[2], base_acc[3], base_acc[4], base_acc[5]);
-  //ROS_INFO("Vel %f %f %f %f %f %f", com_vel[0], com_vel[1], com_vel[2], com_vel[3], com_vel[4], com_vel[5]);
+  // ROS_INFO("Acc %f %f %f %f %f %f", base_acc[0], base_acc[1], base_acc[2], base_acc[3], base_acc[4], base_acc[5]);
+  // ROS_INFO("Vel %f %f %f %f %f %f", com_vel[0], com_vel[1], com_vel[2], com_vel[3], com_vel[4], com_vel[5]);
   
   Eigen::Matrix<Scalar,3,1> ang_vel(base_vel[0], base_vel[1], base_vel[2]);
   Eigen::Matrix<Scalar,3,1> lin_vel(base_vel[3], base_vel[4], base_vel[5]);
   Eigen::Matrix<Scalar,4,1> quat_dot = calcQuatDot(quat, ang_vel);
   
-  lin_vel = rot*lin_vel; //converts from base to world frame.
+  lin_vel = rot*lin_vel; // converts from base to world frame.
   
   Xd[0] = quat_dot[0];
   Xd[1] = quat_dot[1];
@@ -450,9 +444,9 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   Xd[5] = lin_vel[1];
   Xd[6] = lin_vel[2];
   
-  Xd[7] = u[0]; //X[17];
-  Xd[8] = u[1]; //X[18];
-  Xd[9] = u[0]; //X[19];
+  Xd[7]  = u[0]; //X[17];
+  Xd[8]  = u[1]; //X[18];
+  Xd[9]  = u[0]; //X[19];
   Xd[10] = u[1]; //X[20];
   
   Xd[11] = base_acc[0];
@@ -467,72 +461,3 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   Xd[19] = 0; //qdd[2];
   Xd[20] = 0; //qdd[3];
 }
-
-// void HybridDynamics::start_log(){
-//   std::string filename;
-//   ros::param::get("/xout_log_file_name", filename);
-//   log_file.open(filename.c_str());
-//   log_file << "qw,qx,qy,qz,x,y,z,wx,wy,wz,vx,vy,vz,q1,q2,q3,q4,qd1,qd2,qd3,qd4\n";
-
-//   ros::param::get("/debug_log_file_name", filename);
-//   if(debug_file.is_open()){
-//     debug_file.close();
-//   }
-//   debug_file.open(filename.c_str());
-//   debug_file << "kc,kphi,n0,n1,phi\n";
-
-//   ROS_INFO("Debug File is open?: %d", debug_file.is_open());
-//   ROS_INFO("debug filename %s", filename.c_str());
-// }
-
-/*
-void HybridDynamics::log_vehicle_state(){
-
-  if(!log_file.is_open()){
-    return;
-  }
-
-  //Log vehicle state in the format that spatial v2 needs.
-  log_file << state_[3] << ','; //spatial v2 needs the quaternion in w,x,y,z format.
-  log_file << state_[0] << ',';
-  log_file << state_[1] << ',';
-  log_file << state_[2] << ',';
-  
-  log_file << state_[4] << ','; //position
-  log_file << state_[5] << ',';
-  log_file << state_[6] << ',';
-
-  log_file << state_[11] << ','; //spatial velocity
-  log_file << state_[12] << ',';
-  log_file << state_[13] << ',';
-  log_file << state_[14] << ',';
-  log_file << state_[15] << ',';
-  log_file << state_[16] << ',';
-  
-  log_file << state_[7] << ','; //joint positions (should be zero)
-  log_file << state_[8] << ',';
-  log_file << state_[9] << ',';
-  log_file << state_[10] << ',';
-  
-  log_file << state_[17] << ','; //joint velocity
-  log_file << state_[18] << ',';
-  log_file << state_[19] << ',';
-  log_file << state_[20] << '\n';
-}
-*/
-
-// void HybridDynamics::log_value(float *values){
-//   ROS_INFO("Debug File is failed: %d", debug_file.fail());
-//   debug_file << values[0] << ',';
-//   debug_file << values[1] << ',';
-//   debug_file << values[2] << ',';
-//   debug_file << values[3] << ',';
-//   debug_file << values[4] << '\n';
-//   debug_file.flush();
-  
-// }
-
-// void HybridDynamics::stop_log(){
-//   log_file.close();
-//   debug_file.close();
-// }
