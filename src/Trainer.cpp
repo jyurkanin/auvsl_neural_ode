@@ -138,7 +138,7 @@ void Trainer::train()
 	std::vector<VectorAD> x_list(m_train_steps);
 	char fn_array[100];
   
-	for(int i = 1; i <= 1; i++)
+	for(int i = 1; i <= 17; i++)
 	{
 		memset(fn_array, 0, 100);
 		sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -217,7 +217,7 @@ void Trainer::trainThreads()
   char fn_array[100];
 
   int cnt_workers = 0;
-  for(int i = 1; i <= 1; i++)
+  for(int i = 1; i <= 17; i++)
   {
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -295,7 +295,7 @@ void Trainer::evaluate_train3()
   double loss = 0;
   int cnt = 0;
   
-  for(int i = 1; i <= 1; i++)
+  for(int i = 1; i <= 17; i++)
   {
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);

@@ -1,5 +1,43 @@
 Updates
 
+* <2023-07-11 Tue 22:22>
+The fact that we cant bring training error to absolute zero might just be
+caused by noise in the training data that is just not model-able by
+the model.
+
+Lets train specifically on the first 6 second trajectory in the training data.
+So we are only optimizing one specific thing and we should be able to drive that
+error to absolute zero.
+So yeah, when I train like this, and also mess around with the
+learning rate by setting it alternating it high and low, then
+I can achieve a lower training loss very close to 0.
+
+At first it plataued at .04, but after jiggling the learning rate,
+I was able to get it down to .006
+Which is far lower than anything I've seen before.
+Just for fun, I ran this "trained" model on CV3
+CV3 Error was: 88% lol
+
+So actually, you can bring the training loss very low by
+oscillating the learning rate. And a slightly too high learning
+rate is not that big of a deal.
+
+* Residual Learning
+This is pretty overpowered, but sort of stupid and it reduces explainability.
+I think this would probably improve performance.
+Residual network could map [vl,vr,vx,vy,wz]->[dvx, dvy, dwz]
+
+* TODO Do a long train over night to evaluate the separate_z thing
+Idk if I want to incorporate this change into main_8 yet.
+Then do this:
+
+* TODO set COM to origin.
+Idk it might help a bit to kill the asymetry.
+
+* TODO Add the smooth ground data to the training set???
+It might help it learn the dynamics. Bro I dont know.
+
+
 * <2023-06-29 Thu 00:29>
 Okay. You have 2 paths forward at this point.
 THe main issue is that the training loss is not actually
@@ -12,7 +50,7 @@ Maybe. Possibly getting stuck in local minima.
 Lets run main_8 with a large step size all night and see where we
 get. Nah. It's just no bueno.
 
-* TODO augmented tire-network neural ode?
+* augmented tire-network neural ode?
 How likely is this to actually work? bro I don't feel great about it.
 How will you initialize the value? This could be a shit ton of work. Damn.
 Feedback has actually not worked out very well for me in the past. I don't
@@ -41,7 +79,7 @@ Not great tbh. Not good at all really.
 Maybe the loss is plataueing due to initial conditions being
 slightly off?
 
-* TODO Kill the asymmetry??
+* DONE Kill the asymmetry??
 Bro I don't know.
 
 
