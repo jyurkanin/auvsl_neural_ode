@@ -13,8 +13,17 @@ Lets run main_8 with a large step size all night and see where we
 get. Nah. It's just no bueno.
 
 * TODO augmented tire-network neural ode?
+How likely is this to actually work? bro I don't feel great about it.
+How will you initialize the value? This could be a shit ton of work. Damn.
+Feedback has actually not worked out very well for me in the past. I don't
+feel very good about it.
+
 Feedback. Gives more params and can reason about changes in the
 tire's velocity. Let's try this next.
+Add an additional output to the tire network in pretraining.
+Then in C++ modify the network
+Then add it to the entire state of the fucking vehicle in HybridDynamics
+Feed part of the state back into the network.
 
 * DONE Base network?
 Could work. Seems like cheating.
