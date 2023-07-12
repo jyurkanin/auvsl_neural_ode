@@ -13,9 +13,8 @@ Lets run main_8 with a large step size all night and see where we
 get. Nah. It's just no bueno.
 
 * TODO augmented tire-network neural ode?
-Feedback. Gives more params and
-can reason about changes in the
-tire's velocity.
+Feedback. Gives more params and can reason about changes in the
+tire's velocity. Let's try this next.
 
 * DONE Base network?
 Could work. Seems like cheating.
@@ -27,7 +26,8 @@ It compiled.
 Training it over night.
 Loss is still fucking plataueing
 
-Final Train3_1 evaluation loss:
+Final Train3_1 evaluation loss: .108588
+Not great tbh. Not good at all really.
 
 Maybe the loss is plataueing due to initial conditions being
 slightly off?
