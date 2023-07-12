@@ -23,8 +23,17 @@ In progress.
 Forward pass implemented I guess.
 todo: replace cpt_vels with temp_vel (minor thing)
 
-It compiled. Fuck it.
-It's training so okay.
+It compiled.
+Training it over night.
+Loss is still fucking plataueing
+
+Final Train3_1 evaluation loss:
+
+Maybe the loss is plataueing due to initial conditions being
+slightly off?
+
+* TODO Kill the asymmetry??
+Bro I don't fucking know, maybe.
 
 * <2023-04-02 Sun 00:04>
 I trained a new network, it uses relu, tanh, and sigmoid to make sure everything
@@ -821,7 +830,7 @@ to running out of shit to try. This is fucked. You could
 do the base network bullshit. I guess. I think that's my only
 way forward at this point.
 
-* TODO Base Network :(
+* DONE Base Network :(
 
 * DONE Smooth Tire Velocities
 Oh boy. Yeah we got to do this.
@@ -845,7 +854,7 @@ Which is fucked.
 Reduce training error.
 Just train on the first file to show you can do it.
 
-* TODO Separate Fz and Fx,Fy networks
+* DONE Separate Fz and Fx,Fy networks
 With 8 nodes:
 Train3_1 Eval Loss: 3.33%
 Train3_1 Train loss: 1.52%
@@ -872,7 +881,7 @@ Idk it's taking a while. It stopped around 2.5%
 ** Tried no Haxx
 And it was complete shit. As expected.
 
-** TODO BASE NETWORK FUUUUUUCKKKKKKKK
+** DONE BASE NETWORK FUUUUUUCKKKKKKKK
 I didn't want to do this. But I literally see no other way forward.
 
 
