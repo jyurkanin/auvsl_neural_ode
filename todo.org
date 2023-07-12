@@ -32,7 +32,7 @@ Final Train3_1 evaluation loss:
 Maybe the loss is plataueing due to initial conditions being
 slightly off?
 
-* TODO Kill the asymmetry??
+* DONE Kill the asymmetry??
 Bro I don't fucking know, maybe.
 
 * <2023-04-02 Sun 00:04>

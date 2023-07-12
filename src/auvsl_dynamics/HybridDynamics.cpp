@@ -267,6 +267,7 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 }
 
 
+// Don't use. Didn't help.
 void HybridDynamics::get_base_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, LinkDataMap<Force> &ext_forces)
 {
 	// get the matrix that transforms from base to world frame
@@ -403,7 +404,7 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   
   //Calculates ext forces
   get_tire_f_ext(X, ext_forces);
-  get_base_f_ext(X, ext_forces);
+  //get_base_f_ext(X, ext_forces);
   
   //rot is the rotation matrix that transforms vectors from the base frame to world frame.
   //The transpose converts the world frame gravity to a base frame gravity vector.

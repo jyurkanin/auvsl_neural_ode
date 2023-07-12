@@ -7,11 +7,10 @@
 template<typename Scalar>
 VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics::STATE_DIM + HybridDynamics::CNTRL_DIM, 0)
 {
-  this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams() +
-					 m_hybrid_dynamics.base_network.getNumParams());
-  this->setNumSteps(10);
-  this->setTimestep(0.001);  //unused
-  this->setLearningRate(1e-3f);
+	this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
+	this->setNumSteps(10);
+	this->setTimestep(0.001);  //unused
+	this->setLearningRate(1e-3f);
 }
 
 template<typename Scalar>
@@ -23,52 +22,46 @@ VehicleSystem<Scalar>::~VehicleSystem()
 template<typename Scalar>
 void VehicleSystem<Scalar>::setParams(const VectorS &params)
 {
-  int idx = 0;
-  m_hybrid_dynamics.tire_network.setParams(params, idx);
-  idx += m_hybrid_dynamics.tire_network.getNumParams();
-  
-  m_hybrid_dynamics.base_network.setParams(params, idx);
+	int idx = 0;
+	m_hybrid_dynamics.tire_network.setParams(params, idx);
 }
 
 template<typename Scalar>
 void VehicleSystem<Scalar>::getParams(VectorS &params)
 {
-  int idx = 0;
-  m_hybrid_dynamics.tire_network.getParams(params, idx);
-  idx += m_hybrid_dynamics.tire_network.getNumParams();
-  
-  m_hybrid_dynamics.base_network.getParams(params, idx);
+	int idx = 0;
+	m_hybrid_dynamics.tire_network.getParams(params, idx);
 }
 
 template<typename Scalar>
 void VehicleSystem<Scalar>::forward(const VectorS &X, VectorS &Xd)
 {
-  assert(X.size() == this->getStateDim());
-  assert(Xd.size() == this->getStateDim());
+	assert(X.size() == this->getStateDim());
+	assert(Xd.size() == this->getStateDim());
   
-  Eigen::Matrix<Scalar, HybridDynamics::STATE_DIM, 1> model_x;
-  Eigen::Matrix<Scalar, HybridDynamics::CNTRL_DIM, 1> model_u;
-  Eigen::Matrix<Scalar, HybridDynamics::STATE_DIM, 1> model_xd;
+	Eigen::Matrix<Scalar, HybridDynamics::STATE_DIM, 1> model_x;
+	Eigen::Matrix<Scalar, HybridDynamics::CNTRL_DIM, 1> model_u;
+	Eigen::Matrix<Scalar, HybridDynamics::STATE_DIM, 1> model_xd;
   
-  for(int i = 0; i < model_x.size(); i++)
-  {
-    model_x[i] = X[i];
-  }
-  for(int i = 0; i < model_u.size(); i++)
-  {
-    model_u[i] = X[i+model_x.size()];
-  }
+	for(int i = 0; i < model_x.size(); i++)
+	{
+		model_x[i] = X[i];
+	}
+	for(int i = 0; i < model_u.size(); i++)
+	{
+		model_u[i] = X[i+model_x.size()];
+	}
   
-  m_hybrid_dynamics.ODE(model_x, model_xd, model_u);
+	m_hybrid_dynamics.ODE(model_x, model_xd, model_u);
   
-  for(int i = 0; i < model_xd.size(); i++)
-  {
-    Xd[i] = model_xd[i];
-  }
-  for(int i = 0; i < model_u.size(); i++)
-  {
-    Xd[i+model_x.size()] = 0;
-  }  
+	for(int i = 0; i < model_xd.size(); i++)
+	{
+		Xd[i] = model_xd[i];
+	}
+	for(int i = 0; i < model_u.size(); i++)
+	{
+		Xd[i+model_x.size()] = 0;
+	}  
 }
 
 // Linear and Angular error
