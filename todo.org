@@ -32,8 +32,9 @@ Not great tbh. Not good at all really.
 Maybe the loss is plataueing due to initial conditions being
 slightly off?
 
-* DONE Kill the asymmetry??
-Bro I don't fucking know, maybe.
+* TODO Kill the asymmetry??
+Bro I don't know.
+
 
 * <2023-04-02 Sun 00:04>
 I trained a new network, it uses relu, tanh, and sigmoid to make sure everything
@@ -735,7 +736,7 @@ Starting with a relatively large amount: 1e-2
 Yeah, this did not help at all. CV3 error slowly climbed up
 to 9.8%
 
-** TODO Smooth the left and right tire velocities???
+** DONE Smooth the left and right tire velocities???
 These are kinda noisey. Maybe it's throwing off the model.
 Bro IDK. Maybe give the model both unfiltered and filtered
 tire velocity. Bro, IDK
@@ -820,9 +821,9 @@ but I think you've seen it do that before without fake data.
 Small batch size is supposed to be better than full batch size.                                                                                                                
 DOesn't seem to help. If anything its worse.                                                                                                                                   
                                                                                                                                                                                
-* TODO Double check zr -> Fz is continuous                                                                                                                                     
+* DONE Double check zr -> Fz is continuous                                                                                                                                     
 I think it's not which is bad.                                                                                                                                                 
-
+It's continuous.
 
 * <2023-06-24 Sat 11:42>
 Wow okay now what. Adding fake data did not work. Very close
