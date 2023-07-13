@@ -22,21 +22,32 @@ So actually, you can bring the training loss very low by
 oscillating the learning rate. And a slightly too high learning
 rate is not that big of a deal.
 
+* Result:
+separating out the z network didn't help. Rip.
+
 * Residual Learning
 This is pretty overpowered, but sort of stupid and it reduces explainability.
 I think this would probably improve performance.
 Residual network could map [vl,vr,vx,vy,wz]->[dvx, dvy, dwz]
 
-* TODO Do a long train over night to evaluate the separate_z thing
+* DONE Do a long train over night to evaluate the separate_z thing
 Idk if I want to incorporate this change into main_8 yet.
+It seems like the separate z thing is making performance worse.
+Separate z network seems like it isn't working very well. Riperoni
+
 Then do this:
+
+* TODO Add more to the loss function?
+Like velocity?
+It is a running loss so the velocity might help.
+Adding the yaw error helped.
 
 * TODO set COM to origin.
 Idk it might help a bit to kill the asymetry.
 
-* TODO Add the smooth ground data to the training set???
+* Add the smooth ground data to the training set???
 It might help it learn the dynamics. Bro I dont know.
-
+Terrible idea.
 
 * <2023-06-29 Thu 00:29>
 Okay. You have 2 paths forward at this point.
