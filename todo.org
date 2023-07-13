@@ -1,4 +1,99 @@
 Updates
+
+* <2023-07-11 Tue 22:22>
+The fact that we cant bring training error to absolute zero might just be
+caused by noise in the training data that is just not model-able by
+the model.
+
+Lets train specifically on the first 6 second trajectory in the training data.
+So we are only optimizing one specific thing and we should be able to drive that
+error to absolute zero.
+So yeah, when I train like this, and also mess around with the
+learning rate by setting it alternating it high and low, then
+I can achieve a lower training loss very close to 0.
+
+At first it plataued at .04, but after jiggling the learning rate,
+I was able to get it down to .006
+Which is far lower than anything I've seen before.
+Just for fun, I ran this "trained" model on CV3
+CV3 Error was: 88% lol
+
+So actually, you can bring the training loss very low by
+oscillating the learning rate. And a slightly too high learning
+rate is not that big of a deal.
+
+* Result:
+separating out the z network didn't help. Rip.
+
+* Residual Learning
+This is pretty overpowered, but sort of stupid and it reduces explainability.
+I think this would probably improve performance.
+Residual network could map [vl,vr,vx,vy,wz]->[dvx, dvy, dwz]
+
+* DONE Do a long train over night to evaluate the separate_z thing
+Idk if I want to incorporate this change into main_8 yet.
+It seems like the separate z thing is making performance worse.
+Separate z network seems like it isn't working very well. Riperoni
+
+Then do this:
+
+* TODO Add more to the loss function?
+Like velocity?
+It is a running loss so the velocity might help.
+Adding the yaw error helped.
+
+* TODO set COM to origin.
+Idk it might help a bit to kill the asymetry.
+
+* Add the smooth ground data to the training set???
+It might help it learn the dynamics. Bro I dont know.
+Terrible idea.
+
+* <2023-06-29 Thu 00:29>
+Okay. You have 2 paths forward at this point.
+THe main issue is that the training loss is not actually
+going very low.
+
+Possible solutions:
+
+* DONE Better optimizer?
+Maybe. Possibly getting stuck in local minima.
+Lets run main_8 with a large step size all night and see where we
+get. Nah. It's just no bueno.
+
+* augmented tire-network neural ode?
+How likely is this to actually work? bro I don't feel great about it.
+How will you initialize the value? This could be a shit ton of work. Damn.
+Feedback has actually not worked out very well for me in the past. I don't
+feel very good about it.
+
+Feedback. Gives more params and can reason about changes in the
+tire's velocity. Let's try this next.
+Add an additional output to the tire network in pretraining.
+Then in C++ modify the network
+Then add it to the entire state of the fucking vehicle in HybridDynamics
+Feed part of the state back into the network.
+
+* DONE Base network?
+Could work. Seems like cheating.
+In progress.
+Forward pass implemented I guess.
+todo: replace cpt_vels with temp_vel (minor thing)
+
+It compiled.
+Training it over night.
+Loss is still fucking plataueing
+
+Final Train3_1 evaluation loss: .108588
+Not great tbh. Not good at all really.
+
+Maybe the loss is plataueing due to initial conditions being
+slightly off?
+
+* DONE Kill the asymmetry??
+Bro I don't know.
+
+
 * <2023-04-02 Sun 00:04>
 I trained a new network, it uses relu, tanh, and sigmoid to make sure everything
 crosses zero at zero and everything is continuous. Based.
@@ -699,7 +794,7 @@ Starting with a relatively large amount: 1e-2
 Yeah, this did not help at all. CV3 error slowly climbed up
 to 9.8%
 
-** TODO Smooth the left and right tire velocities???
+** DONE Smooth the left and right tire velocities???
 These are kinda noisey. Maybe it's throwing off the model.
 Bro IDK. Maybe give the model both unfiltered and filtered
 tire velocity. Bro, IDK
@@ -784,9 +879,9 @@ but I think you've seen it do that before without fake data.
 Small batch size is supposed to be better than full batch size.                                                                                                                
 DOesn't seem to help. If anything its worse.                                                                                                                                   
                                                                                                                                                                                
-* TODO Double check zr -> Fz is continuous                                                                                                                                     
+* DONE Double check zr -> Fz is continuous                                                                                                                                     
 I think it's not which is bad.                                                                                                                                                 
-
+It's continuous.
 
 * <2023-06-24 Sat 11:42>
 Wow okay now what. Adding fake data did not work. Very close
@@ -794,8 +889,9 @@ to running out of shit to try. This is fucked. You could
 do the base network bullshit. I guess. I think that's my only
 way forward at this point.
 
-* TODO Base Network :(
-* TODO Smooth Tire Velocities
+* DONE Base Network :(
+
+* DONE Smooth Tire Velocities
 Oh boy. Yeah we got to do this.
 So send in the current tire velocity and also a moving average of
 each tire velocity. Like:
@@ -814,3 +910,37 @@ of 9.7%
 * I Think the biggest problem is that Training error is not good
 Training Evaluation loss is 8.85%
 Which is fucked.
+Reduce training error.
+Just train on the first file to show you can do it.
+
+* DONE Separate Fz and Fx,Fy networks
+With 8 nodes:
+Train3_1 Eval Loss: 3.33%
+Train3_1 Train loss: 1.52%
+
+With 16 nodes:
+Probably the same. I stopped at
+1.8% training loss. But it was probably reaching the same
+asymptote. I jsut didn't want to wait around for it.
+Train3_1 Eval loss: 4.8% (undertrained)
+
+Lets try with a fucking ton of hidden units. Like 64. Fuck it.
+Training was Very slow. Seemed to slow down around 9% but was
+still going down. Just too slow to be practical.
+
+Try more shit. Anything to get the training loss lower.
+Ways to get the fucking loss down:
+More features.
+More parameters (shit).
+Different architecture. 
+
+** So I'm trying without the CppAD::abs()
+Idk it's taking a while. It stopped around 2.5%
+
+** Tried no Haxx
+And it was complete shit. As expected.
+
+** DONE BASE NETWORK FUUUUUUCKKKKKKKK
+I didn't want to do this. But I literally see no other way forward.
+
+
