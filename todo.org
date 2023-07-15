@@ -42,6 +42,12 @@ Like velocity?
 It is a running loss so the velocity might help.
 Adding the yaw error helped.
 
+Bruh. In the process of implementing this idea, you found out
+that the gt_vec is expressed in a different frame than the model.
+So that was introducing error at the start of every simulation.
+Which is bad. Bruh moment.
+
+
 * TODO set COM to origin.
 Idk it might help a bit to kill the asymetry.
 

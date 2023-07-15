@@ -69,19 +69,26 @@ void VehicleSystem<Scalar>::forward(const VectorS &X, VectorS &Xd)
 template<typename Scalar>
 Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
 {
-  Scalar x_err = gt_vec[4] - vec[4];
-  Scalar y_err = gt_vec[5] - vec[5];
-  Scalar lin_err = CppAD::sqrt((x_err*x_err) + (y_err*y_err));
+	// Linear Error
+	Scalar x_err = gt_vec[4] - vec[4];
+	Scalar y_err = gt_vec[5] - vec[5];
+	Scalar lin_err = CppAD::sqrt((x_err*x_err) + (y_err*y_err));
 
-  Scalar roll, pitch, yaw;
-  toEulerAngles(vec[3], vec[0], vec[1], vec[2],
-		roll, pitch, yaw);
-  
-  Scalar yaw_err = yaw - gt_vec[3];
-  yaw_err = CppAD::atan2(CppAD::sin(yaw_err), CppAD::cos(yaw_err));
-  Scalar ang_err = CppAD::abs(yaw_err);
-  
-  return ang_err + lin_err;
+	// Angular Error
+	Scalar roll, pitch, yaw;
+	toEulerAngles(vec[3], vec[0], vec[1], vec[2],
+				  roll, pitch, yaw);
+	
+	Scalar yaw_err = yaw - gt_vec[3];
+	yaw_err = CppAD::atan2(CppAD::sin(yaw_err), CppAD::cos(yaw_err));
+	Scalar ang_err = CppAD::abs(yaw_err);
+	
+	Scalar wz_err = CppAD::abs(gt_vec[13] - vec[13]);
+	Scalar vx_err = CppAD::abs(gt_vec[14] - vec[14]);
+	Scalar vy_err = CppAD::abs(gt_vec[15] - vec[15]);
+	Scalar vel_err = .1*(wz_err+vx_err+vy_err);
+	
+	return ang_err + lin_err;
 }
 
 template<typename Scalar>
