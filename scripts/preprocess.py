@@ -38,6 +38,7 @@ def readIMUFile(name, ii):
     
 def readFiles(name, num_files):
     timestep = .01
+    kernel_size = 51
     
     for ii in range(1, num_files+1):
         df_odom = readOdomFile(name, ii)
@@ -54,7 +55,10 @@ def readFiles(name, num_files):
 
         vx_interp = np.append(np.diff(x_interp), 0) / timestep # Finite differences
         vy_interp = np.append(np.diff(y_interp), 0) / timestep
-
+        
+        # vx_interp = np.convolve(vx_interp, np.ones(kernel_size), "same") / kernel_size
+        # vy_interp = np.convolve(vy_interp, np.ones(kernel_size), "same") / kernel_size
+        
         yaw_unbounded = (np.interp(resample_times, df_gt["time"], np.unwrap(df_gt["yaw"]))).reshape(-1,1)
         yaw = np.arctan2(np.sin(yaw_unbounded), np.cos(yaw_unbounded))
         

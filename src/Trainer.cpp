@@ -88,42 +88,48 @@ void Trainer::computeEqState()
 // ,time,vel_left,vel_right,x,y,yaw,wx,wy,wz
 void Trainer::loadDataFile(std::string fn)
 {
-  std::cout << "Opening " << fn << "\n";
-  std::flush(std::cout);
+	std::cout << "Opening " << fn << "\n";
+	std::flush(std::cout);
   
-  std::ifstream data_file(fn);
+	std::ifstream data_file(fn);
 
-  if(!data_file.is_open())
-  {
-    std::cout << "File was not open\n";
-  }
+	if(!data_file.is_open())
+	{
+		std::cout << "File was not open\n";
+	}
   
-  std::string line;
-  std::getline(data_file, line); //ignore column heading
+	std::string line;
+	std::getline(data_file, line); //ignore column heading
   
-  char comma;
-  int idx;
-  double wx, wy;
-  DataRow row;
+	char comma;
+	int idx;
+	double wx, wy;
+	DataRow row;
 
-  m_data.clear();
-  while(data_file.peek() != EOF)
-  {
-    data_file >> idx >> comma;
-    data_file >> row.time >> comma;
-    data_file >> row.vl >> comma;
-    data_file >> row.vr >> comma;
-    data_file >> row.x >> comma;
-    data_file >> row.y >> comma;
-    data_file >> row.yaw >> comma;
-    data_file >> wx >> comma; //ignore this
-    data_file >> wy >> comma; //ignore this
-    data_file >> row.wz >> comma;
-    data_file >> row.vx >> comma;
-    data_file >> row.vy; // >> comma;
-    
-    m_data.push_back(row);
-  }
+	m_data.clear();
+	while(data_file.peek() != EOF)
+	{
+		double vx_w; //vx expressed in world frame. :(
+		double vy_w;
+		
+		data_file >> idx >> comma;
+		data_file >> row.time >> comma;
+		data_file >> row.vl >> comma;
+		data_file >> row.vr >> comma;
+		data_file >> row.x >> comma;
+		data_file >> row.y >> comma;
+		data_file >> row.yaw >> comma;
+		data_file >> wx >> comma; //ignore this
+		data_file >> wy >> comma; //ignore this
+		data_file >> row.wz >> comma;
+		data_file >> vx_w >> comma;
+		data_file >> vy_w; // >> comma;
+
+		row.vx =  vx_w*std::cos(row.yaw) + vy_w*std::sin(row.yaw);
+		row.vy = -vx_w*std::sin(row.yaw) + vy_w*std::cos(row.yaw);
+	
+		m_data.push_back(row);
+	}
 
 }
 
@@ -432,11 +438,16 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   std::vector<double> model_y(x_list.size());
   std::vector<double> model_z(x_list.size());
   std::vector<double> model_yaw(x_list.size());
+  std::vector<double> model_vx(x_list.size());
+  std::vector<double> model_vy(x_list.size());
+  
   
   std::vector<double> gt_x(x_list.size());
   std::vector<double> gt_y(x_list.size());
   std::vector<double> gt_yaw(x_list.size());
-
+  std::vector<double> gt_vx(x_list.size());
+  std::vector<double> gt_vy(x_list.size());
+  
   std::vector<double> x_axis(x_list.size());
   
   for(int i = 0; i < x_list.size(); i++)
@@ -445,11 +456,15 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
     model_y[i] = CppAD::Value(x_list[i][5]);
     model_z[i] = CppAD::Value(x_list[i][6]);
     model_yaw[i] = CppAD::Value(2*CppAD::atan(x_list[i][2] / x_list[i][3])); //this is an approximation
-    
+	model_vx[i] = CppAD::Value(x_list[i][14]);
+	model_vy[i] = CppAD::Value(x_list[i][15]);
+	
     gt_x[i] = traj[i].x;
     gt_y[i] = traj[i].y;
     gt_yaw[i] = traj[i].yaw;
-
+	gt_vx[i] = traj[i].vx;
+	gt_vy[i] = traj[i].vy;
+	
     x_axis[i] = .01*i;
   }
 
@@ -463,7 +478,7 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   aspect_ratio_hack_y[1] = max;
   
   
-  plt::subplot(1,3,1);
+  plt::subplot(1,5,1);
   plt::title("X-Y plot");
   plt::xlabel("[m]");
   plt::ylabel("[m]");
@@ -472,13 +487,13 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   plt::scatter(aspect_ratio_hack_x, aspect_ratio_hack_y);
   plt::legend();
   
-  plt::subplot(1,3,2);
+  plt::subplot(1,5,2);
   plt::title("Time vs Elevation");
   plt::xlabel("Time [s]");
   plt::ylabel("Elevation [m]");
   plt::plot(model_z);
 
-  plt::subplot(1,3,3);
+  plt::subplot(1,5,3);
   plt::title("Time vs yaw");
   plt::xlabel("Time [s]");
   plt::ylabel("yaw [Rads]");
@@ -486,6 +501,13 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   plt::plot(x_axis, gt_yaw, "b", {{"label", "gt"}});
   plt::legend();
   
+  plt::subplot(1,5,4);
+  plt::plot(gt_vx);
+  plt::plot(model_vx);
+  
+  plt::subplot(1,5,5);
+  plt::plot(gt_vy);
+  plt::plot(model_vy);
   plt::show();
 }
 
@@ -581,6 +603,9 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj,
     gt_vec[3] = ADF(traj[i].yaw);
     gt_vec[4] = ADF(traj[i].x);
     gt_vec[5] = ADF(traj[i].y);
+	gt_vec[13] = ADF(traj[i].wz);
+	gt_vec[14] = ADF(traj[i].vx);
+	gt_vec[15] = ADF(traj[i].vy);
     
     ADF dx = traj[i].x - traj[i-1].x;
     ADF dy = traj[i].y - traj[i-1].y;
