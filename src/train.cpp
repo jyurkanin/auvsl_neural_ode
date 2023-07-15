@@ -16,7 +16,7 @@ int main()
   
   // train.evaluate_cv3();
   // train.evaluate_ld3();
-  // train.evaluate_train3();
+  train.evaluate_train3();
 
   for(int i = 0; i < 10000; i++)
   {

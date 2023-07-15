@@ -314,7 +314,7 @@ void Trainer::evaluate_train3()
     {
       std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
       evaluateTrajectory(traj, x_list, loss);
-      // plotTrajectory(traj, x_list);
+      plotTrajectory(traj, x_list);
       
       loss_avg += loss;
       cnt++;

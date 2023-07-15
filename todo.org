@@ -37,7 +37,7 @@ Separate z network seems like it isn't working very well. Riperoni
 
 Then do this:
 
-* TODO Add more to the loss function?
+* DONE Add more to the loss function?
 Like velocity?
 It is a running loss so the velocity might help.
 Adding the yaw error helped.
@@ -45,10 +45,14 @@ Adding the yaw error helped.
 Bruh. In the process of implementing this idea, you found out
 that the gt_vec is expressed in a different frame than the model.
 So that was introducing error at the start of every simulation.
-Which is bad. Bruh moment.
+Which is terrible. Bruh moment.
+
+as a result of the fix, training loss is getting lower than
+ever before. Actually, before fix, I have no idea how training
+with a 20 steps would even be successful at all.
 
 
-* TODO set COM to origin.
+* DONE set COM to origin.
 Idk it might help a bit to kill the asymetry.
 
 * Add the smooth ground data to the training set???
