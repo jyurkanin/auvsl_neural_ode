@@ -1,5 +1,38 @@
 Updates
 
+* <2023-07-15 Sat 11:49>
+Possible bug, but when you set vl and vr to 0mps you see a drift
+in the y direction. Wack. Yep I am seeing a lateral drift. unit test time.
+Unit test graph is showing that fy=0. I dont know why.
+Where the fuck do bugs come from?
+How do they show up inexplicably after a long time of good performance?
+I think I've been seeing this for a long time but I've just been ignoring it.
+It's a minor bug. it's because you use ReLU on the final layer.
+The input to the Fy's ReLU was negative, resulting in 0 fy
+force. This is sort of a bug because it means the network can learn
+a mapping that makes no sense.
+When trained this problem would mostly go away or just become
+invisible. But its still possible that for some combo of
+vx,vy,zr,w Fy would get a negative value before the relu resulting
+in 0 Fy force. Which would probably be overall bad for generalization.
+
+There is still some longitudinal drift. Very small amount.
+4cm over 100s.
+I think this is jsut because this version of the code, doesn't
+iterate over the tire to find the contact point to make sure
+that tire forces are normal to the surface. So the vehicle is
+pitched very slightly forward and the z forces are microscopically
+thrusting it forward.
+
+* DONE Convert ReLU to abs
+Lets get those results.
+So, this might improve generalization.
+I think abs is better than relu.
+Not sure if this really has any significant effect.
+CV3 error is 11.8%. Not sure that this is better. main_8 has been
+performing like shit recently anyways.
+
+
 * <2023-07-11 Tue 22:22>
 The fact that we cant bring training error to absolute zero might just be
 caused by noise in the training data that is just not model-able by

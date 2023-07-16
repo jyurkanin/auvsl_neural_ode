@@ -43,11 +43,11 @@ namespace rcg {
   
   //these dont get used in the forward dynamics.
   const Scalar tx_fr_base_link_COM{0.011999273672699928};
-  const Scalar ty_fr_base_link_COM{0.0019998790230602026};
+	//const Scalar ty_fr_base_link_COM{0.0019998790230602026};
   const Scalar tz_fr_base_link_COM{0.06699594855308533};
   
   //const Scalar tx_fr_base_link_COM = 0.0;
-  //const Scalar ty_fr_base_link_COM = 0.0;
+  const Scalar ty_fr_base_link_COM = 0.0;
   //const Scalar tz_fr_base_link_COM = 0.0;
   
   const Scalar tx_fr_front_mount{0.11999999731779099};
@@ -61,11 +61,11 @@ namespace rcg {
   const Scalar m_base_link{16.52400016784668};
   
   const Scalar comx_base_link{0.011999273672699928};
-  const Scalar comy_base_link{0.0019998790230602026};
+	//const Scalar comy_base_link{0.0019998790230602026};
   const Scalar comz_base_link{0.06699594855308533};
   
   //const Scalar comx_base_link = 0.;
-  //const Scalar comy_base_link = 0.;
+  const Scalar comy_base_link = 0.;
   //const Scalar comz_base_link = 0.;
   
   const Scalar ix_base_link{0.38783785700798035};

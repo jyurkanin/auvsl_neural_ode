@@ -301,7 +301,7 @@ void Trainer::evaluate_train3()
   double loss = 0;
   int cnt = 0;
   
-  for(int i = 1; i <= 17; i++)
+  for(int i = 1; i <= 1; i++)
   {
     memset(fn_array, 0, 100);
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -447,6 +447,8 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   std::vector<double> gt_yaw(x_list.size());
   std::vector<double> gt_vx(x_list.size());
   std::vector<double> gt_vy(x_list.size());
+  std::vector<double> gt_vl(x_list.size());
+  std::vector<double> gt_vr(x_list.size());
   
   std::vector<double> x_axis(x_list.size());
   
@@ -464,6 +466,8 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
     gt_yaw[i] = traj[i].yaw;
 	gt_vx[i] = traj[i].vx;
 	gt_vy[i] = traj[i].vy;
+	gt_vl[i] = traj[i].vl;
+	gt_vr[i] = traj[i].vr;
 	
     x_axis[i] = .01*i;
   }
@@ -476,9 +480,12 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   aspect_ratio_hack_y[0] = min;
   aspect_ratio_hack_x[1] = max;
   aspect_ratio_hack_y[1] = max;
+
+  plt::subplot(1,6,1);
+  plt::plot(gt_vl);
+  plt::plot(gt_vr);
   
-  
-  plt::subplot(1,5,1);
+  plt::subplot(1,6,2);
   plt::title("X-Y plot");
   plt::xlabel("[m]");
   plt::ylabel("[m]");
@@ -487,13 +494,13 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   plt::scatter(aspect_ratio_hack_x, aspect_ratio_hack_y);
   plt::legend();
   
-  plt::subplot(1,5,2);
+  plt::subplot(1,6,3);
   plt::title("Time vs Elevation");
   plt::xlabel("Time [s]");
   plt::ylabel("Elevation [m]");
   plt::plot(model_z);
 
-  plt::subplot(1,5,3);
+  plt::subplot(1,6,4);
   plt::title("Time vs yaw");
   plt::xlabel("Time [s]");
   plt::ylabel("yaw [Rads]");
@@ -501,11 +508,11 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   plt::plot(x_axis, gt_yaw, "b", {{"label", "gt"}});
   plt::legend();
   
-  plt::subplot(1,5,4);
+  plt::subplot(1,6,5);
   plt::plot(gt_vx);
   plt::plot(model_vx);
   
-  plt::subplot(1,5,5);
+  plt::subplot(1,6,6);
   plt::plot(gt_vy);
   plt::plot(model_vy);
   plt::show();
@@ -527,8 +534,8 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
   VectorAD gt_vec;
   for(int i = 1; i < x_list.size(); i++)
   {
-    xk[HybridDynamics::STATE_DIM+0] = traj[i-1].vl;
-    xk[HybridDynamics::STATE_DIM+1] = traj[i-1].vr;
+	  xk[HybridDynamics::STATE_DIM+0] = traj[i-1].vl;
+	  xk[HybridDynamics::STATE_DIM+1] = traj[i-1].vr;
     
     m_system_adf->integrate(xk, xk1);
     xk = xk1;

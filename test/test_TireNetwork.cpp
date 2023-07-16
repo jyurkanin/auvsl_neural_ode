@@ -46,137 +46,140 @@ namespace{
   
   TEST(TireNetwork, vx_fx_plot)
   {
-    TireNetwork tire_network;
-    Eigen::Matrix<ADF,9,1> features;
-    Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
-    
-    features[0] = 0;
-    features[1] = 0;
-    features[2] = 0;
-    features[3] = 0.005;
-    
-    features[4] = 29.758547;
-    features[5] = 2083.0;
-    features[6] = 1.197933;
-    features[7] = 0.102483;
-    features[8] = 0.652405;
-    
-    int len = 10000;
-    std::vector<float> vx_vec(len);
-    std::vector<float> fx_vec(len);
+	  TireNetwork tire_network;
+	  Eigen::Matrix<ADF,8,1> features;
+	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
 
-    for(int j = 0; j < 8; j++)
-    {
-      ADF tire_tangent_vel = j/4.0;
-      for(int i = 0; i < len; i++)
-      {
-	ADF tire_vx = 1.0*ADF((2.0*i/(float)len) - 1.0) + tire_tangent_vel;
+	  tire_network.load_model();
+	  
+	  features[0] = 0;
+	  features[1] = 0;
+	  features[2] = 0;
+	  features[3] = 0.005;
+    
+	  features[4] = 29.758547;
+	  features[5] = 2083.0;
+	  features[6] = 1.197933;
+	  features[7] = 0.102483;
+    
+	  int len = 10000;
+	  std::vector<float> vx_vec(len);
+	  std::vector<float> fx_vec(len);
 
-	features[0] = tire_vx;
-	features[2] = tire_tangent_vel/.098;
+	  for(int j = 0; j < 8; j++)
+	  {
+		  ADF tire_tangent_vel = j/4.0;
+		  for(int i = 0; i < len; i++)
+		  {
+			  ADF tire_vx = 1.0*ADF((2.0*i/(float)len) - 1.0) + tire_tangent_vel;
+
+			  features[0] = tire_vx;
+			  features[2] = tire_tangent_vel/.098;
 	
-	tire_network.forward(features, forces, 0);
+			  tire_network.forward(features, forces, 0);
 	
-	vx_vec[i] = CppAD::Value(tire_tangent_vel - tire_vx);
-	fx_vec[i] = CppAD::Value(forces[0]);
-      }
+			  vx_vec[i] = CppAD::Value(tire_tangent_vel - tire_vx);
+			  fx_vec[i] = CppAD::Value(forces[0]);
+		  }
       
-      plot_cross(-1,1, -100,100);
-      plt::plot(vx_vec, fx_vec);
-    }
+		  plot_cross(-1,1, -100,100);
+		  plt::plot(vx_vec, fx_vec);
+	  }
 
-    plt::title("Vx vs Fx");
-    plt::show();
+	  plt::title("Vx vs Fx");
+	  plt::show();
   }
 
 
   TEST(TireNetwork, vy_fy_plot)
   {
-    TireNetwork tire_network;
-    Eigen::Matrix<ADF,9,1> features;
-    Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
-    
-    features[0] = 0.2;
-    features[1] = 0;
-    features[2] = 0.1;
-    features[3] = 0.001;
-    
-    features[4] = 29.76;
-    features[5] = 2083.0;
-    features[6] = 0.8;
-    features[7] = 0.0;
-    features[8] = 0.3927;
-    
-    int len = 10000;
-    std::vector<float> vy_vec(len);
-    std::vector<float> fy_vec(len);
-    std::vector<float> tanh_vec(len);
+	  TireNetwork tire_network;
+	  Eigen::Matrix<ADF,8,1> features;
+	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
 
-    for(int j = 0; j < 8; j++)
-    {
-      ADF vx = j/8.0;
-      for(int i = 0; i < len; i++)
-      {
-	ADF vy = 1.0 * ADF((2.0*i/(float)len) - 1.0);
-	features[0] = vx;
-	features[1] = vy;
-	
-	tire_network.forward(features, forces, 0);
-	
-	tanh_vec[i] = CppAD::Value(40*CppAD::tanh(100*vy));
-	vy_vec[i] = CppAD::Value(vy);
-	fy_vec[i] = CppAD::Value(forces[1]);
-      }
+	  tire_network.load_model();
+	  
+	  features[0] = 0.2;
+	  features[1] = 0;
+	  features[2] = 0.1;
+	  features[3] = 0.001;
+    
+	  features[4] = 29.76;
+	  features[5] = 2083.0;
+	  features[6] = 0.8;
+	  features[7] = 0.0;
+    
+	  int len = 10000;
+	  std::vector<float> vy_vec(len);
+	  std::vector<float> fy_vec(len);
+	  std::vector<float> tanh_vec(len);
+
+	  for(int j = 0; j < 1; j++)
+	  {
+		  ADF vx = j/8.0;
+		  for(int i = 0; i < len; i++)
+		  {
+			  ADF vy = 1.0 * ADF((2.0*i/(float)len) - 1.0);
+			  features[0] = vx;
+			  features[1] = vy;
+
+			  tire_network.forward(features, forces, 0);
+
+			  tanh_vec[i] = CppAD::Value(40*CppAD::tanh(100*vy));
+			  vy_vec[i] = CppAD::Value(vy);
+			  fy_vec[i] = CppAD::Value(forces[1]);
+		  }
       
-      plot_cross(-1,1, -10,10);
-      //plt::plot(vy_vec, tanh_vec, "g");
-      plt::plot(vy_vec, fy_vec);
-    }
-    plt::title("Vy vs Fy");
-    plt::show();
+		  plot_cross(-1,1, -10,10);
+		  //plt::plot(vy_vec, tanh_vec, "g");
+		  plt::plot(vy_vec, fy_vec);
+	  }
+	  plt::title("Vy vs Fy");
+	  plt::show();
   }
 
   TEST(TireNetwork, vz_fz_plot)
   {
-    TireNetwork tire_network;
-    Eigen::Matrix<ADF,9,1> features;
-    Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
+	  TireNetwork tire_network;
+	  Eigen::Matrix<ADF,8,1> features;
+	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
+	
+	  tire_network.load_model();
+	
+	  features[0] = 0.0;
+	  features[1] = 0;
+	  features[2] = 0.0;
+	  features[3] = 0.005;
     
-    features[0] = 0.0;
-    features[1] = 0;
-    features[2] = 0.0;
-    features[3] = 0.005;
+	  features[4] = 29.76;
+	  features[5] = 2083.0;
+	  features[6] = 0.8;
+	  features[7] = 0.0;
     
-    features[4] = 29.76;
-    features[5] = 2083.0;
-    features[6] = 0.8;
-    features[7] = 0.0;
-    features[8] = 0.3927;
-    
-    int len = 10000;
-    std::vector<float> sinkage_vec(len);
-    std::vector<float> fz_vec(len);
+	  int len = 10000;
+	  std::vector<float> sinkage_vec(len);
+	  std::vector<float> fz_vec(len);
 
-    for(int j = 0; j < 8; j++)
-    {
-      features[0] = 0; //j/8.0;
-      for(int i = 0; i < len; i++)
-      {
-	ADF zr = 0.1 * ADF((2.0*i/(float)len) - 1.0);
-	features[3] = zr;
+	  for(int j = 0; j < 8; j++)
+	  {
+		  features[0] = 0; //j/8.0;
+		  for(int i = 0; i < len; i++)
+		  {
+			  ADF zr = 0.1 * ADF((2.0*i/(float)len) - 1.0);
+			  features[3] = zr;
 	
-	tire_network.forward(features, forces, 0);
+			  tire_network.forward(features, forces, 0);
 	
-	sinkage_vec[i] = CppAD::Value(zr);
-	fz_vec[i] = CppAD::Value(forces[2]);
-      }
+			  sinkage_vec[i] = CppAD::Value(zr);
+			  fz_vec[i] = CppAD::Value(forces[2]);
+		  }
       
-      //plot_cross(-1,1, -10,10);
-      plt::plot(sinkage_vec, fz_vec);
-    }
+		  //plot_cross(-1,1, -10,10);
+		  plt::plot(sinkage_vec, fz_vec);
+	  }
     
-    plt::title("Zr vs Fz");
-    plt::show();
+	  plt::title("Zr vs Fz");
+	  plt::show();
   }
 }
 

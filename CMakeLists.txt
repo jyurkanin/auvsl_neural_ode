@@ -95,6 +95,7 @@ add_executable(
 	runUnitTest
 	test/test_Vehicle.cpp
 	src/VehicleSystem.cpp
+	src/BaseNetwork.cpp
 	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/TireNetwork.cpp
 	src/auvsl_dynamics/utils.cpp
@@ -118,6 +119,7 @@ add_executable(
 	test_TireNetwork
 	test/test_TireNetwork.cpp
 	src/VehicleSystem.cpp
+	src/BaseNetwork.cpp
 	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/TireNetwork.cpp
 	src/auvsl_dynamics/utils.cpp

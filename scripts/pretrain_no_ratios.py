@@ -110,8 +110,7 @@ class TireNet(nn.Module):
       nn.Tanh(),
       nn.Linear(self.hidden_size, self.hidden_size),
       nn.Tanh(),
-      nn.Linear(self.hidden_size, self.out_size),
-      nn.ReLU()
+      nn.Linear(self.hidden_size, self.out_size)
     )
 
     self.model_z = nn.Sequential(
@@ -119,8 +118,7 @@ class TireNet(nn.Module):
       nn.Tanh(),
       nn.Linear(self.hidden_size2, self.hidden_size2),
       nn.Tanh(),
-      nn.Linear(self.hidden_size2, 1),
-      nn.ReLU()
+      nn.Linear(self.hidden_size2, 1)
     )
 
   def compute_bekker_input_scaler(self, x):
@@ -158,9 +156,9 @@ class TireNet(nn.Module):
     yhat_z = self.model_z.forward(bekker_args[:,0][:,None])
     
     yhat_sign_corrected = torch.cat((
-      (yhat[:,0] * torch.tanh(1*diff))[:,None],
-      (yhat[:,1] * torch.tanh(-1*x[:,1]))[:,None],
-      (yhat_z[:,0] / (1 + torch.exp(-1*x[:,3])))[:,None]), 1)
+      (torch.abs(yhat[:,0]) * torch.tanh(1*diff))[:,None],
+      (torch.abs(yhat[:,1]) * torch.tanh(-1*x[:,1]))[:,None],
+      (torch.abs(yhat_z[:,0]) * torch.relu(1*x[:,3]))[:,None]), 1)
     
     return yhat_sign_corrected
     
@@ -198,8 +196,8 @@ def get_evaluation_loss(test_x, test_y):
     predicted_force = output_scaler.inverse_transform(predicted_force)
     print(np.mean(np.square(predicted_force.flatten() - test_y.flatten())))
 
-    plt.scatter(test_x[:100,0], test_y[:100,0])
-    plt.scatter(test_x[:100,0], predicted_force[:100,0])
+    plt.scatter(test_x[:100,2], test_y[:100,2])
+    plt.scatter(test_x[:100,2], predicted_force[:100,2])
     plt.show()
     
 
@@ -267,9 +265,9 @@ model_name = "train_no_ratio1.net"
 md = torch.load(model_name)
 model.load_state_dict(md)
 
-#fit(1e-3, 5000, 100)
-#plt.show()
-#get_evaluation_loss(test_data, test_labels)
+fit(1e-3, 5000, 100)
+plt.show()
+get_evaluation_loss(test_data, test_labels)
 #fit(1e-3, 50, 10)
 #plt.show()
 
@@ -277,7 +275,7 @@ md = model.state_dict()
 print_c_network(md, model.in_mean, model.in_std, output_scaler)
 torch.save(md, model_name)
 
-get_evaluation_loss(test_data, test_labels)
+# get_evaluation_loss(test_data, test_labels)
 # fx_plot()
 # fy_plot()
 # fz_plot()
