@@ -179,16 +179,16 @@ void Trainer::train()
 				m_cnt++;
 			}      
 		}
-    
+		
+		std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
+		std::flush(std::cout);
+		updateParams(m_batch_grad / m_cnt);
+		m_cnt = 0;
+		avg_loss = 0;
+		
 		save();
 	}
-  
-	std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
-	std::flush(std::cout);
-	updateParams(m_batch_grad / m_cnt);
-	m_cnt = 0;
-	avg_loss = 0;
-}
+  }
 
 void Trainer::trainThreads()
 {
@@ -622,13 +622,13 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj,
   }
   
   loss_ad[0] /= x_list.size();
+  //loss_ad[0] = system_adf->loss(gt_vec, x_list.back());
   
   if(traj_len == 0)
   {
     traj_len = 1; //dont let a divide by zero happen.
   }
   
-  //loss_ad[0] = system_adf->loss(gt_vec, x_list.back())
   loss_ad[0] = loss_ad[0] / traj_len;
   CppAD::ADFun<double> func(params, loss_ad);
   
@@ -674,9 +674,8 @@ bool Trainer::combineResults(VectorF &batch_grad,
 void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
 {
   ADF xk[m_system_adf->m_hybrid_dynamics.STATE_DIM];
-  ADF xk_base[m_system_adf->m_hybrid_dynamics.STATE_DIM];
-  
-  VectorAD yaw_quat(4);
+  ADF xk_base[m_system_adf->m_hybrid_dynamics.STATE_DIM]; 
+  VectorAD yaw_quat(4);  
   
   yaw_quat[0] = 0;
   yaw_quat[1] = 0;

@@ -122,11 +122,11 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec,
 int TireNetwork::getNumParams()
 {
   return 4*(m_params[0].weight0.size() +
-	    m_params[0].bias0.size() +
-	    m_params[0].weight2.size() +
-	    m_params[0].bias2.size() +
-	    m_params[0].weight4.size() +
-	    m_params[0].bias4.size());
+			m_params[0].bias0.size() +
+			m_params[0].weight2.size() +
+			m_params[0].bias2.size() +
+			m_params[0].weight4.size() +
+			m_params[0].bias4.size());
 }
 
 void TireNetwork::setParams(const VectorS &params, int idx)

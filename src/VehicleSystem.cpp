@@ -10,7 +10,7 @@ VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics
 	this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
 	this->setNumSteps(10);
 	this->setTimestep(0.001);  //unused
-	this->setLearningRate(1e-2f);
+	this->setLearningRate(1e-3f);
 }
 
 template<typename Scalar>
@@ -103,7 +103,7 @@ void VehicleSystem<Scalar>::evaluate(const VectorS &gt_vec, const VectorS &vec, 
   
   Scalar yaw_err = yaw - gt_vec[3];
   yaw_err = CppAD::atan2(CppAD::sin(yaw_err), CppAD::cos(yaw_err));
-  ang_mse = yaw_err*yaw_err;
+  ang_mse = CppAD::abs(yaw_err);
 }
 
 

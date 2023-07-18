@@ -7,6 +7,7 @@
 
 #include "HybridDynamics.h"
 #include "VehicleSystem.h"
+#include "utils.h"
 
 namespace plt = matplotlibcpp;
 
@@ -293,5 +294,123 @@ namespace {
 		plt::show();
 
 		EXPECT_NEAR((max_x - min_x), (max_y - min_y), 1e-2);
+	}
+
+	
+	// Test to see with an initial 10rad/s wz (yaw rate)
+	// Tire-soil model deactivated
+	// Expected behavior:
+	// No linear velocity except in vz (due to falling)
+	// Roughly same wz (Will be slightly different because wz is not expressed at the center of the mass of the vehicle, and there will be some angular precession)
+	// Still fails with no gravity and no external forces. Fuck.
+	TEST_F(VehicleFixture, test_wz)
+	{
+		int num_steps = 100;
+		std::vector<double> time(num_steps);
+		std::vector<double> yaw_rate(num_steps);
+		std::vector<double> x_vec(num_steps);
+		std::vector<double> y_vec(num_steps);
+
+		// This effectively deactivates the tire-soil network
+		// So no external forces will be acting on the vehicle.
+		m_params = VectorAD::Zero(m_system_adf->getNumParams());
+		m_system_adf->setParams(m_params);
+		
+		VectorAD xk(m_system_adf->getStateDim());
+		VectorAD xk1(m_system_adf->getStateDim());
+
+		constexpr double wz_i = 10.0;
+		Scalar com_state[m_system_adf->m_hybrid_dynamics.STATE_DIM] = {0,0,0,1, 0,0,100, 0,0,0,0, 0,0,wz_i, 0,0,0, 0,0,0,0};
+		Scalar base_state[m_system_adf->m_hybrid_dynamics.STATE_DIM];
+		m_system_adf->m_hybrid_dynamics.initStateCOM(com_state, base_state);
+		
+		for(int i = 0; i < m_system_adf->m_hybrid_dynamics.STATE_DIM; i++)
+		{
+			xk[i] = base_state[i];
+		}
+		
+		double max_x = CppAD::Value(xk[4]);
+		double min_x = CppAD::Value(xk[4]);
+		double max_y = CppAD::Value(xk[5]);
+		double min_y = CppAD::Value(xk[5]);
+		
+		for(int i = 0; i < num_steps; i++)
+		{
+			xk[11] = base_state[11];
+			xk[12] = base_state[12];
+			xk[13] = base_state[13];
+			xk[14] = base_state[14];
+			xk[15] = base_state[15];
+			xk[16] = base_state[16];
+			
+			xk[HybridDynamics::STATE_DIM] = 0; //vl
+			xk[HybridDynamics::STATE_DIM+1] = 0; //vr
+			m_system_adf->integrate(xk, xk1);
+			
+			time[i] = i * 0.01;
+			yaw_rate[i] = CppAD::Value(xk1[13]);
+			x_vec[i] = CppAD::Value(xk1[4]);
+			y_vec[i] = CppAD::Value(xk1[5]);
+			xk = xk1;
+			
+			if(x_vec[i] > max_x)
+			{
+				max_x = x_vec[i];
+			}
+			if(x_vec[i] < min_x)
+			{
+				min_x = x_vec[i];
+			}
+      
+			if(y_vec[i] > max_y)
+			{
+				max_y = y_vec[i];
+			}
+			if(y_vec[i] < min_y)
+			{
+				min_y = y_vec[i];
+			}
+		}
+		
+		plt::subplot(1,2,1);
+		plt::title("X-Y plot");
+		plt::xlabel("[m]");
+		plt::ylabel("[m]");
+		plt::plot(x_vec, y_vec);
+		
+		plt::subplot(1,2,2);
+		plt::title("Time vs Yaw Rate");
+		plt::xlabel("Time [s]");
+		plt::ylabel("Yaw Rate [rad/s]");
+		plt::plot(time, yaw_rate);
+		
+		plt::show();
+		
+		Scalar roll, pitch, yaw;
+		toEulerAngles(xk1[3], xk1[0], xk1[1], xk1[2],
+					  roll, pitch, yaw);
+
+		std::cout << "Quaternion: "
+				  << CppAD::Value(xk1[0]) << ", "
+				  << CppAD::Value(xk1[1]) << ", "
+				  << CppAD::Value(xk1[2]) << ", "
+				  << CppAD::Value(xk1[3]) << "\n";
+		
+		Scalar final_yaw = wz_i*num_steps*.01;
+		std::cout << CppAD::Value(final_yaw) << std::endl;
+		final_yaw = CppAD::atan2(CppAD::sin(final_yaw), CppAD::cos(final_yaw));
+		
+		EXPECT_NEAR(CppAD::Value(yaw), CppAD::Value(final_yaw), 1e-3);
+	}
+
+	TEST_F(VehicleFixture, angle_conversion)
+	{
+		Scalar roll, pitch, yaw;
+		toEulerAngles(-0.979752, 0.0661528, 0.0231171, 0.187553,
+					  roll, pitch, yaw);
+		std::cout << CppAD::Value(roll) << ", "
+				  << CppAD::Value(pitch) << ", "
+				  << CppAD::Value(yaw) << "\n";
+			
 	}
 }

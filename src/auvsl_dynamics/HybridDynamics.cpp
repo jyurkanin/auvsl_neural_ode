@@ -67,6 +67,43 @@ void HybridDynamics::initState(Scalar *start_state){
   }
 }
 
+void HybridDynamics::convertBaseToCOM(VectorS &com_state, const VectorS &base_state)
+{
+  Jackal::rcg::Vector3 com_pos = Jackal::rcg::getWholeBodyCOM(inertias, h_transforms);
+  
+  Eigen::Matrix<Scalar,3,1> com_lin_vel;
+  Eigen::Matrix<Scalar,3,1> base_lin_vel(base_state[14], base_state[15], base_state[16]);
+  Eigen::Matrix<Scalar,3,1> ang_vel(base_state[11], base_state[12], base_state[13]);
+  
+  Eigen::Matrix<Scalar,3,3> r_ss;
+  r_ss << 0.,        -com_pos[2], com_pos[1],
+          com_pos[2], 0.,        -com_pos[0],
+         -com_pos[1], com_pos[0], 0.;
+  
+  // minus, because com_pos is the displacement from com to base_link
+  com_lin_vel = base_lin_vel - (r_ss*ang_vel);
+  
+  for(int i = 0; i < STATE_DIM; i++){
+    com_state[i] = base_state[i];
+  }
+
+  com_state[14] = com_lin_vel[0];
+  com_state[15] = com_lin_vel[1];
+  com_state[16] = com_lin_vel[2];
+}
+
+void HybridDynamics::convertCOMToBase(const VectorS &com_state, VectorS &base_state)
+{
+	Scalar com_state_arr[STATE_DIM];
+	Scalar base_state_arr[STATE_DIM];
+
+	for(int i = 0; i < STATE_DIM; i++)
+	{
+		com_state_arr[i] = com_state[i];
+	}
+	initStateCOM(com_state_arr, base_state_arr);
+}
+
 //velocities expressed in COM frame. more intuitive.
 void HybridDynamics::initStateCOM(Scalar *start_state, Scalar *base_state){
   Jackal::rcg::Vector3 com_pos = Jackal::rcg::getWholeBodyCOM(inertias, h_transforms);
@@ -74,7 +111,7 @@ void HybridDynamics::initStateCOM(Scalar *start_state, Scalar *base_state){
   Eigen::Matrix<Scalar,3,1> base_lin_vel;
   Eigen::Matrix<Scalar,3,1> com_lin_vel(start_state[14], start_state[15], start_state[16]);
   Eigen::Matrix<Scalar,3,1> ang_vel(start_state[11], start_state[12], start_state[13]);
-
+  
   Eigen::Matrix<Scalar,3,3> r_ss;
   r_ss << 0.,        -com_pos[2], com_pos[1],
           com_pos[2], 0.,        -com_pos[0],
@@ -224,12 +261,6 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 	features[7] = 0;
   
 	for(int ii = 0; ii < 4; ii++){    
-		Scalar slip_ratio;  //longitudinal slip
-		Scalar slip_angle;  //
-    
-		const Scalar small_val = 1e-3f;
-		const Scalar literally_zero = 0;
-    
 		//17 is the idx that tire velocities start at.    
 		features[0] = cpt_vels[ii][0];
 		features[1] = cpt_vels[ii][1];
@@ -251,7 +282,7 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 		// Numerical hack to help stabilize sinkage
 		// todo: replace cpt_vels with temp_vel
 		lin_force[2] += -200*cpt_vels[ii][2]; //dead simple, works fine.
-	
+		
 		Force wrench;
 		wrench[0] = 0;
 		wrench[1] = 0;
@@ -280,7 +311,7 @@ void HybridDynamics::get_base_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 	features[0] = X[13]; //wz
 	features[1] = X[14]; //vx
 	features[2] = X[15]; //vy
-	base_network.forward(features, forces);
+	//base_network.forward(features, forces);
 	
 	Eigen::Matrix<Scalar,3,1> ang_force;
 	ang_force[0] = 0;
@@ -404,7 +435,7 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   
   //Calculates ext forces
   get_tire_f_ext(X, ext_forces);
-  //get_base_f_ext(X, ext_forces);
+  // get_base_f_ext(X, ext_forces);
   
   //rot is the rotation matrix that transforms vectors from the base frame to world frame.
   //The transpose converts the world frame gravity to a base frame gravity vector.
@@ -422,13 +453,29 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   gravity_b[5] = gravity_lin[2];
   
   //this calculates base_acc and qdd.
-  fwd_dynamics->fd(qdd, base_acc, base_vel, gravity_b, q, qd, tau, ext_forces);
+  fwd_dynamics->fd(qdd, base_acc, base_vel, gravity_b, q, qd, tau, ext_forces);  
   
-  //Velocity com_vel = m_transforms.fr_base_link_COM_X_fr_base_link*base_vel;
-  //Acceleration com_acc = m_transforms.fr_base_link_COM_X_fr_base_link*base_acc;
+  // Velocity com_vel = m_transforms.fr_base_link_COM_X_fr_base_link*base_vel;
+  // Acceleration com_acc = m_transforms.fr_base_link_COM_X_fr_base_link*base_acc;
 
-  // ROS_INFO("Acc %f %f %f %f %f %f", base_acc[0], base_acc[1], base_acc[2], base_acc[3], base_acc[4], base_acc[5]);
-  // ROS_INFO("Vel %f %f %f %f %f %f", com_vel[0], com_vel[1], com_vel[2], com_vel[3], com_vel[4], com_vel[5]);
+  // std::cout << "qdd[0]: " << qdd[0] << "\n";
+  // std::cout << "com_vel: "
+  // 			<< CppAD::Value(com_vel[0]) << ", "
+  // 			<< CppAD::Value(com_vel[1]) << ", "
+  // 			<< CppAD::Value(com_vel[2]) << ", "
+  // 			<< CppAD::Value(com_vel[3]) << ", "
+  // 			<< CppAD::Value(com_vel[4]) << ", "
+  // 			<< CppAD::Value(com_vel[5]) << "\n";
+  // std::cout << "com_acc: "
+  // 			<< CppAD::Value(com_acc[0]) << ", "
+  // 			<< CppAD::Value(com_acc[1]) << ", "
+  // 			<< CppAD::Value(com_acc[2]) << ", "
+  // 			<< CppAD::Value(com_acc[3]) << ", "
+  // 			<< CppAD::Value(com_acc[4]) << ", "
+  // 			<< CppAD::Value(com_acc[5]) << "\n";
+  
+  // #include <cstdlib>
+  // exit(1);
   
   Eigen::Matrix<Scalar,3,1> ang_vel(base_vel[0], base_vel[1], base_vel[2]);
   Eigen::Matrix<Scalar,3,1> lin_vel(base_vel[3], base_vel[4], base_vel[5]);

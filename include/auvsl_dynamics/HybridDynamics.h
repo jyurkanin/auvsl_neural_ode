@@ -22,6 +22,7 @@ using Jackal::rcg::orderedLinkIDs;
 
 class HybridDynamics{
 public:
+  typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorS;
   const static unsigned STATE_DIM = 21;
   const static unsigned CNTRL_DIM = 2;
   
@@ -32,7 +33,9 @@ public:
   void initState(Scalar *start_state);
   void initStateCOM(Scalar *start_state);
   void initStateCOM(Scalar *start_state, Scalar *base_state);
-  
+  void convertCOMToBase(const VectorS &com_state, VectorS &base_state);
+  void convertBaseToCOM(VectorS &com_state, const VectorS &base_state);
+	
   void step(Scalar vl, Scalar vr);
   void settle();
   
@@ -47,13 +50,13 @@ public:
   void get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, LinkDataMap<Force> &ext_forces);
   void get_tire_cpts(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matrix<Scalar,3,1> *cpt_pts, Eigen::Matrix<Scalar,3,3> *cpt_rots);
   
-  static const Scalar timestep; //The rate that nn_model operates at.
+  static const Scalar timestep; //The rate that this model operates at.
   
-  //angular and linear vel are expressed in the body frame (I think)
-  //Quaternion is x,y,z,w
-  //State is a vector: <quaternion, position, joint positions, angular vel, linear vel, joint velocities>
-  //0  1  2  3  4 5 6 7  8  9  10 11 12 13 14 15 16 17  18  19  20
-  //qx,qy,qz,qw,x,y,z,q1,q2,q3,q4,wx,wy,wz,vx,vy,vz,qd1,qd2,qd3,qd4
+  // angular and linear vel are expressed in the body frame (which is slightly offset from the COM!!! This was the source of many bugs and much suffering)
+  // Quaternion is x,y,z,w
+  // State is a vector: <quaternion, position, joint positions, angular vel, linear vel, joint velocities>
+  // 0  1  2  3  4 5 6 7  8  9  10 11 12 13 14 15 16 17  18  19  20
+  // qx,qy,qz,qw,x,y,z,q1,q2,q3,q4,wx,wy,wz,vx,vy,vz,qd1,qd2,qd3,qd4
   Eigen::Matrix<Scalar,STATE_DIM,1> state_;
   
   const static Acceleration GRAVITY_VEC;

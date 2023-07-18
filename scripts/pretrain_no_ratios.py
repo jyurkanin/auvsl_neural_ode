@@ -97,22 +97,28 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.in_size = 3 # qd, vx, vy
-    self.hidden_size = 8
-    self.hidden_size2 = 8
-    self.out_size = 2
+    self.hidden_size = 4
+    self.hidden_size2 = 4
     
     self.tire_radius = .098
     
     self.loss_fn = torch.nn.MSELoss()
-    self.model = nn.Sequential(
-      nn.Linear(self.in_size, self.hidden_size),
+    self.model_x = nn.Sequential(
+      nn.Linear(2, self.hidden_size),
       nn.Tanh(),
       nn.Linear(self.hidden_size, self.hidden_size),
       nn.Tanh(),
-      nn.Linear(self.hidden_size, self.out_size)
+      nn.Linear(self.hidden_size, 1)
     )
 
+    self.model_y = nn.Sequential(
+      nn.Linear(1, self.hidden_size),
+      nn.Tanh(),
+      nn.Linear(self.hidden_size, self.hidden_size),
+      nn.Tanh(),
+      nn.Linear(self.hidden_size, 1)
+    )
+    
     self.model_z = nn.Sequential(
       nn.Linear(1, self.hidden_size2),
       nn.Tanh(),
@@ -127,7 +133,7 @@ class TireNet(nn.Module):
     slip_lon = (diff)
     slip_lat = (x[:,1])
     tire_abs = (x[:,2])
-    bekker_args = torch.cat((x[:,3][:,None],   # zr
+    bekker_args = torch.cat((x[:,3][:,None],  # zr
                             slip_lon[:,None], # diff
                             tire_abs[:,None], # |qd|
                             slip_lat[:,None]  # vy
@@ -152,12 +158,13 @@ class TireNet(nn.Module):
     
     bekker_args = (bekker_args - self.in_mean) / self.in_std
     
-    yhat = self.model.forward(bekker_args[:,1:4])
+    yhat_x = self.model_x.forward(bekker_args[:,1:3])
+    yhat_y = self.model_y.forward(bekker_args[:,3][:,None])
     yhat_z = self.model_z.forward(bekker_args[:,0][:,None])
     
     yhat_sign_corrected = torch.cat((
-      (torch.abs(yhat[:,0]) * torch.tanh(1*diff))[:,None],
-      (torch.abs(yhat[:,1]) * torch.tanh(-1*x[:,1]))[:,None],
+      (torch.abs(yhat_x[:,0]) * torch.tanh(1*diff))[:,None],
+      (torch.abs(yhat_y[:,0]) * torch.tanh(-1*x[:,1]))[:,None],
       (torch.abs(yhat_z[:,0]) * torch.relu(1*x[:,3]))[:,None]), 1)
     
     return yhat_sign_corrected
@@ -265,7 +272,7 @@ model_name = "train_no_ratio1.net"
 md = torch.load(model_name)
 model.load_state_dict(md)
 
-fit(1e-3, 5000, 100)
+fit(1e-3, 5000, 200)
 plt.show()
 get_evaluation_loss(test_data, test_labels)
 #fit(1e-3, 50, 10)
