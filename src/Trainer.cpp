@@ -63,6 +63,8 @@ Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
   
   m_cnt = 0;
   m_param_file = "/home/justin/tire.net";
+
+  m_best_CV3 = 10; //large number
 }
 
 Trainer::~Trainer()
@@ -187,6 +189,7 @@ void Trainer::train()
 		avg_loss = 0;
 		
 		save();
+		
 	}
   }
 
@@ -223,11 +226,15 @@ void Trainer::trainThreads()
   char fn_array[100];
 
   int cnt_workers = 0;
-  for(int i = 1; i <= 17; i++)
+  //for(int i = 1; i <= 17; i++)
+  for(int i = 1; i <= 1; i++)
   {
+    // memset(fn_array, 0, 100); //todo: uncomment
+    // sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
+	
     memset(fn_array, 0, 100);
-    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
-    
+    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
+	
     std::string fn(fn_array);
     loadDataFile(fn);
 	
@@ -236,15 +243,21 @@ void Trainer::trainThreads()
       std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
       assignWork(traj);
     }
-    
-    save();
   }
   
   finishWork();
   
   std::cout << "Avg Loss: " << m_batch_loss / m_cnt << "\n";
   std::flush(std::cout);
+  save();
   updateParams(m_batch_grad / m_cnt);
+
+  if((m_batch_loss/m_cnt) < m_best_CV3)
+  {
+	  m_best_CV3 = m_batch_loss/m_cnt;
+	  std::cout << "dabest " << m_best_CV3 << "\n";
+	  saveVec(m_params, std::string("/home/justin/best_tire.net"));
+  }
 }
 
 void Trainer::assignWork(const std::vector<DataRow> &traj)
@@ -303,9 +316,12 @@ void Trainer::evaluate_train3()
   
   for(int i = 1; i <= 1; i++)
   {
+    // memset(fn_array, 0, 100); //todo: uncomment
+    // sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
+	
     memset(fn_array, 0, 100);
-    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
-    
+    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
+	
     std::string fn(fn_array);
     loadDataFile(fn);
     
@@ -313,7 +329,7 @@ void Trainer::evaluate_train3()
     {
 		std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
 		evaluateTrajectory(traj, x_list, loss);
-		// plotTrajectory(traj, x_list);
+		plotTrajectory(traj, x_list);
 		
 		loss_avg += loss;
 		cnt++;
@@ -396,16 +412,16 @@ void Trainer::updateParams(const VectorF &grad)
   for(int i = 0; i < m_params.size(); i++)
   {
     grad_idx = grad[i];
-    if(grad[i] < -1)
-    {
-      std::cout << "Clipped [" << i << "] " << grad[i] << "\n";
-      grad_idx = -1;
-    }
-    else if(grad[i] > 1)
-    {
-      std::cout << "Clipped [" << i << "] " << grad[i] << "\n";
-      grad_idx = 1;
-    }
+    // if(grad[i] < -1) //todo: uncomment
+    // {
+    //   std::cout << "Clipped [" << i << "] " << grad[i] << "\n";
+    //   grad_idx = -1;
+    // }
+    // else if(grad[i] > 1)
+    // {
+    //   std::cout << "Clipped [" << i << "] " << grad[i] << "\n";
+    //   grad_idx = 1;
+    // }
     
     m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad_idx*grad_idx);
     m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);

@@ -57,9 +57,13 @@ Okay bro. I don't have a lot to go on from here. This could be it.
 This could be the end.
 
 
-* TODO Only other idea is to also use the other training data
+* DONE Only other idea is to also use the other training data
 THe data collected on floors indoor or whatever instead of the ground.
 Idk it might help.
+Lets add more training data from the other datasets. THere's tile and asphalt.
+CV3 performance is trash 13%
+I can try training more and going for a smaller training loss idk.
+No improvement. Still trash at CV3 13%
 
 * TODO I cant consistently replicate the 8% on CV3
 Can't replicate it at all as a matter of fact
@@ -67,6 +71,16 @@ No idea why. Maybe I'm just not being patient enough with running
 the training over night. I have no idea.
 
 Best I can do is 10.2% on CV3 take it or leave it
+
+* The issue isn't the training loss.
+You can bring the training loss down to 5% no problem.
+That would be great on CV3 and LD3.
+
+* Its just not generalizing or the model isn't suited to the test data
+I'm trying to just train the first trajectory of the CV3 set.
+Just to see how low I can make that error go.
+CV3 test 1 plataued at like 37.5%. We need to understand why.
+plot it.
 
 * <2023-07-11 Tue 22:22>
 The fact that we cant bring training error to absolute zero might just be

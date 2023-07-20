@@ -230,7 +230,7 @@ namespace {
 
 	TEST_F(VehicleFixture, circle)
 	{
-		int num_steps = 1000;
+		int num_steps = 10000;
 		std::vector<double> time(num_steps);
 		std::vector<double> elev(num_steps);
 		std::vector<double> x_vec(num_steps);
@@ -251,10 +251,10 @@ namespace {
 		for(int i = 0; i < num_steps; i++)
 		{
 			xk[HybridDynamics::STATE_DIM] = 2; //vl
-			xk[HybridDynamics::STATE_DIM+1] = 1; //vr
+			xk[HybridDynamics::STATE_DIM+1] = -2; //vr
 			m_system_adf->integrate(xk, xk1);
       
-			time[i] = i * 0.1;
+			time[i] = i * 0.01;
 			elev[i] = CppAD::Value(xk1[6]);
 			x_vec[i] = CppAD::Value(xk1[4]);
 			y_vec[i] = CppAD::Value(xk1[5]);

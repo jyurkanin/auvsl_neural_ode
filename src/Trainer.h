@@ -94,7 +94,9 @@ private:
   const double m_l1_weight = 0.0;
   
   const int m_num_threads;
-  
+
+  double m_best_CV3;
+	
   ADF m_z_stable;
   VectorAD m_quat_stable;
 
