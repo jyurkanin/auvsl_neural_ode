@@ -1,5 +1,22 @@
 Updates
 
+* <2023-07-19 Wed 22:42>
+** TODO NEW NETWORK
+You had an idea, get rid of that stupid symmetry crap.
+Train a network with outputs [Fx,Fy]. And gate the output
+of this network like: sigmoid(qd)*[Fx,Fy]. This allows the
+network to express really stupid and nonphysical mappings
+that might help when turning in place or whatever.
+
+It solves the problem of being 0 at 0
+Okay, but then it could slide frictionlessly if qd=0
+which would be really stupid.
+
+Could gate it with sigmoid(|qd|+|vx|+|vy|) so that it's forced
+to produce only a small output when the overall energy of the
+system is low.
+
+
 * <2023-07-15 Sat 11:49>
 Possible bug, but when you set vl and vr to 0mps you see a drift
 in the y direction. Wack. Yep I am seeing a lateral drift. unit test time.
