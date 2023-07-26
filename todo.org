@@ -1,7 +1,70 @@
 Updates
 
+* <2023-07-23 Sun 18:03>                                                                                                                
+New idea bro. Train a new network with no bias neurons, that way                                                                        
+f(x=0) = 0.                                                                                                                             
+Add a penalty promote passivity. penalty = ReLU(dot(f(x), x))                                                                           
+Let's see how this shit goes                                                                                                            
+
+Seems to get better performance when training exclusively
+on CV3 test 1. 
+
+** DONE Evaluate this idea:
+Loss is not monotically decreasing, uh oh. Training is not going
+good, oh no. Training loss is stagnating around .20.
+Before it would get down to like .08. CV3 loss is terrible.
+
+Try the penalty to promote passivity. Okay that didnt help.
+Rip. Lets add the gating back. Rip.
+
+Not bad actually with the gating. Got down to 11% CV3
+and 5% on LD3. Which I think is better than the normal model.
+
+** DONE Generate new pretraining data
+with a constant zr. Check to see what the zr should be.
+Retrain. The bekker model actually did really good. So lets
+see if we can replicate that success with a neural net
+with just pretraining. Did this. Achieved mega low pretraining
+loss. Evaluation loss is .88N which is the best I've seen.
+When I was using the sign correction haxx, it was usually like
+13.0N
+
+And now 100 step training loss is approaching .08 which is pretty
+good, and it doesn't seem to have plataued yet so thats sick.
+Pretty good day. Good vibes bruh.
+
+Plataued around 6.88% training loss
+12.28% on CV3 (meh)
+5.4% on LD3 (not bad)
+
+** TODO Try different numbers of training steps
+So you saw decent results with 100 steps. Lets try with more
+steps, like 200 and see how that goes. Hopefully the training
+process stays stable again.
+
+200 steps:
+- Training Loss: 4.75%
+- CV3: 11.85%
+- LD3: 4.9%
+
+400 steps:
+- Training Loss: 3.58%
+- CV3: 11.47%
+- LD3: 4.74%
+
+600 steps:
+- Training Loss: 3.0%
+- CV3: 9.58%
+- LD3: 4.56%
+
+
+** TODO Try training the linear model with the same code as your neural model
+Will help me seeing if I'm doing anything wrong.
+Also will help in creating a single executable that can generate
+all my figures for a paper
+
 * <2023-07-19 Wed 22:42>
-** TODO NEW NETWORK
+** DONE NEW NETWORK
 You had an idea, get rid of that stupid symmetry crap.
 Train a network with outputs [Fx,Fy]. And gate the output
 of this network like: sigmoid(qd)*[Fx,Fy]. This allows the
@@ -16,6 +79,7 @@ Could gate it with sigmoid(|qd|+|vx|+|vy|) so that it's forced
 to produce only a small output when the overall energy of the
 system is low.
 
+You are not even going to evaluate this stupid ass idea
 
 * <2023-07-15 Sat 11:49>
 Possible bug, but when you set vl and vr to 0mps you see a drift

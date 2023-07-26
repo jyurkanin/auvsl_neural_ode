@@ -251,7 +251,7 @@ namespace {
 		for(int i = 0; i < num_steps; i++)
 		{
 			xk[HybridDynamics::STATE_DIM] = 2; //vl
-			xk[HybridDynamics::STATE_DIM+1] = -2; //vr
+			xk[HybridDynamics::STATE_DIM+1] = 1; //vr
 			m_system_adf->integrate(xk, xk1);
       
 			time[i] = i * 0.01;

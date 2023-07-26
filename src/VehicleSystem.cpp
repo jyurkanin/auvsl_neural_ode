@@ -11,6 +11,8 @@ VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics
 	this->setNumSteps(10);
 	this->setTimestep(0.001);  //unused
 	this->setLearningRate(1e-3f);
+	
+	m_penalty_weight = 1e-5;
 }
 
 template<typename Scalar>
@@ -86,8 +88,14 @@ Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
 	Scalar vx_err = CppAD::abs(gt_vec[14] - vec[14]);
 	Scalar vy_err = CppAD::abs(gt_vec[15] - vec[15]);
 	Scalar vel_err = .1*(wz_err+vx_err+vy_err);
-	
-	return ang_err + lin_err;
+
+	return ang_err + lin_err + m_hybrid_dynamics.m_penalty*m_penalty_weight;
+}
+
+template<typename Scalar>
+Scalar VehicleSystem<Scalar>::getPenalty()
+{
+	return m_hybrid_dynamics.m_penalty;
 }
 
 template<typename Scalar>
@@ -158,6 +166,12 @@ void VehicleSystem<Scalar>::getDefaultParams(VectorS &params)
 {
   m_hybrid_dynamics.tire_network.load_model();
   getParams(params);
+}
+
+template<typename Scalar>
+void VehicleSystem<Scalar>::reset()
+{
+	m_hybrid_dynamics.m_penalty = 0;
 }
 
 template class VehicleSystem<ADF>;

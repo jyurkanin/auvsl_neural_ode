@@ -58,7 +58,8 @@ public:
   // 0  1  2  3  4 5 6 7  8  9  10 11 12 13 14 15 16 17  18  19  20
   // qx,qy,qz,qw,x,y,z,q1,q2,q3,q4,wx,wy,wz,vx,vy,vz,qd1,qd2,qd3,qd4
   Eigen::Matrix<Scalar,STATE_DIM,1> state_;
-  
+  Scalar m_penalty;
+	
   const static Acceleration GRAVITY_VEC;
   
   Eigen::Matrix<Scalar,5,1> bekker_params;

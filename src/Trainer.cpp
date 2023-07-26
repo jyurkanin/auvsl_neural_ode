@@ -175,7 +175,7 @@ void Trainer::train()
 			{
 				m_batch_grad += traj_grad;
 				avg_loss += loss;
-				// plotTrajectory(traj, x_list);      
+				// plotTrajectory(traj, x_list);
 				std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
 				std::flush(std::cout);
 				m_cnt++;
@@ -191,7 +191,7 @@ void Trainer::train()
 		save();
 		
 	}
-  }
+}
 
 void Trainer::trainThreads()
 {
@@ -226,14 +226,10 @@ void Trainer::trainThreads()
   char fn_array[100];
 
   int cnt_workers = 0;
-  //for(int i = 1; i <= 17; i++)
-  for(int i = 1; i <= 1; i++)
+  for(int i = 1; i <= 17; i++)
   {
-    // memset(fn_array, 0, 100); //todo: uncomment
-    // sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
-	
-    memset(fn_array, 0, 100);
-    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
+    memset(fn_array, 0, 100); //todo: uncomment
+    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
 	
     std::string fn(fn_array);
     loadDataFile(fn);
@@ -314,13 +310,13 @@ void Trainer::evaluate_train3()
   double loss = 0;
   int cnt = 0;
   
-  for(int i = 1; i <= 1; i++)
+  for(int i = 1; i <= 17; i++)
   {
-    // memset(fn_array, 0, 100); //todo: uncomment
-    // sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
+    memset(fn_array, 0, 100); //todo: uncomment
+    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
 	
-    memset(fn_array, 0, 100);
-    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
+    // memset(fn_array, 0, 100);
+    // sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
 	
     std::string fn(fn_array);
     loadDataFile(fn);
@@ -329,7 +325,7 @@ void Trainer::evaluate_train3()
     {
 		std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
 		evaluateTrajectory(traj, x_list, loss);
-		plotTrajectory(traj, x_list);
+		// plotTrajectory(traj, x_list);
 		
 		loss_avg += loss;
 		cnt++;
@@ -423,7 +419,7 @@ void Trainer::updateParams(const VectorF &grad)
     //   grad_idx = 1;
     // }
     
-    m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad_idx*grad_idx);
+    m_squared_grad[i] = 0.99*m_squared_grad[i] + 0.01*ADF(grad_idx*grad_idx);
     m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
 	m_params[i] -= m_l1_weight*m_params[i];
     norm += CppAD::abs(m_params[i]);
@@ -569,7 +565,7 @@ void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<V
     traj_len += CppAD::sqrt(dx*dx + dy*dy);
   }
   
-  //plotTrajectory(traj, x_list);
+  // plotTrajectory(traj, x_list);
   
   // This could also be a running loss instead of a terminal loss
   Scalar ang_mse;
@@ -592,6 +588,7 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj,
 							  double& loss)
 {
   std::shared_ptr<VehicleSystem<ADF>> system_adf = std::make_shared<VehicleSystem<ADF>>();
+  system_adf->reset();
   system_adf->setNumSteps(m_train_steps);
   
   VectorAD params = m_params;
@@ -636,7 +633,7 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj,
     traj_len += CppAD::sqrt(dx*dx + dy*dy);
     loss_ad[0] += system_adf->loss(gt_vec, x_list[i]);
   }
-  
+
   loss_ad[0] /= x_list.size();
   //loss_ad[0] = system_adf->loss(gt_vec, x_list.back());
   
@@ -647,6 +644,9 @@ void Trainer::trainTrajectory(const std::vector<DataRow> &traj,
   
   loss_ad[0] = loss_ad[0] / traj_len;
   CppAD::ADFun<double> func(params, loss_ad);
+  
+  // std::cout << "Penalty: " << CppAD::Value(system_adf->getPenalty()) << "\n";
+  // std::cout << "Loss: " << CppAD::Value(system_adf->loss(gt_vec, x_list.back())) << "\n\n";
   
   VectorF y0(1);
   y0[0] = 1;

@@ -267,8 +267,10 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 		features[2] = X[17+ii];
 		features[3] = sinkages[ii];
 
-		tire_network.forward(features, forces, ii);
-    
+		tire_network.forward(features, forces, 0);
+		
+		m_penalty += forces[3];
+		
 		Eigen::Matrix<Scalar,3,1> lin_force;    
 		lin_force[0] = forces[0];
 		lin_force[1] = forces[1];

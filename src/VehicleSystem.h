@@ -25,8 +25,10 @@ public:
   
   void evaluate(const VectorS &gt_vec, const VectorS &vec, Scalar &ang_err, Scalar &lin_err);
   void integrate(const VectorS &X0, VectorS &X1);  
-
-  
+  void reset();
+  Scalar getPenalty();
+	
+  Scalar m_penalty_weight;
   MatrixS m_params;
   HybridDynamics m_hybrid_dynamics;
 };

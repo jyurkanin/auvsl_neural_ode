@@ -97,26 +97,18 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.hidden_size = 4
-    self.hidden_size2 = 4
+    self.hidden_size = 8
+    self.hidden_size2 = 8
     
     self.tire_radius = .098
     
     self.loss_fn = torch.nn.MSELoss()
-    self.model_x = nn.Sequential(
-      nn.Linear(2, self.hidden_size),
+    self.model_xy = nn.Sequential(
+      nn.Linear(3, self.hidden_size, bias=False),
       nn.Tanh(),
-      nn.Linear(self.hidden_size, self.hidden_size),
+      nn.Linear(self.hidden_size, self.hidden_size, bias=False),
       nn.Tanh(),
-      nn.Linear(self.hidden_size, 1)
-    )
-
-    self.model_y = nn.Sequential(
-      nn.Linear(1, self.hidden_size),
-      nn.Tanh(),
-      nn.Linear(self.hidden_size, self.hidden_size),
-      nn.Tanh(),
-      nn.Linear(self.hidden_size, 1)
+      nn.Linear(self.hidden_size, 2, bias=False)
     )
     
     self.model_z = nn.Sequential(
@@ -142,14 +134,15 @@ class TireNet(nn.Module):
     self.in_mean = torch.mean(bekker_args, 0)
     temp = bekker_args - self.in_mean
     self.in_std = torch.sqrt(torch.var(temp, 0))
+    self.in_std[0] = 0.005
     
   # vx,vy,qd, zr (batch_size,4)
   def forward(self, x):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
-    slip_lon = torch.abs(diff)
-    slip_lat = torch.abs(x[:,1])
-    tire_abs = torch.abs(x[:,2])
+    slip_lon = diff
+    slip_lat = x[:,1]
+    tire_abs = x[:,2]
     bekker_args = torch.cat((x[:,3][:,None],   # zr
                              slip_lon[:,None], # diff
                              tire_abs[:,None], # |qd|
@@ -158,14 +151,13 @@ class TireNet(nn.Module):
     
     bekker_args = (bekker_args - self.in_mean) / self.in_std
     
-    yhat_x = self.model_x.forward(bekker_args[:,1:3])
-    yhat_y = self.model_y.forward(bekker_args[:,3][:,None])
+    yhat_xy = self.model_xy.forward(bekker_args[:,1:4])
     yhat_z = self.model_z.forward(bekker_args[:,0][:,None])
     
     yhat_sign_corrected = torch.cat((
-      (torch.abs(yhat_x[:,0]) * torch.tanh(1*diff))[:,None],
-      (torch.abs(yhat_y[:,0]) * torch.tanh(-1*x[:,1]))[:,None],
-      (torch.abs(yhat_z[:,0]) * torch.relu(1*x[:,3]))[:,None]), 1)
+      (yhat_xy[:,0])[:,None],
+      (yhat_xy[:,1])[:,None],
+      (yhat_z[:,0])[:,None]), 1)
     
     return yhat_sign_corrected
     
@@ -203,8 +195,8 @@ def get_evaluation_loss(test_x, test_y):
     predicted_force = output_scaler.inverse_transform(predicted_force)
     print(np.mean(np.square(predicted_force.flatten() - test_y.flatten())))
 
-    plt.scatter(test_x[:100,2], test_y[:100,2])
-    plt.scatter(test_x[:100,2], predicted_force[:100,2])
+    plt.scatter(test_x[:100,0], test_y[:100,0])
+    plt.scatter(test_x[:100,0], predicted_force[:100,0])
     plt.show()
     
 
@@ -269,14 +261,14 @@ def fz_plot():
     
 
 model_name = "train_no_ratio1.net"
-md = torch.load(model_name)
-model.load_state_dict(md)
+#md = torch.load(model_name)
+#model.load_state_dict(md)
 
-fit(1e-3, 5000, 200)
+fit(1e-3, 5000, 100)
 plt.show()
 get_evaluation_loss(test_data, test_labels)
-#fit(1e-3, 50, 10)
-#plt.show()
+# fit(1e-3, 50, 10)
+# plt.show()
 
 md = model.state_dict()
 print_c_network(md, model.in_mean, model.in_std, output_scaler)

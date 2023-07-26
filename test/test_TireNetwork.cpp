@@ -11,21 +11,40 @@ namespace plt = matplotlibcpp;
 namespace{
   void plot_cross(float x1, float x2, float y1, float y2)
   {
-    std::vector<float> x(2);
-    std::vector<float> y(2);
+	  std::vector<float> x(2);
+	  std::vector<float> y(2);
 
-    x[0] = x1;
-    x[1] = x2;
-    y[0] = 0;
-    y[1] = 0;
-    plt::plot(x, y, "b");
-    x[0] = 0;
-    x[1] = 0;
-    y[0] = y1;
-    y[1] = y2;
-    plt::plot(x, y, "b");    
+	  x[0] = x1;
+	  x[1] = x2;
+	  y[0] = 0;
+	  y[1] = 0;
+	  plt::plot(x, y, "b");
+	  x[0] = 0;
+	  x[1] = 0;
+	  y[0] = y1;
+	  y[1] = y2;
+	  plt::plot(x, y, "b");    
   }
-
+  
+  bool loadVec(VectorAD &params, const std::string &file_name)
+  {
+	  char comma;
+	  std::ifstream data_file(file_name);
+	  if(!data_file.is_open())
+	  {
+		  std::cout << "Failed to open file\n";
+		  return true;
+	  }
+	  
+	  for(int i = 0; i < params.size(); i++)
+	  {
+		  data_file >> params[i];
+		  data_file >> comma;
+	  }
+	  
+	  return false;
+  }  
+  
   TEST(TireNetwork, check_params)
   {
     VehicleSystem<ADF> system1;
@@ -47,10 +66,14 @@ namespace{
   TEST(TireNetwork, vx_fx_plot)
   {
 	  TireNetwork tire_network;
+	  tire_network.load_model();
+	  
+	  VectorAD params = VectorAD::Zero(tire_network.getNumParams());
+	  loadVec(params, "/home/justin/tire.net");
+	  tire_network.setParams(params, 0);
+	  
 	  Eigen::Matrix<ADF,8,1> features;
 	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
-
-	  tire_network.load_model();
 	  
 	  features[0] = 0;
 	  features[1] = 0;
@@ -66,7 +89,7 @@ namespace{
 	  std::vector<float> vx_vec(len);
 	  std::vector<float> fx_vec(len);
 
-	  for(int j = 0; j < 8; j++)
+	  for(int j = 0; j < 10; j++)
 	  {
 		  ADF tire_tangent_vel = j/4.0;
 		  for(int i = 0; i < len; i++)
@@ -86,7 +109,7 @@ namespace{
 		  plt::plot(vx_vec, fx_vec);
 	  }
 
-	  plt::title("Vx vs Fx");
+	  plt::title("Diff vs Fx");
 	  plt::show();
   }
 
@@ -94,10 +117,14 @@ namespace{
   TEST(TireNetwork, vy_fy_plot)
   {
 	  TireNetwork tire_network;
+	  tire_network.load_model();
+	  
+	  VectorAD params = VectorAD::Zero(tire_network.getNumParams());
+	  loadVec(params, "/home/justin/tire.net");
+	  tire_network.setParams(params, 0);
+	  
 	  Eigen::Matrix<ADF,8,1> features;
 	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
-
-	  tire_network.load_model();
 	  
 	  features[0] = 0.2;
 	  features[1] = 0;
@@ -114,7 +141,7 @@ namespace{
 	  std::vector<float> fy_vec(len);
 	  std::vector<float> tanh_vec(len);
 
-	  for(int j = 0; j < 1; j++)
+	  for(int j = 0; j < 8; j++)
 	  {
 		  ADF vx = j/8.0;
 		  for(int i = 0; i < len; i++)
@@ -141,11 +168,15 @@ namespace{
   TEST(TireNetwork, vz_fz_plot)
   {
 	  TireNetwork tire_network;
+	  tire_network.load_model();
+	  
+	  VectorAD params = VectorAD::Zero(tire_network.getNumParams());
+	  loadVec(params, "/home/justin/tire.net");
+	  tire_network.setParams(params, 0);
+	  
 	  Eigen::Matrix<ADF,8,1> features;
 	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
-	
-	  tire_network.load_model();
-	
+	  
 	  features[0] = 0.0;
 	  features[1] = 0;
 	  features[2] = 0.0;

@@ -70,21 +70,22 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec,
 	Eigen::Matrix<Scalar,TireNetwork::num_in_features,1> scaled_features;
 	Eigen::Matrix<Scalar,3,1> xy_features;
 	Eigen::Matrix<Scalar,1,1> z_features;
+	Eigen::Matrix<Scalar,3,1> forces;
 	
 	Eigen::Matrix<Scalar,TireNetwork::num_in_features,1> bekker_vec;
   
 	// Changes features to cross the origin
 	Scalar tire_tangent_vel = in_vec[2] * Jackal::rcg::tire_radius;
 	Scalar diff = tire_tangent_vel - in_vec[0];
-	Scalar slip_lon = CppAD::abs(diff);
-	Scalar slip_lat = CppAD::abs(in_vec[1]);
-	Scalar tire_abs = CppAD::abs(in_vec[2]);
+	Scalar slip_lon = diff;
+	Scalar slip_lat = in_vec[1];
+	Scalar tire_abs = in_vec[2];
   
 	bekker_vec[0] = in_vec[3];
 	bekker_vec[1] = slip_lon;
 	bekker_vec[2] = tire_abs;
 	bekker_vec[3] = slip_lat;
-  
+	
 	// Apply scaling after calculating the bekker features from kinematics
 	scaled_features = (bekker_vec - in_mean).cwiseProduct(in_std_inv);
 
@@ -93,15 +94,14 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec,
 	xy_features[2] = scaled_features[3];
 
 	// Actual NN math
-	xy0_out = (m_params[ii].weight0*xy_features) + m_params[ii].bias0;
+	xy0_out = (m_params[ii].weight0*xy_features);
 	xy0_out = xy0_out.unaryExpr(&tanh_scalar_wrapper);
-	xy2_out = (m_params[ii].weight2*xy0_out) + m_params[ii].bias2;
+	xy2_out = (m_params[ii].weight2*xy0_out);
 	xy2_out = xy2_out.unaryExpr(&tanh_scalar_wrapper);
-	xy4_out = (m_params[ii].weight4*xy2_out) + m_params[ii].bias4;
-  
-	// Sign change passivity haxx
-	out_vec[0] = CppAD::abs(xy4_out[0])*(1*diff);
-	out_vec[1] = CppAD::abs(xy4_out[1])*(-1*in_vec[1]);	
+	xy4_out = (m_params[ii].weight4*xy2_out);
+	
+	forces[0] = xy4_out[0];
+	forces[1] = xy4_out[1];
 	
 	z_features[0] = scaled_features[0];
 
@@ -111,22 +111,31 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec,
 	z2_out = z2_out.unaryExpr(&tanh_scalar_wrapper);
 	z4_out = (m_params[ii].z_weight4*z2_out) + m_params[ii].z_bias4;
 	
-	//out_vec[2] = CppAD::abs(z4_out[0])/(1 + CppAD::exp(-200*in_vec[3]));
-	out_vec[2] = CppAD::abs(z4_out[0])*relu_wrapper(in_vec[3]);
+	forces[2] = CppAD::abs(z4_out[0])*relu_wrapper(in_vec[3]);
 	
 	// Scale output
-	out_vec = out_vec.cwiseProduct(out_std);
+	forces = forces.cwiseProduct(out_std);
+	
+	// L1 to calculate gating value
+	Scalar gate = CppAD::tanh(CppAD::abs(xy_features[0]) +
+							  CppAD::abs(xy_features[1]) +
+							  CppAD::abs(xy_features[2])
+							  );
+	
+	out_vec[0] = forces[0];
+	out_vec[1] = forces[1];
+	out_vec[2] = forces[2];
+	out_vec[3] = relu_wrapper(forces[0]*-diff) +
+		         relu_wrapper(forces[1]*in_vec[1]); // Penalty
 }
 
 
 int TireNetwork::getNumParams()
 {
   return 4*(m_params[0].weight0.size() +
-			m_params[0].bias0.size() +
 			m_params[0].weight2.size() +
-			m_params[0].bias2.size() +
-			m_params[0].weight4.size() +
-			m_params[0].bias4.size());
+			m_params[0].weight4.size()
+			);
 }
 
 void TireNetwork::setParams(const VectorS &params, int idx)
@@ -141,11 +150,6 @@ void TireNetwork::setParams(const VectorS &params, int idx)
 				idx++;
 			}
 		}
-		for(int j = 0; j < m_params[kk].bias0.size(); j++)
-		{
-			m_params[kk].bias0[j] = params[idx];
-			idx++;
-		}
 		
 		for(int i = 0; i < m_params[kk].weight2.rows(); i++)
 		{
@@ -155,11 +159,6 @@ void TireNetwork::setParams(const VectorS &params, int idx)
 				idx++;
 			}
 		}
-		for(int j = 0; j < m_params[kk].bias2.size(); j++)
-		{
-			m_params[kk].bias2[j] = params[idx];
-			idx++;
-		}
 
 		for(int i = 0; i < m_params[kk].weight4.rows(); i++)
 		{
@@ -168,11 +167,6 @@ void TireNetwork::setParams(const VectorS &params, int idx)
 				m_params[kk].weight4(i,j) = params[idx];
 				idx++;
 			}
-		}
-		for(int j = 0; j < m_params[kk].bias4.size(); j++)
-		{
-			m_params[kk].bias4[j] = params[idx];
-			idx++;
 		}
 	}
 }
@@ -189,11 +183,6 @@ void TireNetwork::getParams(VectorS &params, int idx)
 				idx++;
 			}
 		}
-		for(int j = 0; j < m_params[kk].bias0.size(); j++)
-		{
-			params[idx] = m_params[kk].bias0[j];
-			idx++;
-		}
   
 		for(int i = 0; i < m_params[kk].weight2.rows(); i++)
 		{
@@ -203,11 +192,6 @@ void TireNetwork::getParams(VectorS &params, int idx)
 				idx++;
 			}
 		}
-		for(int j = 0; j < m_params[kk].bias2.size(); j++)
-		{
-			params[idx] = m_params[kk].bias2[j];
-			idx++;
-		}
 
 		for(int i = 0; i < m_params[kk].weight4.rows(); i++)
 		{
@@ -216,11 +200,6 @@ void TireNetwork::getParams(VectorS &params, int idx)
 				params[idx] = m_params[kk].weight4(i,j);
 				idx++;
 			}
-		}
-		for(int j = 0; j < m_params[kk].bias4.size(); j++)
-		{
-			params[idx] = m_params[kk].bias4[j];
-			idx++;
 		}
 	}
 }
@@ -233,34 +212,22 @@ int TireNetwork::load_model(){
 	for(int kk = 0; kk < num_networks; kk++)
 	{
 		m_params[kk].weight0 <<
-			1.9183, -1.1944, -0.0941, -0.7726,  0.3715,  0.2232, -0.7302, -0.7460,
-			-0.8535, -0.0809, -0.4715, -2.0354,  0.9554,  0.0775,  0.1348, -0.6217,
-			0.1073,  0.3243, -0.6871,  0.3600, -0.3731, -0.3920, -0.1700,  0.0895;
-		m_params[kk].bias0 <<
-			-2.4556,  0.8624, -0.0141, -0.7818,  0.7625, -0.3900,  1.6314,  0.3270;
-    
-		m_params[kk].weight2 <<
-			-8.2347e-01, -2.8110e-01,  8.4486e-01,  1.2746e-01,  5.1016e-01,
-			-3.8359e-01, -8.0732e-01,  1.5990e+00,  1.6365e-01,  6.9594e-01,
-			-1.8692e-01,  4.8970e-01, -5.0826e-01,  8.5592e-01,  3.0677e-01,
-			9.0613e-03, -2.7446e+00, -6.1632e-01,  6.1301e-01, -5.8197e-01,
-			2.7175e-01, -6.6116e-01,  2.6022e-02,  1.4282e+00, -2.8467e-03,
-			3.4908e-03, -1.8357e-01,  9.9218e-01, -7.4152e-01,  8.0324e-01,
-			2.4962e-01, -1.0594e-01, -5.0993e-01,  1.0599e+00,  2.3402e+00,
-			5.6942e-02, -2.2344e-01, -1.1230e-03,  1.5888e+00,  3.2101e-02,
-			1.5316e-01, -1.0315e+00,  6.6714e-01, -2.8029e-01,  1.1451e-01,
-			-5.1009e-01, -9.4233e-01,  5.4575e-01, -6.4140e-01,  3.6725e-01,
-			-9.0786e-01, -1.2710e-01, -5.3800e-01,  2.6823e-01, -4.5991e-01,
-			-3.4079e-01,  4.1183e-01, -1.4952e+00, -1.2435e+00,  6.8955e-01,
-			-2.4022e-01,  2.7318e-01, -5.6464e-01, -3.5930e-01;
-		m_params[kk].bias2 <<
-			-0.0679, -0.6706,  0.3707, -0.6988,  0.4963, -0.1490, -0.2928, -0.5737;
+			1.3236, -0.0296,  1.0797, -0.5106, -0.2236, -2.7231,  0.9010,  0.0896,
+			-2.1982, -0.4364, -1.3233, -0.4495,  9.8746,  0.6139,  0.0833, -1.2986,
+			0.1669,  0.7433, -9.2812, -1.8801, -0.4478,  0.9916,  0.9795, -0.4905;
 		
+		m_params[kk].weight2 <<
+			-1.3760, -0.7857,  1.0379,  0.8910, -3.6161,  1.5966,  0.1276, -1.7902,
+			0.8242, -0.1313,  0.8048, -0.0164,  3.7134, -1.2779, -1.3999,  0.9186,
+			-1.7484,  1.4101, -1.9800, -0.0733,  0.1897,  1.2107,  0.1620, -0.0420,
+			-0.6605,  0.3101, -0.0374, -1.6281, -2.8861,  1.1062,  2.4163, -1.2547,
+			0.5712,  0.1898, -1.1601, -0.1508,  0.2089,  0.1852, -0.4988,  1.1023,
+			1.1551,  1.4035,  0.5221,  0.3638,  1.0377, -0.4549,  0.4757,  0.3139,
+			-0.6602,  3.0073,  0.1186, -0.0431, -1.7339,  3.0759, -0.7352,  1.2115,
+			-1.0978,  0.5640,  1.0522, -0.0414, -0.5647,  0.4006, -0.4100,  0.6935;
 		m_params[kk].weight4 <<
-			0.1867,  0.7900,  0.3217,  0.5134, -0.4663, -1.4766,  1.4382,  2.2787,
-			-2.0059,  1.4770, -1.7111,  1.1529, -1.3058, -1.0913,  1.2561, -0.4580;
-		m_params[kk].bias4 <<
-			-0.6113, -0.9476;
+			1.1821, -0.0664, -0.5187, -1.2452,  0.1416,  0.5036, -0.2592, -0.1049,
+			-0.3164, -1.1725,  0.0809, -0.9028, -0.2043,  0.7160,  0.2720,  0.5577;
 	}
     
 	return 0;
