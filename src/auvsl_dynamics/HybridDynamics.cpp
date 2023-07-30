@@ -36,6 +36,11 @@ const Acceleration HybridDynamics::GRAVITY_VEC = (Acceleration() << 0,0,0,0,0,-9
 //std::ofstream HybridDynamics::log_file;
 //std::ofstream HybridDynamics::debug_file;
 
+Scalar get_altitude(const Scalar &x, const Scalar &y)
+{
+	return Scalar(0.0);
+}
+
 HybridDynamics::HybridDynamics(){
   fwd_dynamics = new Jackal::rcg::ForwardDynamics(inertias, m_transforms);
   
@@ -201,6 +206,71 @@ void HybridDynamics::get_tire_sinkages(const Eigen::Matrix<Scalar,3,1> *cpt_poin
   sinkages[3] = altitude - cpt_points[3][2];
 }
 
+
+// Actually iterate and find where the tire is sinking into the soil the most
+// And call that the contact point. Then report the orientation of this cpt.
+void HybridDynamics::get_tire_cpts_sinkages_fancy(const Eigen::Matrix<Scalar,STATE_DIM,1> &X,
+												  Eigen::Matrix<Scalar,3,1> *cpt_pts,
+												  Eigen::Matrix<Scalar,3,3> *cpt_rots,
+												  Scalar *sinkages){
+
+	const Eigen::Matrix<Scalar,3,4> tire_translations = (Eigen::Matrix<Scalar,3,4>() <<
+														 tx_front_left_wheel,tx_front_right_wheel,tx_rear_left_wheel,tx_rear_right_wheel,
+														 ty_front_left_wheel,ty_front_right_wheel,ty_rear_left_wheel,ty_rear_right_wheel,
+														 tz_front_left_wheel,tz_front_right_wheel,tz_rear_left_wheel,tz_rear_right_wheel).finished();
+
+	const Eigen::Matrix<Scalar,3,1> radius_vec = (Eigen::Matrix<Scalar,3,1>() << 0,0,-tire_radius).finished();
+
+	//get the matrix that transforms from base to world frame
+	Eigen::Matrix<Scalar,3,3> base_rot = toMatrixRotation(X[0],X[1],X[2],X[3]);
+
+	Eigen::Matrix<Scalar,3,4> end_pos_matrix = base_rot*tire_translations;
+	Eigen::Matrix<Scalar,3,1> end_pos_tire_joint;
+
+	int max_checks = 10;
+	Scalar test_angle;
+	Scalar max_angle = -.3; //arbitrary
+	Scalar test_sinkage;
+	Scalar max_sinkage;
+
+	Eigen::Matrix<Scalar,3,1> test_pos;
+	Eigen::Matrix<Scalar,3,3> test_rot;
+	Eigen::Matrix<Scalar,3,3> best_rot;
+
+	for(int ii = 0; ii < 4; ii++){
+		end_pos_tire_joint[0] = end_pos_matrix(0,ii) + X[4]; //real world position of tire joint.
+		end_pos_tire_joint[1] = end_pos_matrix(1,ii) + X[5];
+		end_pos_tire_joint[2] = end_pos_matrix(2,ii) + X[6];
+
+		cpt_pts[ii] = end_pos_tire_joint; //center of the tire joint.
+
+		//need to find the cpt point between tire and soil to determine the
+		//orientation of the reaction forces frame.
+
+		max_sinkage = 0;
+		best_rot = Eigen::Matrix<Scalar,3,3>::Identity();
+		for(int jj = 0; jj < max_checks; jj++){
+			test_angle = max_angle - (2*max_angle*jj/((Scalar) max_checks - 1)); //test_angle ranges from +-max_angle
+			roty(test_rot, test_angle);
+			test_rot = base_rot*test_rot;
+
+			test_pos = end_pos_tire_joint + test_rot*radius_vec; //a point on the edge of the tire.
+			test_sinkage = get_altitude(test_pos[0],test_pos[1]) - test_pos[2];
+
+			if(test_sinkage > max_sinkage){
+				best_rot = test_rot; //orientation of cpt
+				max_sinkage = test_sinkage;
+			}
+		}
+
+		sinkages[ii] = max_sinkage;
+		cpt_rots[ii] = best_rot;
+	}
+}
+
+
+
+
 void HybridDynamics::get_tire_cpt_vels(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matrix<Scalar,3,1> *cpt_vels){
   const Eigen::Matrix<Scalar,3,4> tire_translations = (Eigen::Matrix<Scalar,3,4>() <<
                                                        tx_front_left_wheel,tx_front_right_wheel,tx_rear_left_wheel,tx_rear_right_wheel,
@@ -237,12 +307,12 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 	get_tire_cpts(X, cpt_points, cpt_rots);
   
 	Scalar sinkages[4];
-	get_tire_sinkages(cpt_points, sinkages); //This is going to have to look things up in a map one day.
+    get_tire_sinkages(cpt_points, sinkages);
   
 	//get the velocity of each tire contact point expressed in the contact point frame
 	Eigen::Matrix<Scalar,3,1> cpt_vels[4];
-	get_tire_cpt_vels(X, cpt_vels);
-  
+	get_tire_cpt_vels(X, cpt_vels); 
+	
 	// We now have sinkage and velocity of each tire contact point
 	// Next we need to compute tire-soil reaction forces
 	// Then we will transform these forces into the body frame of each tire

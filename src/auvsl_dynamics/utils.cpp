@@ -2,6 +2,21 @@
 
 
 
+void roty(Eigen::Matrix<Scalar,3,3>& rot, Scalar angle){
+	rot(0,0) = CppAD::cos(angle);
+	rot(0,1) = 0;
+	rot(0,2) = CppAD::sin(angle);
+	
+	rot(1,0) = 0;
+	rot(1,1) = 1;
+	rot(1,2) = 0;
+	
+	rot(2,0) = -CppAD::sin(angle);
+	rot(2,1) = 0;
+	rot(2,2) = CppAD::cos(angle);
+}
+
+
 Eigen::Matrix<Scalar,4,1> calcQuatDot(Eigen::Matrix<Scalar,4,1> orientation, Eigen::Matrix<Scalar,3,1> ang_vel_body){
   Eigen::Matrix<Scalar,4,3> m;
   m(0, 0) =  orientation[3];   m(0, 1) = -orientation[2];   m(0, 2) =  orientation[1];

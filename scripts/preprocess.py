@@ -32,14 +32,29 @@ def readGTFile(name, ii):
 
 def readIMUFile(name, ii):
     fn = "/mnt/home/justin/Downloads/{0}/extracted_data/imu/{1:04d}_imu_data.txt".format(name, ii)
-    df = pd.read_csv(fn, names = "ax ay az wx wy wz qx qy qz qw time".split())
+    df = pd.read_csv(fn, names = "ax ay az wx wy wz qx qy qz qw time".split())    
     df = df["time wx wy wz".split()]
     return df
+
+    # qx = df["qx"]
+    # qy = df["qy"]
+    # qz = df["qz"]
+    # qw = df["qw"]
+    # yaw = np.arctan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz);
+    # pitch = np.arcsin(-2.0*(qx*qz - qw*qy));
+    # roll = np.arctan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz);
     
+    # plt.plot(yaw*180/np.pi)
+    # plt.plot(pitch*180/np.pi)
+    # plt.plot(roll*180/np.pi)
+    # plt.legend("yaw pitch roll".split())
+    # plt.show()
+
+
 def readFiles(name, num_files):
     timestep = .01
-    kernel_size = 51
     
+    #for ii in range(1, num_files+1):
     for ii in range(1, num_files+1):
         df_odom = readOdomFile(name, ii)
         df_gt   = readGTFile(name, ii)
@@ -49,32 +64,51 @@ def readFiles(name, num_files):
         end_time = df_gt["time"].iloc[-1]
     
         resample_times = np.arange(start_time, end_time, timestep)
-
+        
         x_interp = np.interp(resample_times, df_gt["time"], df_gt["x"])
         y_interp = np.interp(resample_times, df_gt["time"], df_gt["y"])
 
-        vx_interp = np.append(np.diff(x_interp), 0) / timestep # Finite differences
-        vy_interp = np.append(np.diff(y_interp), 0) / timestep
-        
-        # vx_interp = np.convolve(vx_interp, np.ones(kernel_size), "same") / kernel_size
-        # vy_interp = np.convolve(vy_interp, np.ones(kernel_size), "same") / kernel_size
-        
+        yaw_rate = (np.mod((np.diff(df_gt["yaw"]) + np.pi), 2*np.pi) - np.pi) / np.diff(df_gt["time"])
         yaw_unbounded = (np.interp(resample_times, df_gt["time"], np.unwrap(df_gt["yaw"]))).reshape(-1,1)
+        
         yaw = np.arctan2(np.sin(yaw_unbounded), np.cos(yaw_unbounded))
+        yaw = np.squeeze(yaw)
+        
+        vx = np.diff(df_gt["x"]) / np.diff(df_gt["time"])
+        vy = np.diff(df_gt["y"]) / np.diff(df_gt["time"])
+        
+        world_vel = np.stack([vx,vy], axis=0)
+        body_vel = np.zeros(world_vel.shape)
+        
+        #rotate velocities into body frame
+        for i in range(world_vel.shape[1]):
+            yaw_gt = df_gt["yaw"][i]
+            
+            #rotation that transforms vectors in world frame to vectors in vehicle frame
+            rot = np.array([[np.cos(yaw_gt),  np.sin(yaw_gt)],
+                            [-np.sin(yaw_gt), np.cos(yaw_gt)]])
+            body_vel[0:2,i] = np.dot(rot, world_vel[0:2,i])
+        
+        vx_interp = np.interp(resample_times, df_gt["time"][:-1], body_vel[0,:])
+        vy_interp = np.interp(resample_times, df_gt["time"][:-1], body_vel[1,:])
         
         train_data = np.concatenate([resample_times.reshape(-1,1),
                                      np.interp(resample_times, df_odom["time"], df_odom["vel_left"]).reshape(-1,1),
                                      np.interp(resample_times, df_odom["time"], df_odom["vel_right"]).reshape(-1,1),
                                      x_interp.reshape(-1,1),
                                      y_interp.reshape(-1,1),
-                                     yaw,
+                                     yaw.reshape(-1,1),
                                      np.interp(resample_times, df_imu["time"], df_imu["wx"]).reshape(-1,1),
                                      np.interp(resample_times, df_imu["time"], df_imu["wy"]).reshape(-1,1),
-                                     np.interp(resample_times, df_imu["time"], df_imu["wz"]).reshape(-1,1),
+                                     np.interp(resample_times, df_gt["time"][:-1], yaw_rate).reshape(-1,1),
                                      vx_interp.reshape(-1,1),
                                      vy_interp.reshape(-1,1)
                                      ],
                                     axis=1)
+
+        # plt.plot(resample_times, np.interp(resample_times, df_gt["time"][:-1], yaw_rate).reshape(-1,1))
+        # plt.plot(df_imu["time"], df_imu["wz"])
+        # plt.show()
         
         train_df = pd.DataFrame(train_data, columns="time vel_left vel_right x y yaw wx wy wz vx vy".split())
         train_df.to_csv("{0}_data{1:02d}.csv".format(name, ii))
@@ -140,7 +174,7 @@ def plot_ld3_vx():
     
     
 # Training and validation datasets
-readFiles("Train3", 17)
+# readFiles("Train3", 17)
 readFiles("CV3", 144)
 readFiles("LD3", 1)
 

@@ -5,6 +5,8 @@
 
 using Jackal::rcg::Scalar;
 
+void roty(Eigen::Matrix<Scalar,3,3>& rot, Scalar angle);
+
 //This function uses a first order approximation of quaternion_dot. Works well with RK4 and low timestep.
 Eigen::Matrix<Scalar,4,1> calcQuatDot(Eigen::Matrix<Scalar,4,1> orientation, Eigen::Matrix<Scalar,3,1> ang_vel_body);
 

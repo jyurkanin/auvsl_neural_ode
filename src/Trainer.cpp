@@ -56,7 +56,7 @@ Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
   m_system_adf = std::make_shared<VehicleSystem<ADF>>();  
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
-  m_squared_grad = VectorAD::Zero(m_system_adf->getNumParams());
+  m_squared_grad = VectorAD::Ones(m_system_adf->getNumParams());
   m_system_adf->getDefaultParams(m_params);
   
   computeEqState();
@@ -64,7 +64,7 @@ Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
   m_cnt = 0;
   m_param_file = "/home/justin/tire.net";
 
-  m_best_CV3 = 10; //large number
+  m_best_CV3 = .096; //large number
 }
 
 Trainer::~Trainer()
@@ -111,9 +111,6 @@ void Trainer::loadDataFile(std::string fn)
 	m_data.clear();
 	while(data_file.peek() != EOF)
 	{
-		double vx_w; //vx expressed in world frame. :(
-		double vy_w;
-		
 		data_file >> idx >> comma;
 		data_file >> row.time >> comma;
 		data_file >> row.vl >> comma;
@@ -124,12 +121,9 @@ void Trainer::loadDataFile(std::string fn)
 		data_file >> wx >> comma; //ignore this
 		data_file >> wy >> comma; //ignore this
 		data_file >> row.wz >> comma;
-		data_file >> vx_w >> comma;
-		data_file >> vy_w; // >> comma;
-
-		row.vx =  vx_w*std::cos(row.yaw) + vy_w*std::sin(row.yaw);
-		row.vy = -vx_w*std::sin(row.yaw) + vy_w*std::cos(row.yaw);
-	
+		data_file >> row.vx >> comma;
+		data_file >> row.vy; // >> comma;
+		
 		m_data.push_back(row);
 	}
 
@@ -145,7 +139,9 @@ void Trainer::train()
 	double avg_loss = 0;
 	std::vector<VectorAD> x_list(m_train_steps);
 	char fn_array[100];
-  
+
+	int cnt_actual = 0;
+	
 	for(int i = 1; i <= 17; i++)
 	{
 		memset(fn_array, 0, 100);
@@ -179,18 +175,19 @@ void Trainer::train()
 				std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
 				std::flush(std::cout);
 				m_cnt++;
+				cnt_actual++;
 			}      
 		}
 		
-		std::cout << "Avg Loss: " << avg_loss / m_cnt << ", Batch Grad[0]: " << m_batch_grad[0] << "\n";
 		std::flush(std::cout);
 		updateParams(m_batch_grad / m_cnt);
 		m_cnt = 0;
-		avg_loss = 0;
 		
 		save();
-		
 	}
+
+	std::cout << "Avg Loss: " << avg_loss / cnt_actual << "\n";
+	avg_loss = 0;
 }
 
 void Trainer::trainThreads()
@@ -421,15 +418,17 @@ void Trainer::updateParams(const VectorF &grad)
     
     m_squared_grad[i] = 0.99*m_squared_grad[i] + 0.01*ADF(grad_idx*grad_idx);
     m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
-	m_params[i] -= m_l1_weight*m_params[i];
-    norm += CppAD::abs(m_params[i]);
+	//m_params[i] -= m_l1_weight*m_params[i];
+	// m_params[i] -= m_system_adf->getLearningRate()*ADF(grad_idx); // Vanilla gradient descent
+    norm += CppAD::abs(grad[i]);
   }
 
-  ADF update0 = (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[0]) + 1e-6))*ADF(grad[0]);
-  std::cout << "Param norm: " << CppAD::Value(norm)
+  //ADF update0 = (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[0]) + 1e-6))*ADF(grad[0]);
+  ADF update0 = m_system_adf->getLearningRate()*ADF(grad[0]);
+  std::cout << "Gradient norm: " << CppAD::Value(norm)
 			<< " Param[0]: " << CppAD::Value(m_params[0])
 			<< " dParams[0]: " << CppAD::Value(update0)
-			<< " l1_update[0]: " << CppAD::Value(m_l1_weight*m_params[0]) << "\n";
+			<< " squared_grad[0]: " << CppAD::Value(m_squared_grad[0]) << "\n";
   for(int i = 0; i < m_params.size(); i++)
   {
     
@@ -452,6 +451,7 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   std::vector<double> model_yaw(x_list.size());
   std::vector<double> model_vx(x_list.size());
   std::vector<double> model_vy(x_list.size());
+  std::vector<double> model_wz(x_list.size());
   
   
   std::vector<double> gt_x(x_list.size());
@@ -459,6 +459,7 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   std::vector<double> gt_yaw(x_list.size());
   std::vector<double> gt_vx(x_list.size());
   std::vector<double> gt_vy(x_list.size());
+  std::vector<double> gt_wz(x_list.size());
   std::vector<double> gt_vl(x_list.size());
   std::vector<double> gt_vr(x_list.size());
   
@@ -472,10 +473,12 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
     model_yaw[i] = CppAD::Value(2*CppAD::atan(x_list[i][2] / x_list[i][3])); //this is an approximation
 	model_vx[i] = CppAD::Value(x_list[i][14]);
 	model_vy[i] = CppAD::Value(x_list[i][15]);
+	model_wz[i] = CppAD::Value(x_list[i][13]);
 	
     gt_x[i] = traj[i].x;
     gt_y[i] = traj[i].y;
     gt_yaw[i] = traj[i].yaw;
+	gt_wz[i] = traj[i].wz;
 	gt_vx[i] = traj[i].vx;
 	gt_vy[i] = traj[i].vy;
 	gt_vl[i] = traj[i].vl;
@@ -494,8 +497,9 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   aspect_ratio_hack_y[1] = max;
 
   plt::subplot(1,6,1);
-  plt::plot(gt_vl);
-  plt::plot(gt_vr);
+  plt::plot(model_wz);
+  plt::plot(gt_wz);
+  plt::title("Wz");
   
   plt::subplot(1,6,2);
   plt::title("X-Y plot");

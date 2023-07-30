@@ -70,6 +70,17 @@ target_include_directories(train PRIVATE ${PYTHON_INCLUDE_DIRS})
 target_link_libraries(train ${PYTHON_LIBRARIES})
 
 
+add_executable(train_linear
+	src/linear/train_linear.cpp
+	src/linear/LinearTrainer.cpp
+	src/linear/LinearSystem.cpp
+)
+target_link_libraries(train_linear cpp_bptt profiler)
+target_include_directories(train_linear PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(train_linear ${PYTHON_LIBRARIES})
+
+
+
 add_executable(generate_code
 	src/generate_code.cpp
 	src/VehicleSystem.cpp

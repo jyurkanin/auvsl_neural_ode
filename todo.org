@@ -1,5 +1,58 @@
 Updates
 
+* <2023-07-30 Sun 11:46>
+Reduce error.
+Okay yeah but how
+Well the ideas below seemed to work pretty good.
+Also you were able to replicate the linear model performance,
+so there's really no question of bugs in your code that are
+sabotaging performance.
+
+So, where do we go from here? Not sure.
+** TODO Try with more parameters?
+I'll be honest, I don't think this has ever helped.
+** TODO Check the orientation of the vehicle
+Maybe the ground wasn't so flat. There is some pitch and roll info.
+It's definitely non zero. The pitch and roll goes between like -10 and +10 degrees
+Very small slope but possibly this info would improve performance if fed
+into the tire network somehow.
+
+This would sort of be a hack because ideally we would have a map that represents
+the height of the terrain and that info would be used to change the orientation of
+the reaction forces which would account for the change in orientation.
+Instead of manually hacking the orientation into the tire-model it should result
+naturally from the dynamics. That was kind of the whole point.
+
+But also, its a fact that I have no altitude information with this dataset.
+1st option: Utilize the video from the dataset to create point clouds and build an
+            elevation map (difficult)
+2nd option: Cheat. Send roll and pitch to the tire networks.
+            Perhaps you would want to do this even if you had a full 3D elevation map.
+
+Maybe this isn't a hack. I could probably justify it.
+	    
+
+** DONE Better cpt_pt detection
+You have some other code for better cpt_detection that actually returns
+a valid cpt_rot representing the actual orientation of the contact point
+with respect to the tire. This could be as easy as a copy and paste.
+One issue is that the cpt detection could really slow things down.
+And it also might not be continuous. I think it would actually break
+the continuity of the entire model.
+
+Might break the continuity of the model, but it's easy to test. It was
+just a copy and paste. No big deal really.
+
+It's going slower but it seems to be training fine.
+The loss started higher and now its moving down.
+
+600 steps:
+- Plataued arond training Loss:  5.0%
+- CV3: 14.1%
+- LD3: who cares
+
+Conclusion: no bueno and makes it run slower, achieves a higher training loss. Cringe
+
 * <2023-07-23 Sun 18:03>                                                                                                                
 New idea bro. Train a new network with no bias neurons, that way                                                                        
 f(x=0) = 0.                                                                                                                             
@@ -37,7 +90,7 @@ Plataued around 6.88% training loss
 12.28% on CV3 (meh)
 5.4% on LD3 (not bad)
 
-** TODO Try different numbers of training steps
+** DONE Try different numbers of training steps
 So you saw decent results with 100 steps. Lets try with more
 steps, like 200 and see how that goes. Hopefully the training
 process stays stable again.
@@ -57,12 +110,37 @@ process stays stable again.
 - CV3: 9.58%
 - LD3: 4.56%
 
+This is pretty good damn.
 
-** TODO Try training the linear model with the same code as your neural model
+** DONE Try training the linear model with the same code as your neural model
 Will help me seeing if I'm doing anything wrong.
 Also will help in creating a single executable that can generate
-all my figures for a paper
+all my figures for a paper.
 
+I can't replicate the linear model error from the paper.
+Trying to preprocess things differently might help.
+If it improves the linear model performance, it might also
+improve the neural model performance.
+
+Interpolate velocity in body coordinates. I think this helps.
+
+Changes:
+Changed preprocessing to interpolate in velocity in body coordinates
+Changed preprocessing to compute wz from yaw instead of the IMU data
+        ^For the linear model, this greatly improved LD3 performance
+
+Succesfully brought the evalute_lin_model.py and LinearTrainer.cpp
+into pretty close agreement.
+
+** DONE Re run the neural model training with the new preprocessing
+Now that you changed the preprocessing to make the 2 linear models
+match, maybe the neural model will train better. Idk.
+600 steps:
+- Training Loss: 2.99%
+- CV3 Loss: 9.59%
+- LD3 Loss: 4.56%
+Not much of an improvement
+  
 * <2023-07-19 Wed 22:42>
 ** DONE NEW NETWORK
 You had an idea, get rid of that stupid symmetry crap.
