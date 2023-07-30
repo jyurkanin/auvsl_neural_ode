@@ -30,7 +30,7 @@ But also, its a fact that I have no altitude information with this dataset.
             Perhaps you would want to do this even if you had a full 3D elevation map.
 
 Maybe this isn't a hack. I could probably justify it.
-	    
+If this doesnt help though you're fucked	    
 
 ** DONE Better cpt_pt detection
 You have some other code for better cpt_detection that actually returns
