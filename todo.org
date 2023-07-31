@@ -11,7 +11,11 @@ sabotaging performance.
 So, where do we go from here? Not sure.
 ** TODO Try with more parameters?
 I'll be honest, I don't think this has ever helped.
+But it's easy to test out.
+
 ** TODO Check the orientation of the vehicle
+Old Branch: task/new_network
+New Branch: task/rollpitch
 Maybe the ground wasn't so flat. There is some pitch and roll info.
 It's definitely non zero. The pitch and roll goes between like -10 and +10 degrees
 Very small slope but possibly this info would improve performance if fed
@@ -31,6 +35,13 @@ But also, its a fact that I have no altitude information with this dataset.
 
 Maybe this isn't a hack. I could probably justify it.
 If this doesnt help though you're fucked	    
+This is a dumb stupid idea and I'm not gonna do it right now. 
+My main problem is that supplying the model with the ground truth
+of roll and pitch during the training process feels like cheating.
+But maybe if I just compute roll and pitch from the state of the
+vehicle it will help anyways even if it's not the ground truth.
+Let me plot the roll and pitch during a normal evaluation of CV3.
+
 
 ** DONE Better cpt_pt detection
 You have some other code for better cpt_detection that actually returns

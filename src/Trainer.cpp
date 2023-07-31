@@ -357,7 +357,7 @@ void Trainer::evaluate_cv3()
     {
       std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
       evaluateTrajectory(traj, x_list, loss);
-      // plotTrajectory(traj, x_list);
+      //plotTrajectory(traj, x_list);
       
       loss_avg += loss;
       cnt++;
@@ -452,7 +452,6 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   std::vector<double> model_vx(x_list.size());
   std::vector<double> model_vy(x_list.size());
   std::vector<double> model_wz(x_list.size());
-  
   
   std::vector<double> gt_x(x_list.size());
   std::vector<double> gt_y(x_list.size());

@@ -33,23 +33,29 @@ def readGTFile(name, ii):
 def readIMUFile(name, ii):
     fn = "/mnt/home/justin/Downloads/{0}/extracted_data/imu/{1:04d}_imu_data.txt".format(name, ii)
     df = pd.read_csv(fn, names = "ax ay az wx wy wz qx qy qz qw time".split())    
-    df = df["time wx wy wz".split()]
-    return df
-
+    
     # qx = df["qx"]
     # qy = df["qy"]
     # qz = df["qz"]
     # qw = df["qw"]
-    # yaw = np.arctan2(2.0*(qy*qz + qw*qx), qw*qw - qx*qx - qy*qy + qz*qz);
-    # pitch = np.arcsin(-2.0*(qx*qz - qw*qy));
-    # roll = np.arctan2(2.0*(qx*qy + qw*qz), qw*qw + qx*qx - qy*qy - qz*qz);
+    # roll = np.arctan2(
+    #     2 * ((qy * qz) + (qw * qx)),
+    #     qw**2 - qx**2 - qy**2 + qz**2
+    # )
+    # pitch = np.arcsin(2 * ((qx * qz) - (qw * qy)))
+    # yaw = np.arctan2(
+    #     2 * ((qx * qy) + (qw * qz)),
+    #     qw**2 + qx**2 - qy**2 - qz**2
+    # )
     
     # plt.plot(yaw*180/np.pi)
     # plt.plot(pitch*180/np.pi)
     # plt.plot(roll*180/np.pi)
     # plt.legend("yaw pitch roll".split())
     # plt.show()
-
+    
+    df = df["time wx wy wz".split()]
+    return df
 
 def readFiles(name, num_files):
     timestep = .01
