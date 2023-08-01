@@ -12,8 +12,17 @@ So, where do we go from here? Not sure.
 ** TODO Try with more parameters?
 I'll be honest, I don't think this has ever helped.
 But it's easy to test out.
+Bruh moment.
 
-** TODO Check the orientation of the vehicle
+600 steps:
+- Training Loss:  5.87% (probably could go lower)
+- CV3: 15.1%
+- LD3: 6.5%
+
+Trash. But maybe it will improve if I train it more.
+I'm seeing a trend here where CV3 loss = 3x training loss
+
+** DONE Check the orientation of the vehicle
 Old Branch: task/new_network
 New Branch: task/rollpitch
 Maybe the ground wasn't so flat. There is some pitch and roll info.
@@ -42,6 +51,8 @@ But maybe if I just compute roll and pitch from the state of the
 vehicle it will help anyways even if it's not the ground truth.
 Let me plot the roll and pitch during a normal evaluation of CV3.
 
+During a normal evaluation, the roll was basically zero.
+Okay so I am not going to add the roll or pitch to the tire network.
 
 ** DONE Better cpt_pt detection
 You have some other code for better cpt_detection that actually returns
@@ -64,11 +75,11 @@ The loss started higher and now its moving down.
 
 Conclusion: no bueno and makes it run slower, achieves a higher training loss. Cringe
 
-* <2023-07-23 Sun 18:03>                                                                                                                
-New idea bro. Train a new network with no bias neurons, that way                                                                        
-f(x=0) = 0.                                                                                                                             
-Add a penalty promote passivity. penalty = ReLU(dot(f(x), x))                                                                           
-Let's see how this shit goes                                                                                                            
+* <2023-07-23 Sun 18:03>
+New idea bro. Train a new network with no bias neurons, that way
+f(x=0) = 0.
+Add a penalty promote passivity. penalty = ReLU(dot(f(x), x))
+Let's see how this shit goes
 
 Seems to get better performance when training exclusively
 on CV3 test 1. 
