@@ -1,5 +1,11 @@
 Updates
 
+* <2023-08-02 Wed 21:00>
+Looks like more params aren't going to do it.
+I could try training the size 8 model a lot longer. Or try training
+the size 16 model with 1 thread, and update params after every test
+instead of a full batch size.
+
 * <2023-07-30 Sun 11:46>
 Reduce error.
 Okay yeah but how
@@ -19,8 +25,23 @@ Bruh moment.
 - CV3: 15.1%
 - LD3: 6.5%
 
+Training Loss: 4.3% and falling fast (slow)
+4.2% now, like hours later.
+3.85% now
+3.55% now.
+3.33 plataued 2 days later.
+With batched training it seems to be going lower and faster.
+3.1% Now 8 hours later.
+
+The last CV3 value was like 12.4% though.
 Trash. But maybe it will improve if I train it more.
 I'm seeing a trend here where CV3 loss = 3x training loss
+
+Alright fuck it. Adding more parameters hasn't helped. Still around
+12% CV3 error. RIP.
+
+** TODO Tire model feedback
+Add some state to this. So it's a neural ODE. Oh boy.
 
 ** DONE Check the orientation of the vehicle
 Old Branch: task/new_network
@@ -246,7 +267,7 @@ CV3 performance is trash 13%
 I can try training more and going for a smaller training loss idk.
 No improvement. Still trash at CV3 13%
 
-* TODO I cant consistently replicate the 8% on CV3
+* DONE I cant consistently replicate the 8% on CV3
 Can't replicate it at all as a matter of fact
 No idea why. Maybe I'm just not being patient enough with running
 the training over night. I have no idea.

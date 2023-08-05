@@ -186,7 +186,7 @@ void Trainer::train()
 		save();
 	}
 
-	std::cout << "Avg Loss: " << avg_loss / cnt_actual << "\n";
+	std::cout << "Average Loss: " << avg_loss / cnt_actual << "\n";
 	avg_loss = 0;
 }
 
@@ -416,19 +416,20 @@ void Trainer::updateParams(const VectorF &grad)
     //   grad_idx = 1;
     // }
     
-    m_squared_grad[i] = 0.99*m_squared_grad[i] + 0.01*ADF(grad_idx*grad_idx);
+    m_squared_grad[i] = 0.95*m_squared_grad[i] + 0.05*ADF(grad_idx*grad_idx);
     m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
 	//m_params[i] -= m_l1_weight*m_params[i];
 	// m_params[i] -= m_system_adf->getLearningRate()*ADF(grad_idx); // Vanilla gradient descent
     norm += CppAD::abs(grad[i]);
   }
 
-  //ADF update0 = (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[0]) + 1e-6))*ADF(grad[0]);
-  ADF update0 = m_system_adf->getLearningRate()*ADF(grad[0]);
+  ADF update0 = (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[0]) + 1e-6))*ADF(grad[0]);
+  //ADF update0 = m_system_adf->getLearningRate()*ADF(grad[0]);
   std::cout << "Gradient norm: " << CppAD::Value(norm)
 			<< " Param[0]: " << CppAD::Value(m_params[0])
-			<< " dParams[0]: " << CppAD::Value(update0)
-			<< " squared_grad[0]: " << CppAD::Value(m_squared_grad[0]) << "\n";
+			<< " grad[0]: " << grad[0]
+			<< " update[0]: " << CppAD::Value(update0)
+			<< " squared_grad[0]: " << CppAD::Value(CppAD::sqrt(m_squared_grad[0])) << "\n";
   for(int i = 0; i < m_params.size(); i++)
   {
     
