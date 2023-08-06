@@ -15,7 +15,7 @@ so there's really no question of bugs in your code that are
 sabotaging performance.
 
 So, where do we go from here? Not sure.
-** TODO Try with more parameters?
+** DONE Try with more parameters?
 I'll be honest, I don't think this has ever helped.
 But it's easy to test out.
 Bruh moment.
@@ -40,8 +40,26 @@ I'm seeing a trend here where CV3 loss = 3x training loss
 Alright fuck it. Adding more parameters hasn't helped. Still around
 12% CV3 error. RIP.
 
-** TODO Tire model feedback
+** DONE Tire model feedback
 Add some state to this. So it's a neural ODE. Oh boy.
+
+f([x,s]) -> [dx,ds]
+s is the state. This is a neural ode.
+x is the normal tire-model inputs
+
+600 steps:
+- Training loss: 2.8%
+- CV3: 12.6%
+- LD3: 4.2%
+
+Okay not terrible. The very low training loss is cool.
+WHen I plot the hidden state it seems to correlate
+with the vehicle's yaw which is interesting.
+
+It plataued around 2.78% and I couldnt make the loss go lower.
+
+** TODO Relu vs Tanh
+I haven't done this in a while so why not
 
 ** DONE Check the orientation of the vehicle
 Old Branch: task/new_network
