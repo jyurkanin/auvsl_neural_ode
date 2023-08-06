@@ -95,9 +95,9 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec,
 
 	// Actual NN math
 	xy0_out = (m_params[ii].weight0*xy_features);
-	xy0_out = xy0_out.unaryExpr(&tanh_scalar_wrapper);
+	xy0_out = xy0_out.unaryExpr(&relu_wrapper);
 	xy2_out = (m_params[ii].weight2*xy0_out);
-	xy2_out = xy2_out.unaryExpr(&tanh_scalar_wrapper);
+	xy2_out = xy2_out.unaryExpr(&relu_wrapper);
 	xy4_out = (m_params[ii].weight4*xy2_out);
 	
 	forces[0] = xy4_out[0];
@@ -205,6 +205,33 @@ void TireNetwork::getParams(VectorS &params, int idx)
 }
 
 
+int TireNetwork::load_model(){
+	std::cout << "Loading Model\n";
+    
+	for(int kk = 0; kk < num_networks; kk++)
+	{
+		m_params[kk].weight0 <<
+			0.9667, -0.0943, -1.0386, -1.4601,  0.2732, -1.0964,  0.5185, -1.1125,
+			0.8897,  3.1478,  0.2594, -0.0899, -0.8329,  0.0966,  0.8781,  0.8118,
+			0.7432,  0.0432,  1.7740, -0.3037,  1.2673,  0.2137, -0.9656, -0.9468;		
+		m_params[kk].weight2 <<
+			0.1857, -0.2406,  0.6334,  0.8238,  0.5957, -0.0436, -0.6491,  0.0458,
+			-1.1415,  1.0162, -0.2477,  0.8250, -0.3701, -0.2580,  0.3394,  0.5701,
+			0.3578, -0.7221, -0.0425,  1.6657,  0.1656, -0.5105,  0.3563,  0.8256,
+			0.4247, -0.7138, -0.2968,  0.2832, -0.9120,  0.3109,  0.9382,  0.7685,
+			0.0966,  0.0589,  0.7693, -2.8740,  0.7669,  0.6879, -1.1150, -0.0120,
+			-1.9569,  1.0766, -0.3057,  0.4272,  0.2101, -0.2088,  0.2593,  0.7274,
+			-1.4028, -1.4843,  0.3617,  0.3248,  0.4899,  0.7629, -0.2366,  0.0719,
+			0.2110, -0.0278,  0.5485,  0.8301, -0.6081, -0.1699, -1.5623,  0.0371;
+		m_params[kk].weight4 <<
+			0.9912,  0.0359, -0.6847,  0.9571, -1.1064, -0.2172,  0.0892, -0.2194,
+        -0.2288,  1.3379, -0.8043,  0.7705,  0.2697, -0.9926, -0.7576,  1.3404;
+	}
+    
+	return 0;
+}
+
+
 /*
 int TireNetwork::load_model(){
 	std::cout << "Loading Model\n";
@@ -234,7 +261,7 @@ int TireNetwork::load_model(){
 }
 */
 
-
+/*
 int TireNetwork::load_model(){
 	std::cout << "Loading Model\n";
     
@@ -309,3 +336,4 @@ int TireNetwork::load_model(){
     
 	return 0;
 }
+*/

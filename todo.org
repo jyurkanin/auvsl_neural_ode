@@ -60,6 +60,8 @@ It plataued around 2.78% and I couldnt make the loss go lower.
 
 ** TODO Relu vs Tanh
 I haven't done this in a while so why not
+pretraining loss is high. 29N vs like .5N for tanh.
+
 
 ** DONE Check the orientation of the vehicle
 Old Branch: task/new_network

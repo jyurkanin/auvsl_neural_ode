@@ -97,7 +97,7 @@ label_data = label_data.to(device)
 class TireNet(nn.Module):
   def __init__(self):
     super().__init__()
-    self.hidden_size = 16
+    self.hidden_size = 8
     self.hidden_size2 = 8
     
     self.tire_radius = .098
@@ -105,9 +105,9 @@ class TireNet(nn.Module):
     self.loss_fn = torch.nn.MSELoss()
     self.model_xy = nn.Sequential(
       nn.Linear(3, self.hidden_size, bias=False),
-      nn.Tanh(),
+      nn.ReLU(),
       nn.Linear(self.hidden_size, self.hidden_size, bias=False),
-      nn.Tanh(),
+      nn.ReLU(),
       nn.Linear(self.hidden_size, 2, bias=False)
     )
     
@@ -264,7 +264,7 @@ model_name = "train_no_ratio1.net"
 #md = torch.load(model_name)
 #model.load_state_dict(md)
 
-fit(1e-3, 5000, 1000)
+fit(1e-3, 5000, 200)
 plt.show()
 get_evaluation_loss(test_data, test_labels)
 # fit(1e-3, 50, 10)
