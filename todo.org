@@ -1,5 +1,15 @@
 Updates
 
+
+* <2023-08-06 Sun 23:20>
+More parameters didn't help, relu didn't help, adding feedback
+to the tire network didn't help either.
+
+I think I could write this paper by comparing the trained neural
+performance against a 3d model with the Bekker tire-soil model
+instead. I think that way I could show an improvement.
+I really have no ideas left to try. 
+
 * <2023-08-02 Wed 21:00>
 Looks like more params aren't going to do it.
 I could try training the size 8 model a lot longer. Or try training
@@ -61,6 +71,41 @@ It plataued around 2.78% and I couldnt make the loss go lower.
 ** TODO Relu vs Tanh
 I haven't done this in a while so why not
 pretraining loss is high. 29N vs like .5N for tanh.
+I am actually feeling really good about this one.
+Tanh limits the output values and reduces the expressiveness
+of the network which is cringe. I was training at 100 steps
+and the loss was going down linearly, at 2.8% and still dropping
+.2% each iteration. Fire.
+
+It makes sense that the tanh would not be able to achieve absolute
+zero loss. Because the output of such a network is bounded by the
+values in the last layer. So even if the inputs reach a very high
+value, the output layer will not be proportionally large. For
+that reason, I think using tanh is only good when you know the
+output of the network must belong to a compact set. But for normal
+regression tasks, it seems like ReLU is vastly superior because
+the output is unbounded.
+
+WTF
+Training with 600 steps,
+Here was the training loss per iteration:
+Avg Loss: 0.150749
+Avg Loss: 0.0961711
+Avg Loss: 0.0650992
+Avg Loss: 0.0470632
+Avg Loss: 0.0364782
+Avg Loss: 0.0301677
+Avg Loss: 0.0263205
+
+It reached a lower loss than tanh, and exponentially faster.
+Mind blown. I can't believe it. This shit is gonna win it for me
+I think. Oh my god I think this is it we're so back.
+
+Avg Loss: .77%
+It was squared error *Dead*
+With L1 loss it plataeus around 3.98%. Rip.
+
+It's so over.
 
 
 ** DONE Check the orientation of the vehicle

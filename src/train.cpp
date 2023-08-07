@@ -7,7 +7,7 @@
 
 int main()
 {
-	int num_threads = 1;
+	int num_threads = 4;
 	
 	Trainer train(num_threads);
 	std::cout << "Default Performance:\n";
@@ -20,8 +20,8 @@ int main()
 	
 	for(int i = 0; i < 10000; i++)
 	{
-		train.trainThreads();
-		//train.train();
+		//train.trainThreads();
+		train.train();
 		train.save();    
 
 		// if((i % 5) == 4)

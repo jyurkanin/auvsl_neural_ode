@@ -171,7 +171,7 @@ void Trainer::train()
 			{
 				m_batch_grad += traj_grad;
 				avg_loss += loss;
-				plotTrajectory(traj, x_list);
+				// plotTrajectory(traj, x_list);
 				std::cout << "Loss: " << loss << "\tdParams: " << traj_grad[0] << "\n";
 				std::flush(std::cout);
 				m_cnt++;
