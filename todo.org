@@ -10,6 +10,32 @@ performance against a 3d model with the Bekker tire-soil model
 instead. I think that way I could show an improvement.
 I really have no ideas left to try. 
 
+** Discovery: Training with batch size = 1 leads to lower loss
+
+** TODO Different architectures
+0 hidden layers (linear)
+Trained fast. Was trash.
+600 steps:
+- Training Loss: like 4% I think
+- CV3: Bad
+- LD3: Bad
+
+1 hidden layer was trash. It took very long to train.
+600 steps:
+- Training Loss: 3.1%
+- CV3: 14.53%
+- LD3: 5.22%
+
+2 hidden layers is normal.
+I routinely achieve 9.8% CV3 performance.
+
+3 hidden layers. batch_size=1
+600 steps:
+- Training Loss: 2.757%
+- CV3: 11.90%
+- LD3: 4.04 %
+
+
 * <2023-08-02 Wed 21:00>
 Looks like more params aren't going to do it.
 I could try training the size 8 model a lot longer. Or try training
@@ -68,7 +94,7 @@ with the vehicle's yaw which is interesting.
 
 It plataued around 2.78% and I couldnt make the loss go lower.
 
-** TODO Relu vs Tanh
+** DONE Relu vs Tanh
 I haven't done this in a while so why not
 pretraining loss is high. 29N vs like .5N for tanh.
 I am actually feeling really good about this one.
