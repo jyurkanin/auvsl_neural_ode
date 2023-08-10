@@ -199,11 +199,16 @@ void HybridDynamics::get_tire_cpts(const Eigen::Matrix<Scalar,STATE_DIM,1> &X,
 }
 
 void HybridDynamics::get_tire_sinkages(const Eigen::Matrix<Scalar,3,1> *cpt_points, Scalar *sinkages){
-  const Scalar altitude = 0;
-  sinkages[0] = altitude - cpt_points[0][2];
-  sinkages[1] = altitude - cpt_points[1][2];
-  sinkages[2] = altitude - cpt_points[2][2];
-  sinkages[3] = altitude - cpt_points[3][2];
+	// const Scalar altitude = 0;
+
+	for(int i = 0; i < 4; i++)
+	{
+		const Scalar altitude = 0; //.1*CppAD::sin(.1*cpt_points[i][0]);
+		sinkages[i] = altitude - cpt_points[i][2];
+	}
+	// sinkages[1] = altitude - cpt_points[1][2];
+	// sinkages[2] = altitude - cpt_points[2][2];
+	// sinkages[3] = altitude - cpt_points[3][2];
 }
 
 

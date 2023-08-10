@@ -20,8 +20,8 @@ int main()
 	
 	for(int i = 0; i < 10000; i++)
 	{
-		//train.trainThreads();
-		train.train();
+		train.trainThreads();
+		// train.train();
 		train.save();    
 
 		// if((i % 5) == 4)

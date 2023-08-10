@@ -176,13 +176,13 @@ void Trainer::train()
 				std::flush(std::cout);
 				m_cnt++;
 				cnt_actual++;
+
+				std::flush(std::cout);
+				updateParams(m_batch_grad / m_cnt);
+				m_cnt = 0;
 			}      
 		}
-		
-		std::flush(std::cout);
-		updateParams(m_batch_grad / m_cnt);
-		m_cnt = 0;
-		
+				
 		save();
 	}
 

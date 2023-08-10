@@ -123,12 +123,12 @@ class TireNet(nn.Module):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
     slip_lon = (diff)
-    slip_lat = (x[:,1])
+    slip_lat = torch.abs(x[:,1])
     tire_abs = (x[:,2])
     bekker_args = torch.cat((x[:,3][:,None],  # zr
                             slip_lon[:,None], # diff
-                            tire_abs[:,None], # |qd|
-                            slip_lat[:,None]  # vy
+                            tire_abs[:,None], # qd
+                            slip_lat[:,None]  # |vy|
                             ), 1)
     
     self.in_mean = torch.mean(bekker_args, 0)
@@ -141,12 +141,12 @@ class TireNet(nn.Module):
     tire_tangent_vel = x[:,2]*self.tire_radius
     diff = tire_tangent_vel - x[:,0]
     slip_lon = diff
-    slip_lat = x[:,1]
+    slip_lat = torch.abs(x[:,1])
     tire_abs = x[:,2]
     bekker_args = torch.cat((x[:,3][:,None],   # zr
                              slip_lon[:,None], # diff
-                             tire_abs[:,None], # |qd|
-                             slip_lat[:,None]  # vy
+                             tire_abs[:,None], # qd
+                             slip_lat[:,None]  # |vy|
                              ), 1)
     
     bekker_args = (bekker_args - self.in_mean) / self.in_std
@@ -156,7 +156,7 @@ class TireNet(nn.Module):
     
     yhat_sign_corrected = torch.cat((
       (yhat_xy[:,0])[:,None],
-      (yhat_xy[:,1])[:,None],
+      ((1 + yhat_xy[:,1])*torch.tanh(-x[:,1]))[:,None],
       (yhat_z[:,0])[:,None]), 1)
     
     return yhat_sign_corrected

@@ -11,8 +11,20 @@ instead. I think that way I could show an improvement.
 I really have no ideas left to try. 
 
 ** Discovery: Training with batch size = 1 leads to lower loss
+Alright lets try it.
+It was trash.
+600 steps:
+- Training Loss: 2.89%
+- CV3: 13.7%
+- LD3: 4.205%
 
-** TODO Different architectures
+
+** TODO Hack the sign of Fy
+You're seeing a lateral bias when moving forward. Can't be
+good for validation loss.
+
+
+** DONE Different architectures
 0 hidden layers (linear)
 Trained fast. Was trash.
 600 steps:

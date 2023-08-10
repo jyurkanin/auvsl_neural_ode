@@ -22,6 +22,25 @@ namespace {
 		VectorAD m_params;
 
 		std::shared_ptr<VehicleSystem<ADF>>    m_system_adf;
+
+		bool loadVec(VectorAD &params, const std::string &file_name)
+		{
+			char comma;
+			std::ifstream data_file(file_name);
+			if(!data_file.is_open())
+			{
+				std::cout << "Failed to open file\n";
+				return true;
+			}
+	  
+			for(int i = 0; i < params.size(); i++)
+			{
+				data_file >> params[i];
+				data_file >> comma;
+			}
+	  
+			return false;
+		}  
     
 		VehicleFixture()
 		{
@@ -31,11 +50,13 @@ namespace {
       
 			m_params = VectorAD::Zero(m_system_adf->getNumParams());
 			m_x0 = VectorAD::Zero(m_system_adf->getStateDim());
-      
-			m_system_adf->getDefaultParams(m_params);
+			
 			m_system_adf->getDefaultInitialState(m_x0);
 			m_x0[6] = .0605;
 
+			loadVec(m_params, "/home/justin/tire.net");
+			m_system_adf->setParams(m_params);
+			
 			m_gt_list.resize(m_system_adf->getNumSteps());
 			m_gt_list_adf.resize(m_system_adf->getNumSteps());
       
@@ -183,7 +204,7 @@ namespace {
 	
 	TEST_F(VehicleFixture, straight)
 	{
-		int num_steps = 100;
+		int num_steps = 1000;
 		std::vector<double> time(num_steps);
 		std::vector<double> elev(num_steps);
 		std::vector<double> x_vec(num_steps);
@@ -198,11 +219,11 @@ namespace {
     
 		for(int i = 0; i < num_steps; i++)
 		{
-			xk[HybridDynamics::STATE_DIM] = 1; //vl
-			xk[HybridDynamics::STATE_DIM+1] = 1; //vr
+			xk[HybridDynamics::STATE_DIM] = 4; //vl
+			xk[HybridDynamics::STATE_DIM+1] = 4; //vr
 			m_system_adf->integrate(xk, xk1);
       
-			time[i] = i * 0.1;
+			time[i] = i * 0.01;
 			elev[i] = CppAD::Value(xk1[6]);
 			x_vec[i] = CppAD::Value(xk1[4]);
 			y_vec[i] = CppAD::Value(xk1[5]);
