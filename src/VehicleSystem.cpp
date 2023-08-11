@@ -12,7 +12,7 @@ VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics
 	this->setTimestep(0.001);  //unused
 	this->setLearningRate(1e-4f);
 	
-	m_penalty_weight = 1e-5;
+	m_penalty_weight = 1e-3;
 }
 
 template<typename Scalar>

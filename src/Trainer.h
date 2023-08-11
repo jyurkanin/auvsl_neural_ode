@@ -40,6 +40,7 @@ public:
   void evaluate_train3();
   void evaluate_cv3();
   void evaluate_ld3();
+  void evaluate_validation_dataset();
   void computeEqState();
   bool saveVec(const VectorAD &params, const std::string &file_name);
   bool loadVec(VectorAD &params, const std::string &file_name);

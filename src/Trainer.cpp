@@ -223,7 +223,7 @@ void Trainer::trainThreads()
   char fn_array[100];
 
   int cnt_workers = 0;
-  for(int i = 1; i <= 17; i++)
+  for(int i = 1; i <= 16; i++)
   {
     memset(fn_array, 0, 100); //todo: uncomment
     sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -293,6 +293,35 @@ void Trainer::finishWork()
       combineResults(m_batch_grad, m_workers[i].m_grad, m_batch_loss, m_workers[i].m_loss);
     }
   }
+}
+
+void Trainer::evaluate_validation_dataset()
+{
+  m_system_adf->setNumSteps(m_eval_steps);
+  
+  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
+  int traj_len = m_system_adf->getNumSteps();
+  char fn_array[100];
+  
+  double loss = 0;
+  int cnt = 0;
+  
+  int i = 17;
+
+  memset(fn_array, 0, 100); //todo: uncomment
+  sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
+  
+  std::string fn(fn_array);
+  loadDataFile(fn);
+    
+  for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
+  {
+	  std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
+	  evaluateTrajectory(traj, x_list, loss);
+	  // plotTrajectory(traj, x_list);
+  }
+  
+  std::cout << "Train3_17 validation loss: " << loss << "\n";	
 }
 
 void Trainer::evaluate_train3()
@@ -405,20 +434,10 @@ void Trainer::updateParams(const VectorF &grad)
   for(int i = 0; i < m_params.size(); i++)
   {
     grad_idx = grad[i];
-    // if(grad[i] < -1) //todo: uncomment
-    // {
-    //   std::cout << "Clipped [" << i << "] " << grad[i] << "\n";
-    //   grad_idx = -1;
-    // }
-    // else if(grad[i] > 1)
-    // {
-    //   std::cout << "Clipped [" << i << "] " << grad[i] << "\n";
-    //   grad_idx = 1;
-    // }
-    
+	
     m_squared_grad[i] = 0.95*m_squared_grad[i] + 0.05*ADF(grad_idx*grad_idx);
     m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
-	//m_params[i] -= m_l1_weight*m_params[i];
+	m_params[i] -= m_l1_weight*m_params[i];
 	// m_params[i] -= m_system_adf->getLearningRate()*ADF(grad_idx); // Vanilla gradient descent
     norm += CppAD::abs(grad[i]);
   }
