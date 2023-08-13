@@ -7,7 +7,7 @@
 
 int main()
 {
-	int num_threads = 4;
+	int num_threads = 2;
 	
 	Trainer train(num_threads);
 	std::cout << "Default Performance:\n";
@@ -20,9 +20,9 @@ int main()
 	
 	for(int i = 0; i < 10000; i++)
 	{
-		train.trainThreads();
+		//train.trainThreads();
+		train.train();
 		train.evaluate_validation_dataset();
-		// train.train();
 		train.save();    
 		
 		// if((i % 40) == 39)

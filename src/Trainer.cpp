@@ -386,7 +386,7 @@ void Trainer::evaluate_cv3()
     {
       std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
       evaluateTrajectory(traj, x_list, loss);
-      //plotTrajectory(traj, x_list);
+      // plotTrajectory(traj, x_list);
       
       loss_avg += loss;
       cnt++;
@@ -437,7 +437,7 @@ void Trainer::updateParams(const VectorF &grad)
 	
     m_squared_grad[i] = 0.95*m_squared_grad[i] + 0.05*ADF(grad_idx*grad_idx);
     m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
-	m_params[i] -= m_l1_weight*m_params[i];
+	m_params[i] -= m_system_adf->getLearningRate()*m_l1_weight*m_params[i];
 	// m_params[i] -= m_system_adf->getLearningRate()*ADF(grad_idx); // Vanilla gradient descent
     norm += CppAD::abs(grad[i]);
   }
@@ -471,7 +471,6 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   std::vector<double> model_yaw(x_list.size());
   std::vector<double> model_vx(x_list.size());
   std::vector<double> model_vy(x_list.size());
-  std::vector<double> model_wz(x_list.size());
   
   std::vector<double> gt_x(x_list.size());
   std::vector<double> gt_y(x_list.size());
@@ -492,7 +491,6 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
     model_yaw[i] = CppAD::Value(2*CppAD::atan(x_list[i][2] / x_list[i][3])); //this is an approximation
 	model_vx[i] = CppAD::Value(x_list[i][14]);
 	model_vy[i] = CppAD::Value(x_list[i][15]);
-	model_wz[i] = CppAD::Value(x_list[i][13]);
 	
     gt_x[i] = traj[i].x;
     gt_y[i] = traj[i].y;
@@ -516,9 +514,9 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   aspect_ratio_hack_y[1] = max;
 
   plt::subplot(1,6,1);
-  plt::plot(model_wz);
-  plt::plot(gt_wz);
-  plt::title("Wz");
+  plt::plot(gt_vl);
+  plt::plot(gt_vr);
+  plt::title("Vl Vr");
   
   plt::subplot(1,6,2);
   plt::title("X-Y plot");

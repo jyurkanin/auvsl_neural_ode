@@ -10,9 +10,9 @@ VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics
 	this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
 	this->setNumSteps(10);
 	this->setTimestep(0.001);  //unused
-	this->setLearningRate(1e-4f);
+	this->setLearningRate(1e-3f);
 	
-	m_penalty_weight = 1e-3;
+	m_penalty_weight = 0.0;
 }
 
 template<typename Scalar>

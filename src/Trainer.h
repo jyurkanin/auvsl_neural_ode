@@ -92,7 +92,7 @@ private:
   const int m_eval_steps = 600;
   const int m_inc_train_steps = 600;
   const int m_inc_eval_steps = 600;
-  const double m_l1_weight = 0.0;
+  const double m_l1_weight = 0.1;
   
   const int m_num_threads;
 

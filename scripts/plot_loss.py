@@ -6,39 +6,28 @@ f = open("../build/train_output.txt")
 
 
 training_loss = []
-cv3_loss = []
-ld3_loss = []
+validation = []
 param0 = []
+
 for line in f:
-    if re.match("Avg Loss", line):
+    if ("Avg Loss" in line) or ("Average" in line):
         training_loss.append(float(line.split()[2].replace(",","")))
-    elif re.match("CV3 avg", line):
-        cv3_loss.append(float(line.split()[3].replace(",","")))
-    elif re.match("LD3 avg", line):
-        ld3_loss.append(float(line.split()[3].replace(",","")))
-    elif re.match("Param norm", line):
-        param0.append(float(line.split()[4].replace(",","")))
+    elif("validation" in line):
+        validation.append(float(line.split()[3].replace(",","")))
+    elif("Gradient" in line):
+        param0.append(float(line.split()[4]))
 
-
-plt.subplot(4,1,1)
-plt.plot(training_loss, marker='o')
-#plt.yscale(value="log")
+plt.subplot(3,1,1)
+plt.plot(training_loss, marker='2')
 plt.title("Training Loss")
 
-plt.subplot(4,1,2)
-plt.plot(cv3_loss, marker='o')
-#plt.yscale(value="log")
-plt.title("CV3 Loss")
+plt.subplot(3,1,2)
+plt.plot(validation, marker='2')
+plt.title("Validation Loss")
 
-plt.subplot(4,1,3)
-plt.plot(ld3_loss, marker='o')
-#plt.yscale(value="log")
-plt.title("LD3 Loss")
-
-plt.subplot(4,1,4)
-plt.plot(param0, marker='o')
-#plt.yscale(value="log")
-plt.title("Param[0]")
+plt.subplot(3,1,3)
+plt.plot(param0, marker='2')
+plt.title("Param[0] Loss")
 
 plt.tight_layout()
 plt.show()

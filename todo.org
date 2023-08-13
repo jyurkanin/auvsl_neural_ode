@@ -19,7 +19,11 @@ It was trash.
 - LD3: 4.205%
 
 
-** TODO Hack the sign of Fy
+** TODO You could delete the front of the test trajectories
+There is a short period of time where each trajectory is basically
+motionless. So you could delete that shit.
+
+** DONE Hack the sign of Fy
 You're seeing a lateral bias when moving forward. Can't be
 good for validation loss.
 
