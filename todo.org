@@ -5,6 +5,7 @@ Updates
 It's so over. :DDDDD
 
 ** TODO Double check you've addressed all the dumbass comments
+Mostly
 ** TODO Generate all plots with a single executable
 ** TODO Create code to run the shit with the bekker model
 ** TODO REWRITE IT
