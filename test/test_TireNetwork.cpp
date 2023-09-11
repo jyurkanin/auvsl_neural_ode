@@ -1,10 +1,10 @@
 #include <matplotlibcpp.h>
-#include <cpp_bptt.h>
 
 #include "gtest/gtest.h"
 #include "TireNetwork.h"
 #include "VehicleSystem.h"
 #include "generated/model_constants.h"
+#include "types/Scalars.h"
 
 namespace plt = matplotlibcpp;
 

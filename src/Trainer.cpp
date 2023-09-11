@@ -41,7 +41,7 @@ size_t give_me_thread_id()
   return 100; //bad.
 }
 
-Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
+Trainer::Trainer(std::shared_ptr<SystemFactory<ADF>> factory, int num_threads) : m_factory_adf{factory}, m_num_threads{num_threads}
 {
   // Enable CppAD multithreading. Sucky.
   g_id_map.resize(num_threads+1);
@@ -53,7 +53,7 @@ Trainer::Trainer(int num_threads) : m_num_threads{num_threads}
   CppAD::parallel_ad<ADF>();
   g_parallel_mode = true; // "O.K." - Saitama
   
-  m_system_adf = std::make_shared<VehicleSystem<ADF>>();  
+  m_system_adf = m_factory_adf->makeSystem();
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
   m_squared_grad = VectorAD::Ones(m_system_adf->getNumParams());
@@ -74,17 +74,24 @@ Trainer::~Trainer()
 
 void Trainer::computeEqState()
 {
-  m_system_adf->m_hybrid_dynamics.initState(); //set start pos to 0,0,.16 and orientation to 0,0,0,1
-  m_system_adf->m_hybrid_dynamics.settle();     //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
+	VectorAD state = VectorAD::Zero(m_system_adf->getStateDim());
 
-  m_quat_stable = VectorAD::Zero(4);
-  m_quat_stable[0] = m_system_adf->m_hybrid_dynamics.state_[0];
-  m_quat_stable[1] = m_system_adf->m_hybrid_dynamics.state_[1];
-  m_quat_stable[2] = m_system_adf->m_hybrid_dynamics.state_[2];
-  m_quat_stable[3] = m_system_adf->m_hybrid_dynamics.state_[3];
-  
-  m_z_stable = m_system_adf->m_hybrid_dynamics.state_[6];
-  std::cout << "z_stable " << m_z_stable << "\n";
+	m_system_adf->getDefaultInitialState(state);
+	
+	m_quat_stable = VectorAD::Zero(4);
+	m_quat_stable[0] = state[0];
+	m_quat_stable[1] = state[1];
+	m_quat_stable[2] = state[2];
+	m_quat_stable[3] = state[3];
+	
+	m_z_stable = state[6];
+	std::cout << "Stable Quaternion: "
+			  << m_quat_stable[0] << ", "
+		      << m_quat_stable[1] << ", "
+		      << m_quat_stable[2] << ", "
+		      << m_quat_stable[3] << "\n";
+		
+	std::cout << "z_stable: " << m_z_stable << "\n";
 }
 
 // ,time,vel_left,vel_right,x,y,yaw,wx,wy,wz
@@ -106,7 +113,7 @@ void Trainer::loadDataFile(std::string fn)
 	char comma;
 	int idx;
 	double wx, wy;
-	DataRow row;
+	GroundTruthDataRow row;
 
 	m_data.clear();
 	while(data_file.peek() != EOF)
@@ -123,6 +130,7 @@ void Trainer::loadDataFile(std::string fn)
 		data_file >> row.wz >> comma;
 		data_file >> row.vx >> comma;
 		data_file >> row.vy; // >> comma;
+		row.z = CppAD::Value(m_z_stable);
 		
 		m_data.push_back(row);
 	}
@@ -131,10 +139,7 @@ void Trainer::loadDataFile(std::string fn)
 
 void Trainer::train()
 {
-	m_system_adf->setNumSteps(m_train_steps);
-  
 	VectorF traj_grad(m_system_adf->getNumParams());
-	int traj_len = m_train_steps;
 	double loss;
 	double avg_loss = 0;
 	std::vector<VectorAD> x_list(m_train_steps);
@@ -150,9 +155,9 @@ void Trainer::train()
 		std::string fn(fn_array);
 		loadDataFile(fn);
     
-		for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_train_steps)
+		for(int j = 0; j < (m_data.size() - m_train_steps); j += m_inc_train_steps)
 		{
-			std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
+			std::vector<GroundTruthDataRow> traj(m_data.begin() + j, m_data.begin() + j + m_train_steps);
       
 			trainTrajectory(traj, x_list, traj_grad, loss);
       
@@ -213,13 +218,11 @@ void Trainer::trainThreads()
     m_workers[i].m_thread = std::thread(worker_lambda, &m_workers[i]);
   }
   
-  m_system_adf->setNumSteps(m_train_steps);
-
   m_cnt = 0;
   m_batch_loss = 0;
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
   
-  int traj_len = m_train_steps;
+  int m_train_steps = m_train_steps;
   char fn_array[100];
 
   int cnt_workers = 0;
@@ -231,9 +234,9 @@ void Trainer::trainThreads()
     std::string fn(fn_array);
     loadDataFile(fn);
 	
-    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_train_steps)
+    for(int j = 0; j < (m_data.size() - m_train_steps); j += m_inc_train_steps)
     {
-      std::vector<DataRow> traj(m_data.begin() + j, m_data.begin() + j + traj_len);
+      std::vector<GroundTruthDataRow> traj(m_data.begin() + j, m_data.begin() + j + m_train_steps);
       assignWork(traj);
     }
   }
@@ -253,7 +256,7 @@ void Trainer::trainThreads()
   }
 }
 
-void Trainer::assignWork(const std::vector<DataRow> &traj)
+void Trainer::assignWork(const std::vector<GroundTruthDataRow> &traj)
 {
 	while(true)
 	{
@@ -297,10 +300,7 @@ void Trainer::finishWork()
 
 void Trainer::evaluate_validation_dataset()
 {
-  m_system_adf->setNumSteps(m_eval_steps);
-  
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
-  int traj_len = m_system_adf->getNumSteps();
+  std::vector<VectorAD> x_list(m_eval_steps);
   char fn_array[100];
   
   double loss = 0;
@@ -314,9 +314,9 @@ void Trainer::evaluate_validation_dataset()
   std::string fn(fn_array);
   loadDataFile(fn);
     
-  for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
+  for(int j = 0; j < (m_data.size() - m_eval_steps); j += m_inc_eval_steps)
   {
-	  std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
+	  std::vector<GroundTruthDataRow> traj(m_data.begin()+j, m_data.begin()+j+m_eval_steps);
 	  evaluateTrajectory(traj, x_list, loss);
 	  // plotTrajectory(traj, x_list);
   }
@@ -326,10 +326,7 @@ void Trainer::evaluate_validation_dataset()
 
 void Trainer::evaluate_train3()
 {
-  m_system_adf->setNumSteps(m_eval_steps);
-  
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
-  int traj_len = m_system_adf->getNumSteps();
+  std::vector<VectorAD> x_list(m_eval_steps);
   char fn_array[100];
   
   double loss_avg = 0;
@@ -347,9 +344,9 @@ void Trainer::evaluate_train3()
     std::string fn(fn_array);
     loadDataFile(fn);
     
-    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
+    for(int j = 0; j < (m_data.size() - m_eval_steps); j += m_inc_eval_steps)
     {
-		std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
+		std::vector<GroundTruthDataRow> traj(m_data.begin()+j, m_data.begin()+j+m_eval_steps);
 		evaluateTrajectory(traj, x_list, loss);
 		// plotTrajectory(traj, x_list);
 		
@@ -364,105 +361,99 @@ void Trainer::evaluate_train3()
 
 void Trainer::evaluate_cv3()
 {
-  m_system_adf->setNumSteps(m_eval_steps);
+	std::vector<VectorAD> x_list(m_eval_steps);
+	char fn_array[100];
   
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
-  int traj_len = m_system_adf->getNumSteps();
-  char fn_array[100];
+	double loss_avg = 0;
+	double loss = 0;
+	int cnt = 0;
   
-  double loss_avg = 0;
-  double loss = 0;
-  int cnt = 0;
-  
-  for(int i = 1; i <= 144; i++)
-  {
-    memset(fn_array, 0, 100);
-    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
+	for(int i = 1; i <= 144; i++)
+	{
+		memset(fn_array, 0, 100);
+		sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
     
-    std::string fn(fn_array);
-    loadDataFile(fn);
+		std::string fn(fn_array);
+		loadDataFile(fn);
     
-    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
-    {
-      std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
-      evaluateTrajectory(traj, x_list, loss);
-      // plotTrajectory(traj, x_list);
+		for(int j = 0; j < (m_data.size() - m_eval_steps); j += m_inc_eval_steps)
+		{
+			std::vector<GroundTruthDataRow> traj(m_data.begin()+j, m_data.begin()+j+m_eval_steps);
+			evaluateTrajectory(traj, x_list, loss);
+			// plotTrajectory(traj, x_list);
       
-      loss_avg += loss;
-      cnt++;
-    }
-  }
+			loss_avg += loss;
+			cnt++;
+		}
+	}
   
-  std::cout << "CV3 avg loss: " << loss_avg/cnt << "\n";
+	std::cout << "CV3 avg loss: " << loss_avg/cnt << "\n";
 }
 
 void Trainer::evaluate_ld3()
 {
-  m_system_adf->setNumSteps(m_eval_steps);
+	std::vector<VectorAD> x_list(m_eval_steps);
+	char fn_array[100];
   
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
-  int traj_len = m_system_adf->getNumSteps();
-  char fn_array[100];
-  
-  double loss_avg = 0;
-  double loss = 0;
-  int cnt = 0;
+	double loss_avg = 0;
+	double loss = 0;
+	int cnt = 0;
     
-  memset(fn_array, 0, 100);
-  sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/LD3_data%02d.csv", 1);
-  std::string fn(fn_array);
+	memset(fn_array, 0, 100);
+	sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/LD3_data%02d.csv", 1);
+	std::string fn(fn_array);
 
-  loadDataFile(fn);
-  for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
-  {
-    std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
-    evaluateTrajectory(traj, x_list, loss);
-    // plotTrajectory(traj, x_list);
+	loadDataFile(fn);
+	for(int j = 0; j < (m_data.size() - m_eval_steps); j += m_inc_eval_steps)
+	{
+		std::vector<GroundTruthDataRow> traj(m_data.begin()+j, m_data.begin()+j+m_eval_steps);
+		evaluateTrajectory(traj, x_list, loss);
+		// plotTrajectory(traj, x_list);
     
-    loss_avg += loss;
-    cnt++;
-  }
+		loss_avg += loss;
+		cnt++;
+	}
   
-  std::cout << "LD3 avg loss: " << loss_avg/cnt << "\n";
+	std::cout << "LD3 avg loss: " << loss_avg/cnt << "\n";
 }
 
 void Trainer::updateParams(const VectorF &grad)
 {
-  ADF norm = 0;
-  float grad_idx;
+	ADF norm = 0;
+	float grad_idx;
   
-  for(int i = 0; i < m_params.size(); i++)
-  {
-    grad_idx = grad[i];
+	for(int i = 0; i < m_params.size(); i++)
+	{
+		grad_idx = grad[i];
 	
-    m_squared_grad[i] = 0.95*m_squared_grad[i] + 0.05*ADF(grad_idx*grad_idx);
-    m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
-	m_params[i] -= m_system_adf->getLearningRate()*m_l1_weight*m_params[i];
-	// m_params[i] -= m_system_adf->getLearningRate()*ADF(grad_idx); // Vanilla gradient descent
-    norm += CppAD::abs(grad[i]);
-  }
+		m_squared_grad[i] = 0.95*m_squared_grad[i] + 0.05*ADF(grad_idx*grad_idx);
+		m_params[i] -= (m_lr/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
+		m_params[i] -= m_lr*m_l1_weight*m_params[i];
+		// m_params[i] -= m_lr*ADF(grad_idx); // Vanilla gradient descent
+		norm += CppAD::abs(grad[i]);
+	}
 
-  ADF update0 = (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[0]) + 1e-6))*ADF(grad[0]);
-  //ADF update0 = m_system_adf->getLearningRate()*ADF(grad[0]);
-  std::cout << "Gradient norm: " << CppAD::Value(norm)
-			<< " Param[0]: " << CppAD::Value(m_params[0])
-			<< " grad[0]: " << grad[0]
-			<< " update[0]: " << CppAD::Value(update0)
-			<< " squared_grad[0]: " << CppAD::Value(CppAD::sqrt(m_squared_grad[0])) << "\n";
-  for(int i = 0; i < m_params.size(); i++)
-  {
+	ADF update0 = (m_lr/(CppAD::sqrt(m_squared_grad[0]) + 1e-6))*ADF(grad[0]);
+	//ADF update0 = m_lr*ADF(grad[0]);
+	std::cout << "Gradient norm: " << CppAD::Value(norm)
+			  << " Param[0]: " << CppAD::Value(m_params[0])
+			  << " grad[0]: " << grad[0]
+			  << " update[0]: " << CppAD::Value(update0)
+			  << " squared_grad[0]: " << CppAD::Value(CppAD::sqrt(m_squared_grad[0])) << "\n";
+	for(int i = 0; i < m_params.size(); i++)
+	{
     
-    if(CppAD::abs(m_params[i]) > 100.0)
-    {
-      std::cout << "Param[" << i <<"] Exploded: " << CppAD::Value(m_params[i]) << "\n";
-      break;
-    }
-  }
+		if(CppAD::abs(m_params[i]) > 100.0)
+		{
+			std::cout << "Param[" << i <<"] Exploded: " << CppAD::Value(m_params[i]) << "\n";
+			break;
+		}
+	}
 
-  m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
+	m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
 }
 
-void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector<VectorAD> &x_list)
+void Trainer::plotTrajectory(const std::vector<GroundTruthDataRow> &traj, const std::vector<VectorAD> &x_list)
 {
   assert(traj.size() == x_list.size());
   std::vector<double> model_x(x_list.size());
@@ -551,129 +542,124 @@ void Trainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector
   plt::show();
 }
 
-void Trainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<VectorAD> &x_list, double &loss)
+void Trainer::evaluateTrajectory(const std::vector<GroundTruthDataRow> &traj, std::vector<VectorAD> &x_list, double &loss)
 {
-  m_system_adf->setParams(m_params);
+	m_system_adf->setParams(m_params);
   
-  m_system_adf->setNumSteps(m_eval_steps);
+	VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+	VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
   
-  VectorAD xk(m_system_adf->getStateDim());
-  VectorAD xk1(m_system_adf->getStateDim());
-  
-  initializeState(traj[0], xk);
-  x_list[0] = xk;
+	xk = m_system_adf->initializeState(traj[0]);
+	x_list[0] = xk;
 
-  ADF traj_len = 0;
-  VectorAD gt_vec;
-  for(int i = 1; i < x_list.size(); i++)
-  {
-	  xk[HybridDynamics::STATE_DIM+0] = traj[i-1].vl;
-	  xk[HybridDynamics::STATE_DIM+1] = traj[i-1].vr;
+	ADF traj_len = 0;
+	VectorAD gt_vec;
+	for(int i = 1; i < x_list.size(); i++)
+	{
+		xk[m_system_adf->getStateDim()+0] = traj[i-1].vl;
+		xk[m_system_adf->getStateDim()+1] = traj[i-1].vr;
     
-    m_system_adf->integrate(xk, xk1);
-    xk = xk1;
-    x_list[i] = xk;
+		m_system_adf->integrate(xk, xk1);
+		xk = xk1;
+		x_list[i] = xk;
     
-    gt_vec = VectorAD::Zero(m_system_adf->getStateDim());
+		gt_vec = VectorAD::Zero(m_system_adf->getStateDim());
     
-    gt_vec[3] = ADF(traj[i].yaw);
-    gt_vec[4] = ADF(traj[i].x);
-    gt_vec[5] = ADF(traj[i].y);
+		gt_vec[3] = ADF(traj[i].yaw);
+		gt_vec[4] = ADF(traj[i].x);
+		gt_vec[5] = ADF(traj[i].y);
 
-    ADF dx = traj[i].x - traj[i-1].x;
-    ADF dy = traj[i].y - traj[i-1].y;
+		ADF dx = traj[i].x - traj[i-1].x;
+		ADF dy = traj[i].y - traj[i-1].y;
 
-    traj_len += CppAD::sqrt(dx*dx + dy*dy);
-  }
+		traj_len += CppAD::sqrt(dx*dx + dy*dy);
+	}
   
-  // plotTrajectory(traj, x_list);
+	// plotTrajectory(traj, x_list);
   
-  // This could also be a running loss instead of a terminal loss
-  Scalar ang_mse;
-  Scalar lin_mse;
-  m_system_adf->evaluate(gt_vec, x_list.back(), ang_mse, lin_mse);
-  //std::cout << "Lin err " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Ang err " << CppAD::Value(CppAD::sqrt(ang_mse)) << "\n";
+	// This could also be a running loss instead of a terminal loss
+	ADF ang_mse;
+	ADF lin_mse;
+	m_system_adf->evaluate(gt_vec, x_list.back(), ang_mse, lin_mse);
+	//std::cout << "Lin err " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Ang err " << CppAD::Value(CppAD::sqrt(ang_mse)) << "\n";
 
-  loss = CppAD::Value(CppAD::sqrt(lin_mse) / traj_len);
-  // std::cout << "Lin err: " << CppAD::Value(CppAD::sqrt(lin_mse))
-  // 	    << " traj_len: " << CppAD::Value(traj_len)
-  // 	    << " Relative Linear: " << loss << "\n";
+	loss = CppAD::Value(CppAD::sqrt(lin_mse) / traj_len);
+	// std::cout << "Lin err: " << CppAD::Value(CppAD::sqrt(lin_mse))
+	// 	    << " traj_len: " << CppAD::Value(traj_len)
+	// 	    << " Relative Linear: " << loss << "\n";
   
   
   
 }
 
-void Trainer::trainTrajectory(const std::vector<DataRow> &traj,
+void Trainer::trainTrajectory(const std::vector<GroundTruthDataRow> &traj,
 							  std::vector<VectorAD> &x_list,
 							  VectorF &gradient,
 							  double& loss)
 {
-  std::shared_ptr<VehicleSystem<ADF>> system_adf = std::make_shared<VehicleSystem<ADF>>();
-  system_adf->reset();
-  system_adf->setNumSteps(m_train_steps);
+	std::shared_ptr<System<ADF>> system_adf = m_factory_adf->makeSystem();
   
-  VectorAD params = m_params;
-  VectorAD loss_ad(1);
-  VectorAD xk(system_adf->getStateDim());
-  VectorAD xk1(system_adf->getStateDim());
+	VectorAD params = m_params;
+	VectorAD loss_ad(1);
+	VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+	VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
   
-  initializeState(traj[0], xk);
-  xk[HybridDynamics::STATE_DIM+0] = traj[0].vl;
-  xk[HybridDynamics::STATE_DIM+1] = traj[0].vr;
+	xk = m_system_adf->initializeState(traj[0]);
+	xk[m_system_adf->getStateDim()+0] = traj[0].vl;
+	xk[m_system_adf->getStateDim()+1] = traj[0].vr;
   
-  CppAD::Independent(params);
-  system_adf->setParams(params);
+	CppAD::Independent(params);
+	system_adf->setParams(params);
     
-  initializeState(traj[0], xk);
-  x_list[0] = xk;
-  loss_ad[0] = 0;
+	xk = m_system_adf->initializeState(traj[0]);
+	x_list[0] = xk;
+	loss_ad[0] = 0;
   
-  ADF traj_len = 0;
+	ADF traj_len = 0;
   
-  VectorAD gt_vec;
-  for(int i = 1; i < x_list.size(); i++)
-  {
-    xk[HybridDynamics::STATE_DIM+0] = traj[i-1].vl;
-    xk[HybridDynamics::STATE_DIM+1] = traj[i-1].vr;
+	VectorAD gt_vec;
+	for(int i = 1; i < x_list.size(); i++)
+	{
+		xk[m_system_adf->getStateDim()+0] = traj[i-1].vl;
+		xk[m_system_adf->getStateDim()+1] = traj[i-1].vr;
+	
+		system_adf->integrate(xk, xk1);
+		xk = xk1;
+		x_list[i] = xk;
     
-    system_adf->integrate(xk, xk1);
-    xk = xk1;
-    x_list[i] = xk;
+		gt_vec = VectorAD::Zero(system_adf->getStateDim());
+		gt_vec[3] = ADF(traj[i].yaw);
+		gt_vec[4] = ADF(traj[i].x);
+		gt_vec[5] = ADF(traj[i].y);
+		gt_vec[13] = ADF(traj[i].wz);
+		gt_vec[14] = ADF(traj[i].vx);
+		gt_vec[15] = ADF(traj[i].vy);
     
-    gt_vec = VectorAD::Zero(system_adf->getStateDim());
-    gt_vec[3] = ADF(traj[i].yaw);
-    gt_vec[4] = ADF(traj[i].x);
-    gt_vec[5] = ADF(traj[i].y);
-	gt_vec[13] = ADF(traj[i].wz);
-	gt_vec[14] = ADF(traj[i].vx);
-	gt_vec[15] = ADF(traj[i].vy);
+		ADF dx = traj[i].x - traj[i-1].x;
+		ADF dy = traj[i].y - traj[i-1].y;
     
-    ADF dx = traj[i].x - traj[i-1].x;
-    ADF dy = traj[i].y - traj[i-1].y;
-    
-    traj_len += CppAD::sqrt(dx*dx + dy*dy);
-    loss_ad[0] += system_adf->loss(gt_vec, x_list[i]);
-  }
+		traj_len += CppAD::sqrt(dx*dx + dy*dy);
+		loss_ad[0] += system_adf->loss(gt_vec, x_list[i]);
+	}
 
-  loss_ad[0] /= x_list.size();
-  //loss_ad[0] = system_adf->loss(gt_vec, x_list.back());
+	loss_ad[0] /= x_list.size();
+	//loss_ad[0] = system_adf->loss(gt_vec, x_list.back());
   
-  if(traj_len == 0)
-  {
-    traj_len = 1; //dont let a divide by zero happen.
-  }
+	if(traj_len == 0)
+	{
+		traj_len = 1; //dont let a divide by zero happen.
+	}
   
-  loss_ad[0] = loss_ad[0] / traj_len;
-  CppAD::ADFun<double> func(params, loss_ad);
+	loss_ad[0] = loss_ad[0] / traj_len;
+	CppAD::ADFun<double> func(params, loss_ad);
   
-  // std::cout << "Penalty: " << CppAD::Value(system_adf->getPenalty()) << "\n";
-  // std::cout << "Loss: " << CppAD::Value(system_adf->loss(gt_vec, x_list.back())) << "\n\n";
+	// std::cout << "Loss: " << CppAD::Value(system_adf->loss(gt_vec, x_list.back())) << "\n\n";
   
-  VectorF y0(1);
-  y0[0] = 1;
+	VectorF y0(1);
+	y0[0] = 1;
   
-  gradient = func.Reverse(1, y0);
-  loss = CppAD::Value(loss_ad[0]);
+	gradient = func.Reverse(1, y0);
+	loss = CppAD::Value(loss_ad[0]);
 }
 
 bool Trainer::combineResults(VectorF &batch_grad,
@@ -704,63 +690,6 @@ bool Trainer::combineResults(VectorF &batch_grad,
   }
   
   return false;
-}
-
-
-
-void Trainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
-{
-  ADF xk[m_system_adf->m_hybrid_dynamics.STATE_DIM];
-  ADF xk_base[m_system_adf->m_hybrid_dynamics.STATE_DIM]; 
-  VectorAD yaw_quat(4);  
-  
-  yaw_quat[0] = 0;
-  yaw_quat[1] = 0;
-  yaw_quat[2] = std::sin(gt_state.yaw / 2.0); // rotating by yaw around z axis
-  yaw_quat[3] = std::cos(gt_state.yaw / 2.0); // https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
-  
-  // m_quat_stable * yaw_quat
-  // xk[0] = m_quat_stable[3]*yaw_quat[0] + m_quat_stable[0]*yaw_quat[3] + m_quat_stable[1]*yaw_quat[2] - m_quat_stable[2]*yaw_quat[1];
-  // xk[1] = m_quat_stable[3]*yaw_quat[1] + m_quat_stable[1]*yaw_quat[3] + m_quat_stable[2]*yaw_quat[0] - m_quat_stable[0]*yaw_quat[2];
-  // xk[2] = m_quat_stable[3]*yaw_quat[2] + m_quat_stable[2]*yaw_quat[3] + m_quat_stable[0]*yaw_quat[1] - m_quat_stable[1]*yaw_quat[0];
-  // xk[3] = m_quat_stable[3]*yaw_quat[3] - m_quat_stable[0]*yaw_quat[0] - m_quat_stable[1]*yaw_quat[1] - m_quat_stable[2]*yaw_quat[2];
-
-  xk[0] = yaw_quat[0]; // Quaternion. Sets initial yaw.
-  xk[1] = yaw_quat[1];
-  xk[2] = yaw_quat[2];
-  xk[3] = yaw_quat[3];
-  
-  xk[4] = gt_state.x; // Position
-  xk[5] = gt_state.y;
-  xk[6] = m_z_stable;
-
-  xk[7] = 0; // Joint positions
-  xk[8] = 0;
-  xk[9] = 0;
-  xk[10] = 0;
-
-  xk[11] = 0; // Spatial Velocity
-  xk[12] = 0;
-  xk[13] = gt_state.wz;
-  xk[14] = gt_state.vx;
-  xk[15] = gt_state.vy;
-  xk[16] = 0;
-
-  xk[17] = 0; // Joint velocities
-  xk[18] = 0;
-  xk[19] = 0;
-  xk[20] = 0;
-
-  // Unfortunately, the state vector is not expressed at the COM. Depressing. So we must transform it
-  m_system_adf->m_hybrid_dynamics.initStateCOM(&xk[0], &xk_base[0]);
-  
-  for(int i = 0; i < m_system_adf->m_hybrid_dynamics.STATE_DIM; i++)
-  {
-    xk_robot[i] = xk_base[i];
-  }
-  
-  xk_robot[21] = gt_state.vl; // Control tire velocities
-  xk_robot[22] = gt_state.vr;
 }
 
 void Trainer::save()

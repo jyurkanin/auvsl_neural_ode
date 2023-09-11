@@ -1,8 +1,6 @@
 #include <vector>
 #include "gtest/gtest.h"
 
-#include <cpp_bptt.h>
-#include <cpp_neural.h>
 #include "Trainer.h"
 
 namespace {

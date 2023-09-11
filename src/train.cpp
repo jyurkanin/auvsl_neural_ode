@@ -8,8 +8,9 @@
 int main()
 {
 	int num_threads = 2;
-	
-	Trainer train(num_threads);
+
+	std::shared_ptr<VehicleSystemFactory<ADF>> factory = std::make_shared<VehicleSystemFactory<ADF>>();
+	Trainer train(factory, num_threads);
 	std::cout << "Default Performance:\n";
 	
 	train.load();

@@ -2,8 +2,6 @@
 #include "gtest/gtest.h"
 
 #include <matplotlibcpp.h>
-#include <cpp_bptt.h>
-#include <cpp_neural.h>
 
 #include "HybridDynamics.h"
 #include "VehicleSystem.h"

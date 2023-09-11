@@ -5,14 +5,11 @@
 #include <assert.h>
 
 template<typename Scalar>
-VehicleSystem<Scalar>::VehicleSystem() : cpp_bptt::System<Scalar>(HybridDynamics::STATE_DIM + HybridDynamics::CNTRL_DIM, 0)
+VehicleSystem<Scalar>::VehicleSystem()
 {
 	this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
-	this->setNumSteps(10);
-	this->setTimestep(0.001);  //unused
-	this->setLearningRate(1e-3f);
-	
-	m_penalty_weight = 0.0;
+	this->setStateDim(HybridDynamics::STATE_DIM);
+	this->setControlDim(HybridDynamics::CNTRL_DIM);
 }
 
 template<typename Scalar>
@@ -89,14 +86,9 @@ Scalar VehicleSystem<Scalar>::loss(const VectorS &gt_vec, VectorS &vec)
 	Scalar vy_err = CppAD::abs(gt_vec[15] - vec[15]);
 	Scalar vel_err = .1*(wz_err+vx_err+vy_err);
 
-	return ang_err + lin_err; // + m_hybrid_dynamics.m_penalty*m_penalty_weight;
+	return ang_err + lin_err;
 }
 
-template<typename Scalar>
-Scalar VehicleSystem<Scalar>::getPenalty()
-{
-	return m_hybrid_dynamics.m_penalty;
-}
 
 template<typename Scalar>
 void VehicleSystem<Scalar>::evaluate(const VectorS &gt_vec, const VectorS &vec, Scalar &ang_mse, Scalar &lin_mse)
@@ -156,9 +148,15 @@ void VehicleSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
 template<typename Scalar>
 void VehicleSystem<Scalar>::getDefaultInitialState(VectorS &state)
 {
-  state = VectorS::Zero(this->getStateDim());
-  state[3] = Scalar(1.0);
-  state[6] = Scalar(0.16);
+	state = VectorS::Zero(this->getStateDim());
+  
+	m_hybrid_dynamics.initState(); //set start pos to 0,0,.16 and orientation to 0,0,0,1
+	m_hybrid_dynamics.settle();     //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
+
+	for(int i = 0; i < this->getStateDim(); i++)
+	{
+		state[i] = m_hybrid_dynamics.state_[i];
+	}
 }
 
 template<typename Scalar>
@@ -169,10 +167,59 @@ void VehicleSystem<Scalar>::getDefaultParams(VectorS &params)
 }
 
 template<typename Scalar>
-void VehicleSystem<Scalar>::reset()
+VehicleSystem<Scalar>::VectorS VehicleSystem<Scalar>::initializeState(const GroundTruthDataRow &gt_state)
 {
-	m_hybrid_dynamics.m_penalty = 0;
+	Scalar xk[this->getStateDim()];
+	Scalar xk_base[this->getStateDim()];
+	VectorS xk_robot(this->getStateDim() +
+					 this->getControlDim());
+	VectorS yaw_quat(4);  
+  
+	yaw_quat[0] = 0;
+	yaw_quat[1] = 0;
+	yaw_quat[2] = std::sin(gt_state.yaw / 2.0); // rotating by yaw around z axis
+	yaw_quat[3] = std::cos(gt_state.yaw / 2.0); // https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
+	
+	xk[0] = yaw_quat[0]; // Quaternion. Sets initial yaw.
+	xk[1] = yaw_quat[1];
+	xk[2] = yaw_quat[2];
+	xk[3] = yaw_quat[3];
+  
+	xk[4] = gt_state.x; // Position
+	xk[5] = gt_state.y;
+	xk[6] = gt_state.z;
+
+	xk[7] = 0; // Joint positions
+	xk[8] = 0;
+	xk[9] = 0;
+	xk[10] = 0;
+
+	xk[11] = 0; // Spatial Velocity
+	xk[12] = 0;
+	xk[13] = gt_state.wz;
+	xk[14] = gt_state.vx;
+	xk[15] = gt_state.vy;
+	xk[16] = 0;
+
+	xk[17] = 0; // Joint velocities
+	xk[18] = 0;
+	xk[19] = 0;
+	xk[20] = 0;
+
+	// Unfortunately, the state vector is not expressed at the COM. Depressing. So we must transform it
+	m_hybrid_dynamics.initStateCOM(&xk[0], &xk_base[0]);
+  
+	for(int i = 0; i < this->getStateDim(); i++)
+	{
+		xk_robot[i] = xk_base[i];
+	}
+  
+	xk_robot[21] = gt_state.vl; // Control tire velocities
+	xk_robot[22] = gt_state.vr;
+
+	return xk_robot;
 }
+
 
 template class VehicleSystem<ADF>;
 //template class VehicleSystem<ADAD>;

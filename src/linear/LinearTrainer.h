@@ -1,8 +1,8 @@
 #pragma once
 
-#include <cpp_bptt.h>
-
 #include "linear/LinearSystem.h"
+#include "types/Scalars.h"
+
 #include <string>
 #include <atomic>
 #include <vector>
@@ -25,6 +25,11 @@ struct DataRow
 class LinearTrainer
 {
 public:
+	typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorF;
+	typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixF;
+	typedef Eigen::Matrix<ADF, Eigen::Dynamic, 1> VectorAD;
+	typedef Eigen::Matrix<ADF, Eigen::Dynamic, Eigen::Dynamic> MatrixAD;
+
 	LinearTrainer();
 	~LinearTrainer();
 
@@ -45,6 +50,7 @@ public:
 private:
 	const int m_eval_steps = 600;
 	const int m_inc_eval_steps = 600;
+	const ADF m_lr{1e-3};
 	
 	std::string m_param_file;
 	int m_cnt;
@@ -53,5 +59,5 @@ private:
 	VectorAD m_squared_grad;
 	VectorF m_batch_grad;
 	double m_batch_loss;
-	std::shared_ptr<LinearSystem<ADF>> m_system_adf;
+	std::shared_ptr<LinearSystem> m_system_adf;
 };

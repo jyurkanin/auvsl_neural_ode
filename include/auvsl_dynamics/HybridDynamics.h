@@ -10,6 +10,7 @@
 //My files
 #include "TireNetwork.h"
 #include "BaseNetwork.h"
+#include "BekkerTireModel.h"
 
 //using namespace iit::Fancy;
 using Jackal::rcg::Scalar;
@@ -70,7 +71,7 @@ public:
 	Eigen::Matrix<Scalar,5,1> bekker_params;
 	TireNetwork tire_network; // holds the tire-soil model
 	BaseNetwork base_network; // Base Network
-  
+	
 	Jackal::rcg::HomogeneousTransforms h_transforms; // Not actually used
 	Jackal::rcg::MotionTransforms      m_transforms;
 	Jackal::rcg::ForceTransforms       f_transforms; // Used to convert external forces to the right frame. Oh wait

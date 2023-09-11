@@ -1,32 +1,35 @@
 #pragma once
 
-#include <cpp_bptt.h>
+#include "types/System.h"
+#include "types/Scalars.h"
 
 // I believe this is ready.
 // This represents an ODE and loss function
 
-template<typename Scalar>
-class LinearSystem : public cpp_bptt::System<Scalar>
+///todo: implement the other base class functions
+class LinearSystem : public System<ADF>
 {
 public:
-	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorS;
-	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixS;
+	typedef Eigen::Matrix<ADF, Eigen::Dynamic, 1> VectorAD;
+	typedef Eigen::Matrix<ADF, Eigen::Dynamic, Eigen::Dynamic> MatrixAD;
 	
 	LinearSystem();
 	~LinearSystem();
 
-	virtual void   getDefaultParams(VectorS &params);
-	virtual void   getDefaultInitialState(VectorS &state);
-	virtual void   setParams(const VectorS &params);
-	virtual void   getParams(VectorS &params);
+	virtual void getDefaultParams(VectorAD &params);
+	virtual void getDefaultInitialState(VectorAD &state);
+	virtual void setParams(const VectorAD &params);
+	virtual void getParams(VectorAD &params);
 
 	/// This function represents the model Xd = B*u
 	/// Xd is velocities in body coordinates
-	virtual void   forward(const VectorS &u, VectorS &Xd);
-	virtual Scalar loss(const VectorS &gt_vec, VectorS &vec);
+	virtual void forward(const VectorAD &u, VectorAD &Xd);
+	virtual ADF  loss(const VectorAD &gt_vec, VectorAD &vec);
 
-	void evaluate(const VectorS &gt_vec, const VectorS &vec, Scalar &ang_err, Scalar &lin_err);
-	void integrate(const VectorS &X0, VectorS &X1);  
-	
-	MatrixS m_params;
+	virtual void evaluate(const VectorAD &gt_vec, const VectorAD &vec, ADF &ang_err, ADF &lin_err);
+	virtual void integrate(const VectorAD &X0, VectorAD &X1);  
+
+private:
+	MatrixAD m_params;
+	const ADF m_timestep{1e-2};
 };

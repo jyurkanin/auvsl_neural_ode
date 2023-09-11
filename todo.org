@@ -7,9 +7,24 @@ It's so over. :DDDDD
 ** TODO Double check you've addressed all the dumbass comments
 Mostly
 ** TODO Generate all plots with a single executable
-** TODO Create code to run the shit with the bekker model
-** TODO REWRITE IT
 
+** DONE Create code to run the shit with the bekker model
+Yes.
+*** DONE Create a derived bekker model class to inherit all the
+functionality of the HybridDynamics class
+*** DONE create a new system class and train it.
+*** DONE Remove all use of HybridDynamics from Trainer
+to make it abstract.
+Working on it.
+*** DONE Achieve some dependency injection by using
+a factory class to create VehicleSystem objects.
+*** TODO Run this shit, see what happens
+
+Add some helper functions.
+** Templatize all code for float and ADF
+Oh hell nah
+** TODO REWRITE IT
+the paper
 
 
 * <2023-08-06 Sun 23:20>

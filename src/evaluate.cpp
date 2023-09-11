@@ -6,7 +6,8 @@ int main()
 {
 	int num_threads = 1;
 	
-	Trainer train(num_threads);
+	std::shared_ptr<VehicleSystemFactory<ADF>> factory = std::make_shared<VehicleSystemFactory<ADF>>();
+	Trainer train(factory, num_threads);
 	train.load();
 	
 	train.evaluate_cv3();

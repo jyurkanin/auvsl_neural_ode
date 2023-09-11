@@ -14,7 +14,7 @@ namespace plt = matplotlibcpp;
 
 LinearTrainer::LinearTrainer()
 {  
-	m_system_adf = std::make_shared<LinearSystem<ADF>>();  
+	m_system_adf = std::make_shared<LinearSystem>();  
 	m_params = VectorAD::Zero(m_system_adf->getNumParams());
 	m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
 	m_squared_grad = VectorAD::Zero(m_system_adf->getNumParams());
@@ -135,135 +135,126 @@ void LinearTrainer::train()
 
 void LinearTrainer::evaluate_train3()
 {
-  m_system_adf->setNumSteps(m_eval_steps);
+	std::vector<VectorAD> x_list(m_eval_steps);
+	char fn_array[100];
   
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
-  int traj_len = m_system_adf->getNumSteps();
-  char fn_array[100];
+	double loss_avg = 0;
+	double loss = 0;
+	int cnt = 0;
   
-  double loss_avg = 0;
-  double loss = 0;
-  int cnt = 0;
-  
-  for(int i = 1; i <= 17; i++)
-  {
-    memset(fn_array, 0, 100); //todo: uncomment
-    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
+	for(int i = 1; i <= 17; i++)
+	{
+		memset(fn_array, 0, 100); //todo: uncomment
+		sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
 	
-    // memset(fn_array, 0, 100);
-    // sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
+		// memset(fn_array, 0, 100);
+		// sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
 	
-    std::string fn(fn_array);
-    loadDataFile(fn);
+		std::string fn(fn_array);
+		loadDataFile(fn);
     
-    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
-    {
-		std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
-		evaluateTrajectory(traj, x_list, loss);
-		// plotTrajectory(traj, x_list);
+		for(int j = 0; j < (m_data.size() - m_eval_steps); j += m_inc_eval_steps)
+		{
+			std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+m_eval_steps);
+			evaluateTrajectory(traj, x_list, loss);
+			// plotTrajectory(traj, x_list);
 		
-		loss_avg += loss;
-		cnt++;
-    }
-  }
+			loss_avg += loss;
+			cnt++;
+		}
+	}
   
-  std::cout << "Train3 avg loss: " << loss_avg/cnt << "\n";
+	std::cout << "Train3 avg loss: " << loss_avg/cnt << "\n";
 }
 
 
 void LinearTrainer::evaluate_cv3()
 {
-  m_system_adf->setNumSteps(m_eval_steps);
+	std::vector<VectorAD> x_list(m_eval_steps);
+	char fn_array[100];
   
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
-  int traj_len = m_system_adf->getNumSteps();
-  char fn_array[100];
+	double loss_avg = 0;
+	double loss = 0;
+	int cnt = 0;
   
-  double loss_avg = 0;
-  double loss = 0;
-  int cnt = 0;
-  
-  for(int i = 1; i <= 144; i++)
-  {
-    memset(fn_array, 0, 100);
-    sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
+	for(int i = 1; i <= 144; i++)
+	{
+		memset(fn_array, 0, 100);
+		sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/CV3_data%02d.csv", i);
     
-    std::string fn(fn_array);
-    loadDataFile(fn);
+		std::string fn(fn_array);
+		loadDataFile(fn);
     
-    for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
-    {
-      std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
-      evaluateTrajectory(traj, x_list, loss);
-      //plotTrajectory(traj, x_list);
+		for(int j = 0; j < (m_data.size() - m_eval_steps); j += m_inc_eval_steps)
+		{
+			std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+m_eval_steps);
+			evaluateTrajectory(traj, x_list, loss);
+			//plotTrajectory(traj, x_list);
       
-      loss_avg += loss;
-      cnt++;
-    }
-  }
+			loss_avg += loss;
+			cnt++;
+		}
+	}
   
-  std::cout << "CV3 avg loss: " << loss_avg/cnt << "\n";
+	std::cout << "CV3 avg loss: " << loss_avg/cnt << "\n";
 }
 
 void LinearTrainer::evaluate_ld3()
 {
-  m_system_adf->setNumSteps(m_eval_steps);
+	std::vector<VectorAD> x_list(m_eval_steps);
+	char fn_array[100];
   
-  std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
-  int traj_len = m_system_adf->getNumSteps();
-  char fn_array[100];
-  
-  double loss_avg = 0;
-  double loss = 0;
-  int cnt = 0;
+	double loss_avg = 0;
+	double loss = 0;
+	int cnt = 0;
     
-  memset(fn_array, 0, 100);
-  sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/LD3_data%02d.csv", 1);
-  std::string fn(fn_array);
+	memset(fn_array, 0, 100);
+	sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/LD3_data%02d.csv", 1);
+	std::string fn(fn_array);
 
-  loadDataFile(fn);
-  for(int j = 0; j < (m_data.size() - traj_len); j += m_inc_eval_steps)
-  {
-    std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+traj_len);
-    evaluateTrajectory(traj, x_list, loss);
-    // plotTrajectory(traj, x_list);
+	loadDataFile(fn);
+	for(int j = 0; j < (m_data.size() - m_eval_steps); j += m_inc_eval_steps)
+	{
+		std::vector<DataRow> traj(m_data.begin()+j, m_data.begin()+j+m_eval_steps);
+		evaluateTrajectory(traj, x_list, loss);
+		// plotTrajectory(traj, x_list);
     
-    loss_avg += loss;
-    cnt++;
-  }
+		loss_avg += loss;
+		cnt++;
+	}
   
-  std::cout << "LD3 avg loss: " << loss_avg/cnt << "\n";
+	std::cout << "LD3 avg loss: " << loss_avg/cnt << "\n";
 }
 
 void LinearTrainer::updateParams(const VectorF &grad)
 {
-  ADF norm = 0;
-  float grad_idx;
+	ADF norm = 0;
+	float grad_idx;
   
-  for(int i = 0; i < m_params.size(); i++)
-  {
-    grad_idx = grad[i];
+	for(int i = 0; i < m_params.size(); i++)
+	{
+		grad_idx = grad[i];
 	
-    m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad_idx*grad_idx);
-    m_params[i] -= (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
-    norm += CppAD::abs(m_params[i]);
-  }
+		m_squared_grad[i] = 0.9*m_squared_grad[i] + 0.1*ADF(grad_idx*grad_idx);
+		m_params[i] -= (m_lr/(CppAD::sqrt(m_squared_grad[i]) + 1e-6))*ADF(grad_idx);
+		norm += CppAD::abs(m_params[i]);
+	}
 
-  ADF update0 = (m_system_adf->getLearningRate()/(CppAD::sqrt(m_squared_grad[0]) + 1e-6))*ADF(grad[0]);
-  std::cout << "Param norm: " << CppAD::Value(norm)
-			<< " Param[0]: " << CppAD::Value(m_params[0])
-			<< " dParams[0]: " << CppAD::Value(update0) << "\n";
-  for(int i = 0; i < m_params.size(); i++)
-  {
+	ADF update0 = (m_lr/(CppAD::sqrt(m_squared_grad[0]) + 1e-6))*ADF(grad[0]);
+	std::cout << "Param norm: " << CppAD::Value(norm)
+			  << " Param[0]: " << CppAD::Value(m_params[0])
+			  << " dParams[0]: " << CppAD::Value(update0) << "\n";
+	for(int i = 0; i < m_params.size(); i++)
+	{
     
-    if(CppAD::abs(m_params[i]) > 100.0)
-    {
-      std::cout << "Param[" << i <<"] Exploded: " << CppAD::Value(m_params[i]) << "\n";
-      break;
-    }
-  }
+		if(CppAD::abs(m_params[i]) > 100.0)
+		{
+			std::cout << "Param[" << i <<"] Exploded: " << CppAD::Value(m_params[i]) << "\n";
+			break;
+		}
+	}
 
-  m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
+	m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
 }
 
 void LinearTrainer::plotTrajectory(const std::vector<DataRow> &traj, const std::vector<VectorAD> &x_list)
@@ -323,56 +314,51 @@ void LinearTrainer::plotTrajectory(const std::vector<DataRow> &traj, const std::
 
 void LinearTrainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::vector<VectorAD> &x_list, double &loss)
 {
-  m_system_adf->setParams(m_params);
+	m_system_adf->setParams(m_params);
   
-  m_system_adf->setNumSteps(m_eval_steps);
+	VectorAD xk(m_system_adf->getStateDim());
+	VectorAD xk1(m_system_adf->getStateDim());
   
-  VectorAD xk(m_system_adf->getStateDim());
-  VectorAD xk1(m_system_adf->getStateDim());
-  
-  initializeState(traj[0], xk);
-  x_list[0] = xk;
+	initializeState(traj[0], xk);
+	x_list[0] = xk;
 
-  ADF traj_len = 0;
-  VectorAD gt_vec;
-  for(int i = 1; i < x_list.size(); i++)
-  {
-	  xk[3] = traj[i-1].vl;
-	  xk[4] = traj[i-1].vr;
+	ADF traj_len = 0;
+	VectorAD gt_vec;
+	for(int i = 1; i < x_list.size(); i++)
+	{
+		xk[3] = traj[i-1].vl;
+		xk[4] = traj[i-1].vr;
     
-	  m_system_adf->integrate(xk, xk1);
-	  xk = xk1;
-	  x_list[i] = xk;
+		m_system_adf->integrate(xk, xk1);
+		xk = xk1;
+		x_list[i] = xk;
 	  
-	  gt_vec = VectorAD::Zero(m_system_adf->getStateDim());
+		gt_vec = VectorAD::Zero(m_system_adf->getStateDim());
 	  
-	  gt_vec[0] = ADF(traj[i].x);
-	  gt_vec[1] = ADF(traj[i].y);
-	  gt_vec[2] = ADF(traj[i].yaw);
+		gt_vec[0] = ADF(traj[i].x);
+		gt_vec[1] = ADF(traj[i].y);
+		gt_vec[2] = ADF(traj[i].yaw);
 	  
-	  ADF dx = traj[i].x - traj[i-1].x;
-	  ADF dy = traj[i].y - traj[i-1].y;
+		ADF dx = traj[i].x - traj[i-1].x;
+		ADF dy = traj[i].y - traj[i-1].y;
 	  
-	  traj_len += CppAD::sqrt(dx*dx + dy*dy);
-  }
+		traj_len += CppAD::sqrt(dx*dx + dy*dy);
+	}
   
-  // plotTrajectory(traj, x_list);
+	// plotTrajectory(traj, x_list);
   
-  // This could also be a running loss instead of a terminal loss
-  ADF ang_mse;
-  ADF lin_mse;
-  m_system_adf->evaluate(gt_vec, x_list.back(), ang_mse, lin_mse);
+	// This could also be a running loss instead of a terminal loss
+	ADF ang_mse;
+	ADF lin_mse;
+	m_system_adf->evaluate(gt_vec, x_list.back(), ang_mse, lin_mse);
 
-  // std::cout << "Lin err: " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Lin Displacement: " << CppAD::Value(traj_len) << "\n";
-  // std::cout << "Lin err " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Ang err " << CppAD::Value(CppAD::sqrt(ang_mse)) << "\n";
+	// std::cout << "Lin err: " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Lin Displacement: " << CppAD::Value(traj_len) << "\n";
+	// std::cout << "Lin err " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Ang err " << CppAD::Value(CppAD::sqrt(ang_mse)) << "\n";
 
-  loss = CppAD::Value(CppAD::sqrt(lin_mse) / traj_len);
-  // std::cout << "Lin err: " << CppAD::Value(CppAD::sqrt(lin_mse))
-  // 	    << " traj_len: " << CppAD::Value(traj_len)
-  // 	    << " Relative Linear: " << loss << "\n";
-  
-  
-  
+	loss = CppAD::Value(CppAD::sqrt(lin_mse) / traj_len);
+	// std::cout << "Lin err: " << CppAD::Value(CppAD::sqrt(lin_mse))
+	// 	    << " traj_len: " << CppAD::Value(traj_len)
+	// 	    << " Relative Linear: " << loss << "\n";
 }
 
 
