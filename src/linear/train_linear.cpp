@@ -26,6 +26,7 @@ int main()
 		{
 			train.evaluate_cv3();
 			train.evaluate_ld3();
+			return 0;
 		}
 	}
     

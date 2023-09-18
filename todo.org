@@ -18,7 +18,14 @@ to make it abstract.
 Working on it.
 *** DONE Achieve some dependency injection by using
 a factory class to create VehicleSystem objects.
-*** TODO Run this shit, see what happens
+*** DONE Run this shit, see what happens
+Got all executables running after the refactor.
+Need to make bekker model train/evaluate.
+*** TODO Bekker model isn't that great
+Should have higher performance.
+Try messing with the tire settling hacks.
+It seems like it isn't turning enough.
+Try different hacks for avoiding divide by zero in the slip_ratio
 
 Add some helper functions.
 ** Templatize all code for float and ADF

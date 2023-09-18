@@ -575,7 +575,7 @@ void Trainer::evaluateTrajectory(const std::vector<GroundTruthDataRow> &traj, st
 		traj_len += CppAD::sqrt(dx*dx + dy*dy);
 	}
   
-	// plotTrajectory(traj, x_list);
+	plotTrajectory(traj, x_list);
   
 	// This could also be a running loss instead of a terminal loss
 	ADF ang_mse;

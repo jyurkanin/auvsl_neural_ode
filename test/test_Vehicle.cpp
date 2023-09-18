@@ -10,7 +10,11 @@
 namespace plt = matplotlibcpp;
 
 namespace {
-
+	typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorF;
+	typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixF;
+	typedef Eigen::Matrix<ADF, Eigen::Dynamic, 1> VectorAD;
+	typedef Eigen::Matrix<ADF, Eigen::Dynamic, Eigen::Dynamic> MatrixAD;
+	
 	class VehicleFixture : public ::testing::Test
 	{
 	public:
@@ -44,19 +48,21 @@ namespace {
 		{
 			srand(time(NULL)); // randomize seed
       
-			m_system_adf    = std::make_shared<VehicleSystem<ADF>>();
+			m_system_adf = std::make_shared<VehicleSystem<ADF>>();
       
 			m_params = VectorAD::Zero(m_system_adf->getNumParams());
-			m_x0 = VectorAD::Zero(m_system_adf->getStateDim());
+			m_x0 = VectorAD::Zero(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+			
+			loadVec(m_params, "/home/justin/tire.net");
+			m_system_adf->getDefaultParams(m_params);
+			m_system_adf->setParams(m_params);
 			
 			m_system_adf->getDefaultInitialState(m_x0);
 			m_x0[6] = .0605;
-
-			loadVec(m_params, "/home/justin/tire.net");
-			m_system_adf->setParams(m_params);
 			
-			m_gt_list.resize(m_system_adf->getNumSteps());
-			m_gt_list_adf.resize(m_system_adf->getNumSteps());
+			int num_steps = 100;
+			m_gt_list.resize(num_steps);
+			m_gt_list_adf.resize(num_steps);
       
 			for(int i = 0; i < m_gt_list.size(); i++)
 			{
@@ -74,8 +80,9 @@ namespace {
 		{      
 			CppAD::Independent(m_params);
 			m_system_adf->setParams(m_params);
-      
-			std::vector<VectorAD> x_list(m_system_adf->getNumSteps());
+
+			int num_steps = 100;
+			std::vector<VectorAD> x_list(num_steps);
       
 			VectorAD loss(1);
       
@@ -122,8 +129,8 @@ namespace {
     
 		m_system_adf->setParams(m_params);
 
-		VectorAD xk(m_system_adf->getStateDim());
-		VectorAD xk1(m_system_adf->getStateDim());
+		VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+		VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
     
 		xk = m_x0;
     
@@ -137,6 +144,7 @@ namespace {
 			elev[i] = CppAD::Value(xk1[6]);
 			x_vec[i] = CppAD::Value(xk1[4]);
 			y_vec[i] = CppAD::Value(xk1[5]);
+
 			xk = xk1;
 		}
     
@@ -161,8 +169,8 @@ namespace {
 		
 		m_system_adf->setParams(m_params);
 		
-		VectorAD xk(m_system_adf->getStateDim());
-		VectorAD xk1(m_system_adf->getStateDim());
+		VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+		VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 		
 		xk = m_x0;
 		xk[15] = .1; //add an initial lateral movement
@@ -209,10 +217,10 @@ namespace {
 		std::vector<double> y_vec(num_steps);
     
 		m_system_adf->setParams(m_params);
-
-		VectorAD xk(m_system_adf->getStateDim());
-		VectorAD xk1(m_system_adf->getStateDim());
-    
+		
+		VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+		VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+		
 		xk = m_x0;
     
 		for(int i = 0; i < num_steps; i++)
@@ -256,10 +264,10 @@ namespace {
 		std::vector<double> y_vec(num_steps);
     
 		m_system_adf->setParams(m_params);
-
-		VectorAD xk(m_system_adf->getStateDim());
-		VectorAD xk1(m_system_adf->getStateDim());
-    
+		
+		VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+		VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+		
 		xk = m_x0;
 
 		double max_x = CppAD::Value(xk[4]);
@@ -335,17 +343,18 @@ namespace {
 		m_params = VectorAD::Zero(m_system_adf->getNumParams());
 		m_system_adf->setParams(m_params);
 		
-		VectorAD xk(m_system_adf->getStateDim());
-		VectorAD xk1(m_system_adf->getStateDim());
-
-		constexpr double wz_i = 10.0;
-		Scalar com_state[m_system_adf->m_hybrid_dynamics.STATE_DIM] = {0,0,0,1, 0,0,100, 0,0,0,0, 0,0,wz_i, 0,0,0, 0,0,0,0};
-		Scalar base_state[m_system_adf->m_hybrid_dynamics.STATE_DIM];
-		m_system_adf->m_hybrid_dynamics.initStateCOM(com_state, base_state);
+		VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+		VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 		
-		for(int i = 0; i < m_system_adf->m_hybrid_dynamics.STATE_DIM; i++)
+		constexpr double wz_i = 10.0;
+		VectorAD init_state = VectorAD::Zero(m_system_adf->getStateDim());
+		init_state[3] = 1;
+		init_state[6] = 100;
+		init_state[13] = wz_i;
+		
+		for(int i = 0; i < m_system_adf->getStateDim(); i++)
 		{
-			xk[i] = base_state[i];
+			xk[i] = init_state[i];
 		}
 		
 		double max_x = CppAD::Value(xk[4]);
@@ -355,12 +364,12 @@ namespace {
 		
 		for(int i = 0; i < num_steps; i++)
 		{
-			xk[11] = base_state[11];
-			xk[12] = base_state[12];
-			xk[13] = base_state[13];
-			xk[14] = base_state[14];
-			xk[15] = base_state[15];
-			xk[16] = base_state[16];
+			xk[11] = init_state[11];
+			xk[12] = init_state[12];
+			xk[13] = init_state[13];
+			xk[14] = init_state[14];
+			xk[15] = init_state[15];
+			xk[16] = init_state[16];
 			
 			xk[HybridDynamics::STATE_DIM] = 0; //vl
 			xk[HybridDynamics::STATE_DIM+1] = 0; //vr

@@ -43,6 +43,7 @@ private:
   
 	const int num_steps = 100;
 	
+public:	
 	ADF sigma_x_cf(ADF theta);
 	ADF sigma_x_cc(ADF theta);
 	ADF sigma_x_cr(ADF theta);  
@@ -78,7 +79,6 @@ private:
 
 	ADF integrate(ADF (BekkerTireModel::*func)(ADF), ADF upper_b, ADF lower_b);
 	
-public:
 	BekkerTireModel();
 	Eigen::Matrix<ADF,4,1> get_forces(const Eigen::Matrix<ADF,8,1> &in_vec);
 };

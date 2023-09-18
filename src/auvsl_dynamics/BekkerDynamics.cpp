@@ -53,20 +53,38 @@ void BekkerDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 	features[3] = m_params[0];
 	features[4] = m_params[1];
 	features[5] = m_params[2];
-	features[6] = m_params[3]; //todo: assign the right shit here.
+	features[6] = m_params[3];
 	features[7] = m_params[4];
   
 	for(int ii = 0; ii < 4; ii++){    
 		//17 is the idx that tire velocities start at.
 		Scalar vel_x_tan = .098*X[17+ii];
-		features[0] = sinkages[ii];
-		features[1] = CppAD::abs(vel_x_tan - cpt_vels[ii][0])/(CppAD::abs(vel_x_tan) + 1e-4f);
-		features[2] = CppAD::tanh(cpt_vels[ii][1] / (CppAD::abs(cpt_vels[ii][0]) + 1e-4f));
+		Scalar tire_vx = cpt_vels[ii][0];
+
+		Scalar small = 1e-4;
+		vel_x_tan = CppAD::CondExpGt(vel_x_tan, small, vel_x_tan, small);
+		tire_vx = CppAD::CondExpGt(tire_vx, small, tire_vx, small);
 		
-		forces = m_bekker_tire_model.get_forces(features);
+		features[0] = sinkages[ii];
+		features[1] = (vel_x_tan - tire_vx)/vel_x_tan; // This will need a sign correction on the output
+		features[2] = CppAD::tanh(cpt_vels[ii][1] / tire_vx);
+		
+		if(sinkages[ii] > 0.0)
+		{		
+			forces = m_bekker_tire_model.get_forces(features);
+		}
+		else
+		{
+			forces[0] = 0.0;
+			forces[1] = 0.0;
+			forces[2] = 0.0;
+			forces[3] = 0.0;
+		}
+		
+		forces[0] = CppAD::CondExpGt((vel_x_tan - cpt_vels[ii][0]), small, forces[0], -forces[0]);
 		
 		Eigen::Matrix<Scalar,3,1> lin_force;    
-		lin_force[0] = forces[0];
+-		lin_force[0] = forces[0];
 		lin_force[1] = forces[1];
 		lin_force[2] = forces[2];
 	
@@ -76,8 +94,7 @@ void BekkerDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
     
 		// ang_force = cpt_rots[ii].transpose()*ang_force;
 		// Numerical hack to help stabilize sinkage
-		// todo: replace cpt_vels with temp_vel
-		lin_force[2] += -200*cpt_vels[ii][2]; //dead simple, works fine.
+		lin_force[2] += -200.0*cpt_vels[ii][2]; //dead simple, works fine.
 		
 		Force wrench;
 		wrench[0] = 0;

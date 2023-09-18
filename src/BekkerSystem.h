@@ -37,4 +37,4 @@ public:
 	{
 		return std::make_shared<BekkerSystem<Scalar>>();
 	}
-}
+};

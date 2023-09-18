@@ -148,7 +148,7 @@ void VehicleSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
 template<typename Scalar>
 void VehicleSystem<Scalar>::getDefaultInitialState(VectorS &state)
 {
-	state = VectorS::Zero(this->getStateDim());
+	state = VectorS::Zero(state.size());
   
 	m_hybrid_dynamics.initState(); //set start pos to 0,0,.16 and orientation to 0,0,0,1
 	m_hybrid_dynamics.settle();     //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.

@@ -2,13 +2,14 @@
 #include "HybridDynamics.h"
 #include "BekkerTireModel.h"
 
-class BekkerDynamics : HybridDynamics
+class BekkerDynamics : public HybridDynamics
 {
 public:
 	BekkerDynamics();
 	~BekkerDynamics();
 
-	void get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, LinkDataMap<Force> &ext_forces);
+	virtual void get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, LinkDataMap<Force> &ext_forces);
+	
 
 	void setParams(const VectorS &params);
 	void getParams(VectorS &params);

@@ -1,4 +1,5 @@
 #include "BekkerSystem.h"
+#include "utils.h"
 
 template<typename Scalar>
 BekkerSystem<Scalar>::BekkerSystem()
@@ -27,7 +28,7 @@ void BekkerSystem<Scalar>::getDefaultParams(VectorS &params)
 template<typename Scalar>
 void BekkerSystem<Scalar>::getDefaultInitialState(VectorS &state)
 {
-	state = VectorS::Zero(this->getStateDim());
+	state = VectorS::Zero(state.size());
 	
 	m_bekker_dynamics.initState(); //set start pos to 0,0,.16 and orientation to 0,0,0,1
 	m_bekker_dynamics.settle();     //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
@@ -163,7 +164,7 @@ void BekkerSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
 
 
 template<typename Scalar>
-VectorS BekkerSystem<Scalar>::initializeState(const GroundTruthDataRow &gt_state)
+BekkerSystem<Scalar>::VectorS BekkerSystem<Scalar>::initializeState(const GroundTruthDataRow &gt_state)
 {
 	Scalar xk[this->getStateDim()];
 	Scalar xk_base[this->getStateDim()];

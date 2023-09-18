@@ -9,6 +9,11 @@
 namespace plt = matplotlibcpp;
 
 namespace{
+	typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorF;
+	typedef Eigen::Matrix<double, Eigen::Dynamic, Eigen::Dynamic> MatrixF;
+	typedef Eigen::Matrix<ADF, Eigen::Dynamic, 1> VectorAD;
+	typedef Eigen::Matrix<ADF, Eigen::Dynamic, Eigen::Dynamic> MatrixAD;
+
   void plot_cross(float x1, float x2, float y1, float y2)
   {
 	  std::vector<float> x(2);

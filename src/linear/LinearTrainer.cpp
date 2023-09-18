@@ -87,7 +87,7 @@ void LinearTrainer::train()
 		
 		for(int j = 0; j < m_data.size(); j++)
 		{
-			VectorAD xk(m_system_adf->getStateDim());
+			VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 			initializeState(m_data[j], xk);
 			
 			VectorAD u(2);
@@ -144,7 +144,7 @@ void LinearTrainer::evaluate_train3()
   
 	for(int i = 1; i <= 17; i++)
 	{
-		memset(fn_array, 0, 100); //todo: uncomment
+		memset(fn_array, 0, 100);
 		sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
 	
 		// memset(fn_array, 0, 100);
@@ -316,8 +316,8 @@ void LinearTrainer::evaluateTrajectory(const std::vector<DataRow> &traj, std::ve
 {
 	m_system_adf->setParams(m_params);
   
-	VectorAD xk(m_system_adf->getStateDim());
-	VectorAD xk1(m_system_adf->getStateDim());
+	VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
+	VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
   
 	initializeState(traj[0], xk);
 	x_list[0] = xk;
@@ -368,7 +368,7 @@ void LinearTrainer::initializeState(const DataRow &gt_state, VectorAD &xk_robot)
 	xk_robot[1] = gt_state.y;
 	xk_robot[2] = gt_state.yaw;
 	xk_robot[3] = gt_state.vl;
-	xk_robot[3] = gt_state.vr;
+	xk_robot[4] = gt_state.vr;
 }
 
 void LinearTrainer::save()

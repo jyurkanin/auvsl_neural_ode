@@ -1,7 +1,8 @@
+#pragma once
+
 #include <Eigen/Dense>
 #include "generated/forward_dynamics.h"
 #include "generated/model_constants.h"
-
 
 using Jackal::rcg::Scalar;
 

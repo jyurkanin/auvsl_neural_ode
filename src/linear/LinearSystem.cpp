@@ -1,14 +1,14 @@
 #include "linear/LinearSystem.h"
-#include "utils.h"
 
 #include <iostream>
 #include <assert.h>
 
 
-LinearSystem::LinearSystem() : System<ADF>()
+LinearSystem::LinearSystem()
 {
-	this->setNumParams(6);
-	this->setStateDim(3);
+	setNumParams(6);
+	setStateDim(3);
+	setControlDim(2);
 
 	m_params = MatrixAD::Random(3,2);
 	m_params(0,0) = 0.0472;
@@ -81,10 +81,7 @@ void LinearSystem::forward(const VectorAD &u, VectorAD &Xd)
 
 
 void LinearSystem::integrate(const VectorAD &Xk, VectorAD &Xk1)
-{
-	assert(Xk.size() == this->getStateDim());
-	assert(Xk1.size() == this->getStateDim());
-	
+{	
 	VectorAD u(2);
 	VectorAD Xd_w(3);
 	VectorAD Xd_b(3);
