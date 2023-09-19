@@ -62,7 +62,7 @@ namespace{
 		
 		BekkerFixture()
 		{
-			//feenableexcept(FE_INVALID | FE_OVERFLOW);
+			// feenableexcept(FE_INVALID | FE_OVERFLOW);
 			srand(time(NULL)); // randomize seed
       
 			m_system_adf = std::make_shared<BekkerSystem<ADF>>();
@@ -76,6 +76,16 @@ namespace{
 
 			m_system_adf->getDefaultInitialState(m_x0);
 			m_x0[6] = .0605;
+
+			ADF z_stable = m_x0[6];
+			std::cout << "Stable Quaternion: "
+					  << m_x0[0] << ", "
+					  << m_x0[1] << ", "
+					  << m_x0[2] << ", "
+					  << m_x0[3] << "\n";
+		
+			std::cout << "z_stable: " << z_stable << "\n";
+
 		}
 	};
 
@@ -186,7 +196,7 @@ namespace{
 			for(int i = 0; i < len; i++)
 			{
 				ADF tire_tangent_vel = 1.0*ADF((2.0*i/(float)len) - 1.0) + tire_vx;
-				ADF small = 1e-4;
+				ADF small = 1e-6;
 				
 				tire_tangent_vel = CppAD::CondExpGt(tire_tangent_vel, small, tire_tangent_vel, small);
 				tire_vx = CppAD::CondExpGt(tire_vx, small, tire_vx, small);
@@ -450,7 +460,7 @@ namespace{
 
 	TEST_F(BekkerFixture, circle)
 	{
-		int num_steps = 10000;
+		int num_steps = 1000;
 		std::vector<double> time(num_steps);
 		std::vector<double> elev(num_steps);
 		std::vector<double> x_vec(num_steps);

@@ -37,6 +37,9 @@ void BekkerSystem<Scalar>::getDefaultInitialState(VectorS &state)
 	{
 		state[i] = m_bekker_dynamics.state_[i];
 	}
+
+	state[4] = 0;
+	state[5] = 0;
 }
 
 

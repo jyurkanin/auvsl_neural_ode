@@ -81,40 +81,50 @@ ADF BekkerTireModel::tau_x_cf(ADF theta)
 {
 	//smart divide
 	ADF j_cf_theta = j_cf(theta);
-	ADF temp = CppAD::CondExpEq(j_cf_theta, ADF(0.0), ADF(0.0), jx_cf(theta)/j_cf_theta);
-	return (-temp) * (c + (sigma_x_cf(theta)*CppAD::tan(phi))) * (1 - (exp(-j_cf_theta/K)));
+	j_cf_theta = CppAD::CondExpEq(j_cf_theta, ADF(0.0), ADF(1e-6), j_cf_theta);
+	return (-jx_cf(theta)/j_cf_theta) * (c + (sigma_x_cf(theta)*CppAD::tan(phi))) * (1 - (exp(-j_cf_theta/K)));
 }
 
 ADF BekkerTireModel::tau_x_cc(ADF theta)
 {
 	ADF j_cc_theta = j_cc(theta);
-	ADF temp = CppAD::CondExpEq(j_cc_theta, ADF(0.0), ADF(0.0), jx_cc(theta)/j_cc_theta);
+	j_cc_theta = CppAD::CondExpEq(j_cc_theta, ADF(0.0), ADF(1e-6), j_cc_theta);
+	
+	ADF temp = jx_cc(theta)/j_cc_theta;
 	return (-temp) * (c + (sigma_x_cc(theta)*CppAD::tan(phi))) * (1 - (exp(-j_cc_theta/K)));
 }
 
 ADF BekkerTireModel::tau_x_cr(ADF theta)
 {
 	ADF j_cr_theta = j_cr(theta);
-	ADF temp = CppAD::CondExpEq(j_cr_theta, ADF(0.0), ADF(0.0), jx_cr(theta)/j_cr_theta);
+	j_cr_theta = CppAD::CondExpEq(j_cr_theta, ADF(0.0), ADF(1e-6), j_cr_theta);
+	ADF temp = jx_cr(theta)/j_cr_theta;
+	
 	return (-temp) * (c + (sigma_x_cr(theta)*CppAD::tan(phi))) * (1 - (exp(-j_cr_theta/K)));
 }
-  
+
 ADF BekkerTireModel::tau_y_cf(ADF theta)
 {
 	ADF j_cf_theta = j_cf(theta);
-	ADF temp = CppAD::CondExpEq(j_cf_theta, ADF(0.0), ADF(0.0), jy_cf(theta)/j_cf_theta);
+	j_cf_theta = CppAD::CondExpEq(j_cf_theta, ADF(0.0), ADF(1e-6), j_cf_theta);
+	ADF temp = jy_cf(theta)/j_cf_theta;
+	
 	return (-temp) * (c + (sigma_x_cf(theta)*CppAD::tan(phi))) * (1 - (exp(-j_cf_theta/K)));
 }
 ADF BekkerTireModel::tau_y_cc(ADF theta)
 {
 	ADF j_cc_theta = j_cc(theta);
-	ADF temp = CppAD::CondExpEq(j_cc_theta, ADF(0.0), ADF(0.0), jy_cc(theta)/j_cc_theta);
+	j_cc_theta = CppAD::CondExpEq(j_cc_theta, ADF(0.0), ADF(1e-6), j_cc_theta);
+	ADF temp = jy_cc(theta)/j_cc_theta;
+	
 	return (-temp) * (c + (sigma_x_cc(theta)*CppAD::tan(phi))) * (1 - (exp(-j_cc_theta/K)));
 }
 ADF BekkerTireModel::tau_y_cr(ADF theta)
 {
 	ADF j_cr_theta = j_cr(theta);
-	ADF temp = CppAD::CondExpEq(j_cr_theta, ADF(0.0), ADF(0.0), jy_cr(theta)/j_cr_theta);
+	j_cr_theta = CppAD::CondExpEq(j_cr_theta, ADF(0.0), ADF(1e-6), j_cr_theta);
+	ADF temp = jy_cr(theta)/j_cr_theta;
+	
 	return (-temp) * (c + (sigma_x_cr(theta)*CppAD::tan(phi))) * (1 - (exp(-j_cr_theta/K)));
 }
 

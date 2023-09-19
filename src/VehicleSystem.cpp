@@ -157,6 +157,9 @@ void VehicleSystem<Scalar>::getDefaultInitialState(VectorS &state)
 	{
 		state[i] = m_hybrid_dynamics.state_[i];
 	}
+
+	state[4] = 0.0;
+	state[5] = 0.0;
 }
 
 template<typename Scalar>

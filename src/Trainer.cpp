@@ -57,7 +57,9 @@ Trainer::Trainer(std::shared_ptr<SystemFactory<ADF>> factory, int num_threads) :
   m_params = VectorAD::Zero(m_system_adf->getNumParams());
   m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
   m_squared_grad = VectorAD::Ones(m_system_adf->getNumParams());
+  
   m_system_adf->getDefaultParams(m_params);
+  m_system_adf->setParams(m_params);
   
   computeEqState();
   
@@ -575,7 +577,7 @@ void Trainer::evaluateTrajectory(const std::vector<GroundTruthDataRow> &traj, st
 		traj_len += CppAD::sqrt(dx*dx + dy*dy);
 	}
   
-	plotTrajectory(traj, x_list);
+	// plotTrajectory(traj, x_list);
   
 	// This could also be a running loss instead of a terminal loss
 	ADF ang_mse;
@@ -715,27 +717,34 @@ bool Trainer::saveVec(const VectorAD &params, const std::string &file_name)
 
 void Trainer::load()
 {
-  if(!loadVec(m_params, m_param_file))
-  {
-    m_system_adf->setParams(m_params);
-  }
+	if(!loadVec(m_params, m_param_file))
+	{
+		m_system_adf->setParams(m_params);
+	}
+	else
+	{
+		std::cout << "No param save file found\n";
+		m_system_adf->getDefaultParams(m_params);
+		m_system_adf->setParams(m_params);
+	}
 }
+
 bool Trainer::loadVec(VectorAD &params, const std::string &file_name)
 {
-  char comma;
-  std::ifstream data_file(file_name);
-  if(!data_file.is_open())
-  {
-    return true;
-  }
+	char comma;
+	std::ifstream data_file(file_name);
+	if(!data_file.is_open())
+	{
+		return true;
+	}
   
-  for(int i = 0; i < params.size(); i++)
-  {
-    data_file >> params[i];
-    data_file >> comma;
-  }
+	for(int i = 0; i < params.size(); i++)
+	{
+		data_file >> params[i];
+		data_file >> comma;
+	}
   
-  return false;
+	return false;
 }
 
 
