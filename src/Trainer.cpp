@@ -442,6 +442,7 @@ void Trainer::updateParams(const VectorF &grad)
 			  << " grad[0]: " << grad[0]
 			  << " update[0]: " << CppAD::Value(update0)
 			  << " squared_grad[0]: " << CppAD::Value(CppAD::sqrt(m_squared_grad[0])) << "\n";
+	
 	for(int i = 0; i < m_params.size(); i++)
 	{
     

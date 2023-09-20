@@ -47,6 +47,13 @@ template<typename Scalar>
 void BekkerSystem<Scalar>::setParams(const VectorS &params)
 {
 	m_bekker_dynamics.setParams(params);
+
+	std::cout << "Params: "
+			  << CppAD::Value(params[0]) << ", "
+			  << CppAD::Value(params[1]) << ", "
+			  << CppAD::Value(params[2]) << ", "
+			  << CppAD::Value(params[3]) << ", "
+			  << CppAD::Value(params[4]) << "\n";
 }
 
 template<typename Scalar>

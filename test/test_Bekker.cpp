@@ -506,7 +506,7 @@ namespace{
     
 		for(int i = 0; i < num_steps; i++)
 		{
-			xk[m_system_adf->getStateDim()] = 4; //vl
+			xk[m_system_adf->getStateDim()+0] = 4; //vl
 			xk[m_system_adf->getStateDim()+1] = 1; //vr
 			m_system_adf->integrate(xk, xk1);
       
