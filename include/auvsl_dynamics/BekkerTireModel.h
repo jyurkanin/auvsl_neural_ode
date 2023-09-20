@@ -41,7 +41,7 @@ private:
 	ADF theta_r;
 	ADF theta_c;
   
-	const int num_steps = 100;
+	const int num_steps = 10;
 	
 public:	
 	ADF sigma_x_cf(ADF theta);

@@ -168,13 +168,14 @@ void Trainer::train()
 			{
 				if(fabs(traj_grad[i]) > 100.0)
 				{
-					has_explosion = true;
 					std::cout << "Explosion " << i << ":" << traj_grad[i] << "\n";
-					break;
+					traj_grad[i] = 0.0;
+					has_explosion = true;
+					//break;
 				}
 			}
 
-			if(!has_explosion)
+			//if(!has_explosion)
 			{
 				m_batch_grad += traj_grad;
 				avg_loss += loss;
@@ -443,16 +444,6 @@ void Trainer::updateParams(const VectorF &grad)
 			  << " update[0]: " << CppAD::Value(update0)
 			  << " squared_grad[0]: " << CppAD::Value(CppAD::sqrt(m_squared_grad[0])) << "\n";
 	
-	for(int i = 0; i < m_params.size(); i++)
-	{
-    
-		if(CppAD::abs(m_params[i]) > 100.0)
-		{
-			std::cout << "Param[" << i <<"] Exploded: " << CppAD::Value(m_params[i]) << "\n";
-			break;
-		}
-	}
-
 	m_batch_grad = VectorF::Zero(m_system_adf->getNumParams());
 }
 
@@ -578,8 +569,8 @@ void Trainer::evaluateTrajectory(const std::vector<GroundTruthDataRow> &traj, st
 		traj_len += CppAD::sqrt(dx*dx + dy*dy);
 	}
   
-	plotTrajectory(traj, x_list);
-  
+	// plotTrajectory(traj, x_list);
+	
 	// This could also be a running loss instead of a terminal loss
 	ADF ang_mse;
 	ADF lin_mse;

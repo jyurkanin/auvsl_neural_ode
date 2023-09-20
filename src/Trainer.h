@@ -79,9 +79,9 @@ public:
 
 	std::vector<Worker> m_workers;
 private:
-	const int m_train_steps = 600;
+	const int m_train_steps = 200;
 	const int m_eval_steps = 600;
-	const int m_inc_train_steps = 600;
+	const int m_inc_train_steps = 200;
 	const int m_inc_eval_steps = 600;
 	const double m_l1_weight = 0.0;
 	const double m_lr = 1e-3;

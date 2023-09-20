@@ -15,6 +15,9 @@ void BekkerDynamics::setParams(const VectorS &params)
 	{
 		m_params[i] = params[i];
 	}
+
+	Scalar zero = 0.0;
+	m_params[3] = CppAD::CondExpGt(m_params[3], zero, m_params[3], zero);
 }
 
 void BekkerDynamics::getParams(VectorS &params)
@@ -52,11 +55,12 @@ void BekkerDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 	Eigen::Matrix<Scalar,3,1> bekker_features;
 	Eigen::Matrix<Scalar,4,1> inputs;
 	Eigen::Matrix<Scalar,4,1> forces;
-	features[3] = m_params[0];
-	features[4] = m_params[1];
-	features[5] = m_params[2];
-	features[6] = m_params[3];
-	features[7] = m_params[4];
+	
+	features[3] = 100.0*m_params[0];
+	features[4] = 1000.0*m_params[1];
+	features[5] = 1.0*m_params[2];
+	features[6] = 1.0*m_params[3];
+	features[7] = 1.0*m_params[4];
   
 	for(int ii = 0; ii < 4; ii++){    
 		//17 is the idx that tire velocities start at.

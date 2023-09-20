@@ -18,8 +18,8 @@ BekkerSystem<Scalar>::~BekkerSystem()
 template<typename Scalar>
 void BekkerSystem<Scalar>::getDefaultParams(VectorS &params)
 {
-	params[0] = 29.76;
-	params[1] = 2083.0;
+	params[0] = .2976;
+	params[1] = 2.083;
 	params[2] = 0.8;
 	params[3] = 0.0;
 	params[4] = .3927;
