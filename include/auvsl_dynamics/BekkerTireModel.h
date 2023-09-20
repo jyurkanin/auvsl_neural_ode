@@ -78,6 +78,8 @@ public:
 	ADF Ty_eqn1(ADF theta);
 
 	ADF integrate(ADF (BekkerTireModel::*func)(ADF), ADF upper_b, ADF lower_b);
+
+	Eigen::Matrix<ADF,3,1> get_features(const Eigen::Matrix<ADF,4,1> inputs);
 	
 	BekkerTireModel();
 	Eigen::Matrix<ADF,4,1> get_forces(const Eigen::Matrix<ADF,8,1> &in_vec);

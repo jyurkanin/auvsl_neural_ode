@@ -26,9 +26,9 @@ Should have higher performance.
 Try messing with the tire settling hacks.
 It seems like it isn't turning enough.
 Try different hacks for avoiding divide by zero in the slip_ratio
-*** TODO Bekker model isn't turning. wtf
-
-Add some helper functions.
+*** DONE Bekker model isn't turning. wtf
+*** TODO Bekker Model error is still higher than it should be.
+wtf why.  I dont get it
 ** Templatize all code for float and ADF
 Oh hell nah
 ** TODO REWRITE IT

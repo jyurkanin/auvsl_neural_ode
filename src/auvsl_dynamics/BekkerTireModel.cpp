@@ -18,7 +18,6 @@ ADF BekkerTireModel::sigma_x_cf(ADF theta)
 {
 	//in some cases, CppAD::cos - CppAD::cos can return negative due to theta != theta_f, but very close.
 	ADF diff = CppAD::cos(theta) - CppAD::cos(theta_f); //std::max(0.0f,CppAD::cos(theta) - CppAD::cos(theta_f));
-	// diff = CppAD::CondExpLt(diff, ADF(0.0), ADF(0.0), diff);
 	ADF temp = ((kc/b) + kphi)*CppAD::pow(R*diff, n);
 	return temp;
 }
@@ -178,6 +177,34 @@ ADF BekkerTireModel::integrate(ADF (BekkerTireModel::*func)(ADF), ADF upper_b, A
 	return sum;
 }
 
+// inputs[0] = zr
+// inputs[1] = vx
+// inputs[2] = vy
+// inputs[3] = w*R
+Eigen::Matrix<ADF,3,1> BekkerTireModel::get_features(const Eigen::Matrix<ADF,4,1> inputs)
+{
+	ADF zr = inputs[0];
+	ADF tire_vx = inputs[1];
+	ADF tire_vy = inputs[2];
+	ADF w_R = inputs[3];
+	
+	Eigen::Matrix<ADF,3,1> bekker_features;
+	
+	const ADF zero = 0.0;
+	const ADF small = 1e-6;
+	
+	ADF tangent_vx_clamped = CppAD::CondExpGt(w_R, small, w_R, small);
+	ADF tire_vx_clamped = CppAD::CondExpGt(tire_vx, small, tire_vx, small);
+	ADF slip_ratio = (tangent_vx_clamped - tire_vx_clamped)/(tangent_vx_clamped);	
+   	
+	ADF slip_angle = CppAD::tanh(tire_vy / tire_vx_clamped);
+	
+	bekker_features[0] = zr;
+	bekker_features[1] = slip_ratio;
+	bekker_features[2] = slip_angle;
+
+	return bekker_features;
+}
 
 
 Eigen::Matrix<ADF,4,1> BekkerTireModel::get_forces(const Eigen::Matrix<ADF,8,1> &features)

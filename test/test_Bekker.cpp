@@ -62,7 +62,7 @@ namespace{
 		
 		BekkerFixture()
 		{
-			// feenableexcept(FE_INVALID | FE_OVERFLOW);
+			//feenableexcept(FE_INVALID | FE_OVERFLOW);
 			srand(time(NULL)); // randomize seed
       
 			m_system_adf = std::make_shared<BekkerSystem<ADF>>();
@@ -140,22 +140,31 @@ namespace{
 	// Slip ratio sucks.
 	TEST_F(BekkerFixture, slip_ratio)
 	{
+		BekkerTireModel tire_model;
+		
+		Eigen::Matrix<ADF,4,1> inputs;
+		Eigen::Matrix<ADF,3,1> bekker_features;
+		
 		int len = 100;
 		std::vector<float> vx_vec(len);
 		std::vector<float> slip_ratio_vec(len);
-
+		
 		for(int j = 0; j < 10; j++)
 		{
-			ADF tire_vx = j / 10.0;
+			ADF tire_vx = j *0.01;
 			for(int i = 0; i < len; i++)
 			{
-				ADF tangent_vx = 5e-1*ADF((2.0*i/(float)len) - 1.0);
-			
+				ADF tangent_vx = 0.1*ADF((2.0*i/(float)len) - 1.0);
+				
+				inputs[0] = 0.004;
+				inputs[1] = tire_vx;
+				inputs[2] = 0.0;
+				inputs[3] = tangent_vx;
+
+				bekker_features = tire_model.get_features(inputs);
+				
 				vx_vec[i] = CppAD::Value(tangent_vx);
-			
-				//ADF slip_ratio = (tangent_vx - tire_vx) / tangent_vx;
-				ADF slip_ratio = CppAD::abs(tangent_vx - tire_vx)/(CppAD::abs(tangent_vx) + 1e-4f);
-				slip_ratio_vec[i] = CppAD::Value(slip_ratio);
+				slip_ratio_vec[i] = CppAD::Value(bekker_features[1]);
 			}
 		
 			plt::plot(vx_vec, slip_ratio_vec);
@@ -170,8 +179,10 @@ namespace{
 	TEST_F(BekkerFixture, vx_fx_plot)
 	{
 		BekkerTireModel tire_model;
-	  
+		
 		Eigen::Matrix<ADF,8,1> features;
+		Eigen::Matrix<ADF,4,1> inputs;
+		Eigen::Matrix<ADF,3,1> bekker_features;
 		Eigen::Matrix<ADF,4,1> forces;
 	  
 		features[0] = 0;
@@ -192,26 +203,32 @@ namespace{
 	  
 		for(int j = 0; j < 10; j++)
 		{
-			ADF tire_vx = j/4.0;
+			ADF tire_vx = j*.02;
 			for(int i = 0; i < len; i++)
 			{
-				ADF tire_tangent_vel = 1.0*ADF((2.0*i/(float)len) - 1.0) + tire_vx;
-				ADF small = 1e-6;
+				ADF tangent_vx = 0.1*ADF((2.0*i/(float)len) - 1.0) + tire_vx;
 				
-				tire_tangent_vel = CppAD::CondExpGt(tire_tangent_vel, small, tire_tangent_vel, small);
-				tire_vx = CppAD::CondExpGt(tire_vx, small, tire_vx, small);
+				inputs[0] = 0.004; //zr
+				inputs[1] = tire_vx;
+				inputs[2] = 0.0;
+				inputs[3] = tangent_vx;
 				
-				features[0] = 0.005;
-				features[1] = (tire_tangent_vel - tire_vx)/tire_tangent_vel;
-				features[2] = 0.0;				
+				bekker_features = tire_model.get_features(inputs);
+				
+				features[0] = bekker_features[0];
+				features[1] = bekker_features[1];
+				features[2] = bekker_features[2];
 				
 				forces = tire_model.get_forces(features);
-			  
-				vx_vec[i] = CppAD::Value(tire_tangent_vel - tire_vx);
+				
+				ADF l1_sum = 1.0*(CppAD::abs(tangent_vx) + CppAD::abs(tire_vx));
+				forces[0] = forces[0]*CppAD::CondExpGt(l1_sum, ADF(1.0), ADF(1.0), l1_sum);
+				
+				vx_vec[i] = CppAD::Value(tangent_vx - tire_vx);
 				fx_vec[i] = CppAD::Value(forces[0]);
 			}
       
-			plot_cross(-1,1, -100,100);
+			plot_cross(-1,1, -10,10);
 			plt::plot(vx_vec, fx_vec);
 		}
 
@@ -228,7 +245,9 @@ namespace{
 	  
 		Eigen::Matrix<ADF,8,1> features;
 		Eigen::Matrix<ADF,4,1> forces;
-	  
+		Eigen::Matrix<ADF,4,1> inputs;
+		Eigen::Matrix<ADF,3,1> bekker_features;
+		
 		features[0] = 0;
 		features[1] = 0;
 		features[2] = 0;
@@ -253,13 +272,19 @@ namespace{
 			{
 				ADF tire_vy = 4.0*ADF((2.0*i/(float)len) - 1.0);
 			  
-				features[0] = 0.005;
-				features[1] = (tire_tangent_vel - tire_vx)/(CppAD::abs(tire_tangent_vel) + 1e-4f);
-				features[2] = CppAD::tanh(tire_vy / tire_vx);
-
-			  
+				inputs[0] = 0.004; //zr
+				inputs[1] = tire_vx;
+				inputs[2] = tire_vy;
+				inputs[3] = tire_tangent_vel;
+				
+				bekker_features = tire_model.get_features(inputs);
+				
+				features[0] = bekker_features[0];
+				features[1] = bekker_features[1];
+				features[2] = bekker_features[2];
+				
 				forces = tire_model.get_forces(features);
-			  
+				
 				vy_vec[i] = CppAD::Value(features[2]);
 				fy_vec[i] = CppAD::Value(forces[1]);
 			}
@@ -410,7 +435,8 @@ namespace{
 	}
 	
 	
-	
+	// Moving straight at 4rad/s, tire radius is .098, total time is 10s
+	// Expected distance is .392m.
 	TEST_F(BekkerFixture, straight)
 	{
 		int num_steps = 1000;
@@ -455,7 +481,7 @@ namespace{
 
 		// tire_radius is .098m * 1rad/s
 		std::cout << "Distance: " << x_vec.back() << "\n";
-		EXPECT_NEAR(x_vec.back(), 10*.098, 5e-2);
+		EXPECT_NEAR(x_vec.back(), 10*.098*4, 1e-1);
 	}
 
 	TEST_F(BekkerFixture, circle)
@@ -480,7 +506,7 @@ namespace{
     
 		for(int i = 0; i < num_steps; i++)
 		{
-			xk[m_system_adf->getStateDim()] = 2; //vl
+			xk[m_system_adf->getStateDim()] = 4; //vl
 			xk[m_system_adf->getStateDim()+1] = 1; //vr
 			m_system_adf->integrate(xk, xk1);
       
