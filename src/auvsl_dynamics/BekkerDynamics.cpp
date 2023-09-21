@@ -90,8 +90,7 @@ void BekkerDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 			forces[3] = 0.0;
 		}
 		
-		ADF l1_sum = 1.0*(CppAD::abs(vel_x_tan) + CppAD::abs(cpt_vels[ii][0]));
-		forces[0] = forces[0]*CppAD::CondExpGt(l1_sum, ADF(1.0), ADF(1.0), l1_sum);
+		forces[0] = CppAD::CondExpGt(vel_x_tan - cpt_vels[ii][0], ADF(0.0), CppAD::abs(forces[0]), -CppAD::abs(forces[0]));
 		
 		Eigen::Matrix<Scalar,3,1> lin_force;    
 		lin_force[0] = forces[0];

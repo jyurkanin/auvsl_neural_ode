@@ -151,10 +151,10 @@ namespace{
 		
 		for(int j = 0; j < 10; j++)
 		{
-			ADF tire_vx = j *0.01;
+			ADF tire_vx = j *0.1;
 			for(int i = 0; i < len; i++)
 			{
-				ADF tangent_vx = 0.1*ADF((2.0*i/(float)len) - 1.0);
+				ADF tangent_vx = 1.0*ADF((2.0*i/(float)len) - 1.0);
 				
 				inputs[0] = 0.004;
 				inputs[1] = tire_vx;
@@ -196,17 +196,20 @@ namespace{
 		features[7] = 0.652405;
     
 		int len = 100;
+		int num = 10;
 		std::vector<float> vx_vec(len);
 		std::vector<float> fx_vec(len);
-
+		std::vector<float> slip_ratio_vec(len);
+		
 		ADF tire_vy = 0;
 	  
 		for(int j = 0; j < 10; j++)
 		{
-			ADF tire_vx = j*.02;
+			ADF tire_vx = 0.1*ADF((2.0*j/(float)num) - 1.0);
+			
 			for(int i = 0; i < len; i++)
 			{
-				ADF tangent_vx = 0.1*ADF((2.0*i/(float)len) - 1.0) + tire_vx;
+				ADF tangent_vx = 0.1*ADF((2.0*i/(float)len) - 1.0); // + tire_vx;
 				
 				inputs[0] = 0.004; //zr
 				inputs[1] = tire_vx;
@@ -221,16 +224,23 @@ namespace{
 				
 				forces = tire_model.get_forces(features);
 				
-				ADF l1_sum = 1.0*(CppAD::abs(tangent_vx) + CppAD::abs(tire_vx));
-				forces[0] = forces[0]*CppAD::CondExpGt(l1_sum, ADF(1.0), ADF(1.0), l1_sum);
+				forces[0] = CppAD::CondExpGt(tangent_vx - tire_vx, ADF(0.0), CppAD::abs(forces[0]), -CppAD::abs(forces[0]));
 				
 				vx_vec[i] = CppAD::Value(tangent_vx - tire_vx);
 				fx_vec[i] = CppAD::Value(forces[0]);
+				slip_ratio_vec[i] = CppAD::Value(features[1]);
 			}
       
-			plot_cross(-1,1, -10,10);
+			plt::subplot(2,1,1);
 			plt::plot(vx_vec, fx_vec);
+			plt::subplot(2,1,2);
+			plt::plot(vx_vec, slip_ratio_vec);
 		}
+		
+		plt::subplot(2,1,1);
+		plot_cross(-1,1, -1,1);
+		plt::subplot(2,1,2);
+		plot_cross(-1,1, -1,1);
 
 		plt::title("Slip vs Fx");
 		plt::show();
@@ -506,8 +516,8 @@ namespace{
     
 		for(int i = 0; i < num_steps; i++)
 		{
-			xk[m_system_adf->getStateDim()+0] = 4; //vl
-			xk[m_system_adf->getStateDim()+1] = 1; //vr
+			xk[m_system_adf->getStateDim()+0] = 2; //vl
+			xk[m_system_adf->getStateDim()+1] = -2; //vr
 			m_system_adf->integrate(xk, xk1);
       
 			time[i] = i * 0.01;

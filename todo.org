@@ -6,6 +6,16 @@ It's so over. :DDDDD
 
 ** TODO Double check you've addressed all the dumbass comments
 Mostly
+
+** TODO Uh what plots do I want to show?
+Table with 3d offroad model comparison
+Dataset|Bekker|Bekker Trained|NN
+--------------------------------
+CV3    |      |              |
+--------------------------------
+LD3    |      |              |
+--------------------------------
+
 ** TODO Generate all plots with a single executable
 
 ** DONE Create code to run the shit with the bekker model
@@ -28,7 +38,9 @@ It seems like it isn't turning enough.
 Try different hacks for avoiding divide by zero in the slip_ratio
 *** DONE Bekker model isn't turning. wtf
 *** TODO Bekker Model error is still higher than it should be.
-wtf why.  I dont get it
+wtf why. I dont get it
+I think it's because I'm clamping w*R
+
 ** Templatize all code for float and ADF
 Oh hell nah
 ** TODO REWRITE IT

@@ -191,13 +191,14 @@ Eigen::Matrix<ADF,3,1> BekkerTireModel::get_features(const Eigen::Matrix<ADF,4,1
 	Eigen::Matrix<ADF,3,1> bekker_features;
 	
 	const ADF zero = 0.0;
-	const ADF small = 1e-6;
+	const ADF small = 1e-3;
 	
-	ADF tangent_vx_clamped = CppAD::CondExpGt(w_R, small, w_R, small);
-	ADF tire_vx_clamped = CppAD::CondExpGt(tire_vx, small, tire_vx, small);
-	ADF slip_ratio = (tangent_vx_clamped - tire_vx_clamped)/(tangent_vx_clamped);	
-   	
-	ADF slip_angle = CppAD::tanh(tire_vy / tire_vx_clamped);
+	ADF tire_vx_clamped = CppAD::CondExpGt(CppAD::abs(tire_vx), small, tire_vx, small);
+	ADF tangent_vx_clamped = CppAD::CondExpGt(CppAD::abs(w_R), small, w_R, small);
+	
+	ADF slip_ratio = 1 - (tire_vx_clamped/tangent_vx_clamped);
+
+	ADF slip_angle = CppAD::tanh(tire_vy / CppAD::abs(tire_vx_clamped));
 	
 	bekker_features[0] = zr;
 	bekker_features[1] = slip_ratio;

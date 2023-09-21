@@ -384,7 +384,9 @@ void Trainer::evaluate_cv3()
 			std::vector<GroundTruthDataRow> traj(m_data.begin()+j, m_data.begin()+j+m_eval_steps);
 			evaluateTrajectory(traj, x_list, loss);
 			// plotTrajectory(traj, x_list);
-      
+			
+			std::cout << "CV3 " << j << " loss: " << loss << "\n;";
+			
 			loss_avg += loss;
 			cnt++;
 		}
