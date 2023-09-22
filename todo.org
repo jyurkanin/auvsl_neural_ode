@@ -8,6 +8,9 @@ It's so over. :DDDDD
 Mostly
 
 ** TODO Uh what plots do I want to show?
+You can't train the bekker model.
+How do I explain the hacks I used to make bekker work?
+
 Table with 3d offroad model comparison
 Dataset|Bekker|Bekker Trained|NN
 --------------------------------
@@ -37,9 +40,11 @@ Try messing with the tire settling hacks.
 It seems like it isn't turning enough.
 Try different hacks for avoiding divide by zero in the slip_ratio
 *** DONE Bekker model isn't turning. wtf
-*** TODO Bekker Model error is still higher than it should be.
+*** DONE Bekker Model error is still higher than it should be.
 wtf why. I dont get it
 I think it's because I'm clamping w*R
+Whatever the fuck I did fixed it. I don't want to talk about it.
+It's complete shit, yeah I know.
 
 ** Templatize all code for float and ADF
 Oh hell nah
