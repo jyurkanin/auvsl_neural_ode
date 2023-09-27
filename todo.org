@@ -1,18 +1,41 @@
 Updates
 
 
+
+* <2023-09-25 Mon 23:40>
+Plots you want
+
+** TODO Plot all models on the 144 different CV3 trajectories
+
+** TODO Plots for neural/Bekker tire-soil model vx-fx, vy-fy, zr-fz
+
+** TODO Plots to show training/validation loss over time
+
+** TODO Plots for example trajectories CV3#55, CV3#1, and a mostly straight CV3 would be good
+
+** TODO 2D colormap plot to show unsafe vs safe 3D trajectories
+
+Code you need to write:
+
+** TODO 3D terrain simulation. Could be done with a branch.
+Better yet, would be to use OOP and add a class that can provide the ability
+to try different terrain maps.
+
+
+
 * <2023-08-23 Wed 18:50>
 It's so over. :DDDDD
 
 ** TODO Double check you've addressed all the dumbass comments
 Mostly
 
-** TODO Uh what plots do I want to show?
+** Uh what plots do I want to show?
 You can't train the bekker model.
 How do I explain the hacks I used to make bekker work?
+Just explain that it doesn't work when going in reverse.
 
 Table with 3d offroad model comparison
-Dataset|Bekker|Bekker Trained|NN
+Dataset|Bekker|NN|NN Trained|
 --------------------------------
 CV3    |      |              |
 --------------------------------
