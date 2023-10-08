@@ -2,11 +2,13 @@
 #include "utils.h"
 
 template<typename Scalar>
-BekkerSystem<Scalar>::BekkerSystem()
+BekkerSystem<Scalar>::BekkerSystem(const std::shared_ptr<const TerrainMap<Scalar>> &map)
 {
 	this->setNumParams(5);
 	this->setStateDim(BekkerDynamics::STATE_DIM);
 	this->setControlDim(BekkerDynamics::CNTRL_DIM);
+
+	m_bekker_dynamics.setTerrainMap(map);
 }
 
 template<typename Scalar>
@@ -31,15 +33,18 @@ void BekkerSystem<Scalar>::getDefaultInitialState(VectorS &state)
 	state = VectorS::Zero(state.size());
 	
 	m_bekker_dynamics.initState(); //set start pos to 0,0,.16 and orientation to 0,0,0,1
-	m_bekker_dynamics.settle();     //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
+	m_bekker_dynamics.settle(); //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
+	
+	// Quaternion
+	state[0] = m_hybrid_dynamics.state_[0];
+	state[1] = m_hybrid_dynamics.state_[1];
+	state[2] = m_hybrid_dynamics.state_[2];
+	state[3] = m_hybrid_dynamics.state_[3];
 
-	for(int i = 0; i < this->getStateDim(); i++)
-	{
-		state[i] = m_bekker_dynamics.state_[i];
-	}
-
-	state[4] = 0;
-	state[5] = 0;
+	// Position
+	state[4] = 0.0;
+	state[5] = 0.0;
+	state[6] = m_hybrid_dynamics.state_[6];
 }
 
 
@@ -181,49 +186,49 @@ BekkerSystem<Scalar>::VectorS BekkerSystem<Scalar>::initializeState(const Ground
 	VectorS xk_robot(this->getStateDim() +
 					 this->getControlDim());
 	VectorS yaw_quat(4);  
-  
+	
 	yaw_quat[0] = 0;
 	yaw_quat[1] = 0;
 	yaw_quat[2] = std::sin(gt_state.yaw / 2.0); // rotating by yaw around z axis
 	yaw_quat[3] = std::cos(gt_state.yaw / 2.0); // https://stackoverflow.com/questions/4436764/rotating-a-quaternion-on-1-axis
-  
+	
 	xk[0] = yaw_quat[0]; // Quaternion. Sets initial yaw.
 	xk[1] = yaw_quat[1];
 	xk[2] = yaw_quat[2];
 	xk[3] = yaw_quat[3];
-  
+	
 	xk[4] = gt_state.x; // Position
 	xk[5] = gt_state.y;
 	xk[6] = gt_state.z;
-
+	
 	xk[7] = 0; // Joint positions
 	xk[8] = 0;
 	xk[9] = 0;
 	xk[10] = 0;
-
+	
 	xk[11] = 0; // Spatial Velocity
 	xk[12] = 0;
 	xk[13] = gt_state.wz;
 	xk[14] = gt_state.vx;
 	xk[15] = gt_state.vy;
 	xk[16] = 0;
-
+	
 	xk[17] = 0; // Joint velocities
 	xk[18] = 0;
 	xk[19] = 0;
 	xk[20] = 0;
-
+	
 	// Unfortunately, the state vector is not expressed at the COM. Depressing. So we must transform it
 	m_bekker_dynamics.initStateCOM(&xk[0], &xk_base[0]);
-  
+	
 	for(int i = 0; i < this->getStateDim(); i++)
 	{
 		xk_robot[i] = xk_base[i];
 	}
-  
+	
 	xk_robot[21] = gt_state.vl; // Control tire velocities
 	xk_robot[22] = gt_state.vr;
-
+	
 	return xk_robot;
 }
 

@@ -2,6 +2,7 @@
 
 #include "types/System.h"
 #include "types/SystemFactory.h"
+#include "types/TerrainMap.h"
 #include "HybridDynamics.h"
 
 // I believe this is ready.
@@ -14,9 +15,9 @@ public:
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorS;
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixS;
   
-	VehicleSystem();
+	VehicleSystem(const std::shared_ptr<const TerrainMap<Scalar>> &map);
 	~VehicleSystem();
-
+	
 	virtual void   getDefaultParams(VectorS &params);
 	virtual void   getDefaultInitialState(VectorS &state);
 	virtual void   setParams(const VectorS &params);
@@ -33,12 +34,18 @@ private:
 	HybridDynamics m_hybrid_dynamics;
 };
 
+
 template<typename Scalar>
 class VehicleSystemFactory : public SystemFactory<Scalar>
 {
 public:
+	VehicleSystemFactory(const std::shared_ptr<const TerrainMap<Scalar>>& map) : SystemFactory<Scalar>(map)
+	{
+		
+	}
+	
 	virtual std::shared_ptr<System<Scalar>> makeSystem()
 	{
-		return std::make_shared<VehicleSystem<Scalar>>();
+		return std::make_shared<VehicleSystem<Scalar>>(this->m_terrain_map);
 	}
 };

@@ -41,7 +41,9 @@ size_t give_me_thread_id()
   return 100; //bad.
 }
 
-Trainer::Trainer(std::shared_ptr<SystemFactory<ADF>> factory, int num_threads) : m_factory_adf{factory}, m_num_threads{num_threads}
+Trainer::Trainer(std::shared_ptr<SystemFactory<ADF>> factory,
+				 int num_threads): m_factory_adf{factory},
+								   m_num_threads{num_threads}
 {
   // Enable CppAD multithreading. Sucky.
   g_id_map.resize(num_threads+1);

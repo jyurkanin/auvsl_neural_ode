@@ -2,6 +2,7 @@
 
 #include "types/System.h"
 #include "types/SystemFactory.h"
+#include "TestTerrainMaps.h"
 #include "BekkerDynamics.h"
 
 template<typename Scalar>
@@ -11,7 +12,7 @@ public:
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorS;
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, Eigen::Dynamic> MatrixS;
 
-	BekkerSystem();
+	BekkerSystem(const std::shared_ptr<const TerrainMap<Scalar>> &map);
 	~BekkerSystem();
 
 	virtual void   getDefaultParams(VectorS &params);
@@ -33,8 +34,14 @@ template<typename Scalar>
 class BekkerSystemFactory : public SystemFactory<Scalar>
 {
 public:
+	BekkerSystemFactory(const std::shared_ptr<const TerrainMap<Scalar>>& map) : SystemFactory<Scalar>(map)
+	{
+		
+	}
+
+	
 	virtual std::shared_ptr<System<Scalar>> makeSystem()
 	{
-		return std::make_shared<BekkerSystem<Scalar>>();
+		return std::make_shared<BekkerSystem<Scalar>>(this->m_terrain_map);
 	}
 };

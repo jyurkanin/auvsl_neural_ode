@@ -1,6 +1,7 @@
 #pragma once
 
 #include "types/System.h"
+#include "types/TerrainMap.h"
 #include "types/SystemFactory.h"
 #include "types/GroundTruthDataRow.h"
 
@@ -19,7 +20,8 @@ public:
 	
 	friend class Worker;
   
-	Trainer(std::shared_ptr<SystemFactory<ADF>> factory, int num_threads = 2);
+	Trainer(std::shared_ptr<SystemFactory<ADF>> factory,
+			int num_threads = 2);
 	~Trainer();
 
 	void updateParams(const VectorF &grad);
@@ -85,9 +87,7 @@ private:
 	const int m_inc_eval_steps = 600;
 	const double m_l1_weight = 0.0;
 	const double m_lr = 1e-3;
-  
-	const int m_num_threads;
-
+	
 	double m_best_CV3;
 	
 	ADF m_z_stable;
@@ -100,7 +100,9 @@ private:
 	VectorAD m_squared_grad;
 	VectorF m_batch_grad;
 	double m_batch_loss;
-
+	
 	std::shared_ptr<SystemFactory<ADF>> m_factory_adf;
 	std::shared_ptr<System<ADF>> m_system_adf;
+	
+	const int m_num_threads;
 };

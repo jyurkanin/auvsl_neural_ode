@@ -1,4 +1,6 @@
 #include "VehicleSystem.h"
+#include "TestTerrainMaps.h"
+#include "types/TerrainMap.h"
 #include "Trainer.h"
 #include <iostream>
 #include <fenv.h>
@@ -8,8 +10,9 @@
 int main()
 {
 	int num_threads = 2;
-
-	std::shared_ptr<VehicleSystemFactory<ADF>> factory = std::make_shared<VehicleSystemFactory<ADF>>();
+	
+	std::shared_ptr<const FlatTerrainMap<ADF>> map;
+	std::shared_ptr<VehicleSystemFactory<ADF>> factory = std::make_shared<VehicleSystemFactory<ADF>>(map);
 	Trainer train(factory, num_threads);
 	std::cout << "Default Performance:\n";
 	

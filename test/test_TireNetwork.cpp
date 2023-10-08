@@ -3,6 +3,7 @@
 #include "gtest/gtest.h"
 #include "TireNetwork.h"
 #include "VehicleSystem.h"
+#include "TestTerrainMaps.h"
 #include "generated/model_constants.h"
 #include "types/Scalars.h"
 
@@ -52,20 +53,21 @@ namespace{
   
   TEST(TireNetwork, check_params)
   {
-    VehicleSystem<ADF> system1;
-    VehicleSystem<ADF> system2;
+	  std::shared_ptr<const FlatTerrainMap<ADF>> map;
+	  VehicleSystem<ADF> system1(map);
+	  VehicleSystem<ADF> system2(map);
     
-    VectorAD params1(system1.getNumParams());
-    VectorAD params2(system1.getNumParams());
+	  VectorAD params1(system1.getNumParams());
+	  VectorAD params2(system1.getNumParams());
     
-    system1.getDefaultParams(params1);
-    system2.setParams(params1);
-    system2.getParams(params2);
+	  system1.getDefaultParams(params1);
+	  system2.setParams(params1);
+	  system2.getParams(params2);
     
-    for(int i = 0; i < params1.size(); i++)
-    {
-      EXPECT_EQ(params1[i], params2[i]);  
-    }
+	  for(int i = 0; i < params1.size(); i++)
+	  {
+		  EXPECT_EQ(params1[i], params2[i]);  
+	  }
   }
   
   TEST(TireNetwork, vx_fx_plot)
@@ -74,8 +76,10 @@ namespace{
 	  tire_network.load_model();
 	  
 	  VectorAD params = VectorAD::Zero(tire_network.getNumParams());
-	  loadVec(params, "/home/justin/tire.net");
-	  tire_network.setParams(params, 0);
+	  if(!loadVec(params, "/home/justin/tire.net"))
+	  {
+		  tire_network.setParams(params, 0);
+	  }
 	  
 	  Eigen::Matrix<ADF,8,1> features;
 	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
@@ -125,8 +129,10 @@ namespace{
 	  tire_network.load_model();
 	  
 	  VectorAD params = VectorAD::Zero(tire_network.getNumParams());
-	  loadVec(params, "/home/justin/tire.net");
-	  tire_network.setParams(params, 0);
+	  if(!loadVec(params, "/home/justin/tire.net"))
+	  {
+		  tire_network.setParams(params, 0);
+	  }
 	  
 	  Eigen::Matrix<ADF,8,1> features;
 	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
@@ -176,8 +182,10 @@ namespace{
 	  tire_network.load_model();
 	  
 	  VectorAD params = VectorAD::Zero(tire_network.getNumParams());
-	  loadVec(params, "/home/justin/tire.net");
-	  tire_network.setParams(params, 0);
+	  if(!loadVec(params, "/home/justin/tire.net"))
+	  {
+		  tire_network.setParams(params, 0);
+	  }
 	  
 	  Eigen::Matrix<ADF,8,1> features;
 	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;

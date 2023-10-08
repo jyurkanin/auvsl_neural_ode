@@ -116,17 +116,10 @@ void TireNetwork::forward(const Eigen::Matrix<Scalar,8,1> &in_vec,
 	// Scale output
 	forces = forces.cwiseProduct(out_std);
 	
-	// L1 to calculate gating value
-	Scalar gate = CppAD::tanh(CppAD::abs(xy_features[0]) +
-							  CppAD::abs(xy_features[1]) +
-							  CppAD::abs(xy_features[2])
-							  );
-	
 	out_vec[0] = forces[0];
 	out_vec[1] = forces[1];
 	out_vec[2] = forces[2];
-	out_vec[3] = relu_wrapper(forces[0]*-diff) +
-		         relu_wrapper(forces[1]*in_vec[1]); // Penalty
+	out_vec[3] = 0;
 }
 
 

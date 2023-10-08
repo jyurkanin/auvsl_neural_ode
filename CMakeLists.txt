@@ -149,10 +149,11 @@ add_executable(gen_tire_data
 
 
 add_executable(
-	runUnitTest
+	test_Vehicle
 	test/test_Vehicle.cpp
 	src/VehicleSystem.cpp
 	src/BaseNetwork.cpp
+	src/TestTerrainMaps.cpp
 	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/TireNetwork.cpp
 	src/auvsl_dynamics/utils.cpp
@@ -164,17 +165,46 @@ add_executable(
 	src/auvsl_dynamics/generated/miscellaneous.cpp
 	src/auvsl_dynamics/generated/transforms.cpp
 )
-target_include_directories(runUnitTest PRIVATE ${PYTHON_INCLUDE_DIRS})
-target_link_libraries(runUnitTest ${PYTHON_LIBRARIES})
-target_link_libraries(runUnitTest GTest::gtest_main)
+target_include_directories(test_Vehicle PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(test_Vehicle ${PYTHON_LIBRARIES})
+target_link_libraries(test_Vehicle GTest::gtest_main)
 include(GoogleTest)
-gtest_discover_tests(runUnitTest)
+gtest_discover_tests(test_Vehicle)
+
+
+
+
+add_executable(
+	test_Terrain
+	test/test_Terrain.cpp
+	src/VehicleSystem.cpp
+	src/BaseNetwork.cpp
+	src/TestTerrainMaps.cpp
+	src/auvsl_dynamics/HybridDynamics.cpp
+	src/auvsl_dynamics/TireNetwork.cpp
+	src/auvsl_dynamics/utils.cpp
+	src/auvsl_dynamics/generated/forward_dynamics.cpp
+	src/auvsl_dynamics/generated/inertia_properties.cpp
+	src/auvsl_dynamics/generated/inverse_dynamics.cpp
+	src/auvsl_dynamics/generated/jacobians.cpp
+	src/auvsl_dynamics/generated/jsim.cpp
+	src/auvsl_dynamics/generated/miscellaneous.cpp
+	src/auvsl_dynamics/generated/transforms.cpp
+)
+target_include_directories(test_Terrain PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(test_Terrain ${PYTHON_LIBRARIES})
+target_link_libraries(test_Terrain GTest::gtest_main)
+include(GoogleTest)
+gtest_discover_tests(test_Terrain)
+
+
 
 
 add_executable(
 	test_TireNetwork
 	test/test_TireNetwork.cpp
 	src/VehicleSystem.cpp
+	src/TestTerrainMaps.cpp
 	src/BaseNetwork.cpp
 	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/TireNetwork.cpp

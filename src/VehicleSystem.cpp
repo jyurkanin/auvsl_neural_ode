@@ -5,11 +5,13 @@
 #include <assert.h>
 
 template<typename Scalar>
-VehicleSystem<Scalar>::VehicleSystem()
+VehicleSystem<Scalar>::VehicleSystem(const std::shared_ptr<const TerrainMap<Scalar>> &map)
 {
 	this->setNumParams(m_hybrid_dynamics.tire_network.getNumParams());
 	this->setStateDim(HybridDynamics::STATE_DIM);
 	this->setControlDim(HybridDynamics::CNTRL_DIM);
+	
+	m_hybrid_dynamics.setTerrainMap(map);
 }
 
 template<typename Scalar>
@@ -153,13 +155,16 @@ void VehicleSystem<Scalar>::getDefaultInitialState(VectorS &state)
 	m_hybrid_dynamics.initState(); //set start pos to 0,0,.16 and orientation to 0,0,0,1
 	m_hybrid_dynamics.settle();     //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
 
-	for(int i = 0; i < this->getStateDim(); i++)
-	{
-		state[i] = m_hybrid_dynamics.state_[i];
-	}
+	// Quaternion
+	state[0] = m_hybrid_dynamics.state_[0];
+	state[1] = m_hybrid_dynamics.state_[1];
+	state[2] = m_hybrid_dynamics.state_[2];
+	state[3] = m_hybrid_dynamics.state_[3];
 
+	// Position
 	state[4] = 0.0;
 	state[5] = 0.0;
+	state[6] = m_hybrid_dynamics.state_[6];
 }
 
 template<typename Scalar>

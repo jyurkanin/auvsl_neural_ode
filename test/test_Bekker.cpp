@@ -1,6 +1,7 @@
 #include <matplotlibcpp.h>
 
 #include "gtest/gtest.h"
+#include "TestTerrainMaps.h"
 #include "BekkerTireModel.h"
 #include "BekkerSystem.h"
 #include "generated/model_constants.h"
@@ -64,8 +65,9 @@ namespace{
 		{
 			//feenableexcept(FE_INVALID | FE_OVERFLOW);
 			srand(time(NULL)); // randomize seed
-      
-			m_system_adf = std::make_shared<BekkerSystem<ADF>>();
+
+			std::shared_ptr<const FlatTerrainMap<ADF>> map;
+			m_system_adf = std::make_shared<BekkerSystem<ADF>>(map);
       
 			m_params = VectorAD::Zero(m_system_adf->getNumParams());
 			m_x0 = VectorAD::Zero(m_system_adf->getStateDim() + m_system_adf->getControlDim());

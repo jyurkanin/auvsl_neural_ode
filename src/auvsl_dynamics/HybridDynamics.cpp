@@ -44,8 +44,6 @@ Scalar get_altitude(const Scalar &x, const Scalar &y)
 HybridDynamics::HybridDynamics(){
   fwd_dynamics = new Jackal::rcg::ForwardDynamics(inertias, m_transforms);
   
-  //For more information on these, see TerrainMap.cpp and TerrainMap.h
-  
   bekker_params[0] = 29.758547;
   bekker_params[1] = 2083.000000;
   bekker_params[2] = 1.197933;
@@ -141,31 +139,73 @@ void HybridDynamics::initStateCOM(Scalar *start_state)
   initState(base_state);
 }
 
-void HybridDynamics::settle(){
-  //reach equillibrium sinkage.
-  for(int i = 0; i < 20; i++){
-    step(0,0);
-  }
+void HybridDynamics::settle()
+{
+	const int num_steps = 50; //50*.001 = .05
+	Eigen::Matrix<Scalar,STATE_DIM,1> Xt1;
+	Eigen::Matrix<Scalar,CNTRL_DIM,1> u;
+	
+	u(0) = 0.0;
+	u(1) = 0.0;
+	
+	//reach equillibrium sinkage.
+	for(int j = 0; j < 20; j++)
+	{
+		for(int ii = 0; ii < num_steps; ii++)
+		{
+			state_[17] = state_[19] = u[0];
+			state_[18] = state_[20] = u[1];
+			
+			Eigen::Matrix<Scalar,3,3> rot = toMatrixRotation(state_[0],state_[1],state_[2],state_[3]);
+			Eigen::Matrix<Scalar,3,1> ang_vel(state_[11], state_[12], state_[13]);
+			Eigen::Matrix<Scalar,3,1> lin_vel(state_[14], state_[15], state_[16]);
+
+			// Transform from base to world frame
+			ang_vel = rot*ang_vel;
+			lin_vel = rot*lin_vel;
+
+			// Prevent moving in the x or y directions.
+			ang_vel[0] = 0;
+			ang_vel[1] = 0;
+			lin_vel[0] = 0;
+			lin_vel[1] = 0;
+
+			// Transform from world frame to base frame
+			ang_vel = rot.transpose()*ang_vel;
+			lin_vel = rot.transpose()*lin_vel;
+			
+			state_[11] = ang_vel[0];
+			state_[12] = ang_vel[1];
+			state_[13] = ang_vel[2];
+			state_[14] = lin_vel[0];
+			state_[15] = lin_vel[1];
+			state_[16] = lin_vel[2];
+
+			// Integrate
+			RK4(state_, Xt1, u);
+			state_ = Xt1;
+		}		
+	}
 }
 
 //step is .05s
 //THis matches up with the test dataset sample rate.
 void HybridDynamics::step(Scalar vl, Scalar vr){  
-  Eigen::Matrix<Scalar,STATE_DIM,1> Xt1;
-  Eigen::Matrix<Scalar,CNTRL_DIM,1> u;
+	Eigen::Matrix<Scalar,STATE_DIM,1> Xt1;
+	Eigen::Matrix<Scalar,CNTRL_DIM,1> u;
   
-  u(0) = vl;
-  u(1) = vr;
+	u(0) = vl;
+	u(1) = vr;
   
-  const int num_steps = 50; //10*.005 = .05
-  for(int ii = 0; ii < num_steps; ii++){
-    state_[17] = state_[19] = u[0];
-    state_[18] = state_[20] = u[1];
+	const int num_steps = 50; //10*.005 = .05
+	for(int ii = 0; ii < num_steps; ii++){
+		state_[17] = state_[19] = u[0];
+		state_[18] = state_[20] = u[1];
     
-    RK4(state_, Xt1, u);
-    //Euler(state_, Xt1, u);
-    state_ = Xt1;
-  }
+		RK4(state_, Xt1, u);
+		//Euler(state_, Xt1, u);
+		state_ = Xt1;
+	}
 }
 
 
@@ -203,7 +243,7 @@ void HybridDynamics::get_tire_sinkages(const Eigen::Matrix<Scalar,3,1> *cpt_poin
 
 	for(int i = 0; i < 4; i++)
 	{
-		const Scalar altitude = 0; //.1*CppAD::sin(.1*cpt_points[i][0]);
+		const Scalar altitude = m_terrain_map->getAltitude(cpt_points[i][0], cpt_points[i][1]);
 		sinkages[i] = altitude - cpt_points[i][2];
 	}
 	// sinkages[1] = altitude - cpt_points[1][2];
@@ -260,7 +300,8 @@ void HybridDynamics::get_tire_cpts_sinkages_fancy(const Eigen::Matrix<Scalar,STA
 			test_rot = base_rot*test_rot;
 
 			test_pos = end_pos_tire_joint + test_rot*radius_vec; //a point on the edge of the tire.
-			test_sinkage = get_altitude(test_pos[0],test_pos[1]) - test_pos[2];
+			//test_sinkage = get_altitude(test_pos[0],test_pos[1]) - test_pos[2];
+			test_sinkage = m_terrain_map->getAltitude(test_pos[0],test_pos[1]) - test_pos[2];
 
 			if(test_sinkage > max_sinkage){
 				best_rot = test_rot; //orientation of cpt
@@ -557,8 +598,9 @@ void HybridDynamics::ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matr
   Eigen::Matrix<Scalar,3,1> ang_vel(base_vel[0], base_vel[1], base_vel[2]);
   Eigen::Matrix<Scalar,3,1> lin_vel(base_vel[3], base_vel[4], base_vel[5]);
   Eigen::Matrix<Scalar,4,1> quat_dot = calcQuatDot(quat, ang_vel);
-  
-  lin_vel = rot*lin_vel; // converts from base to world frame.
+
+  // converts from base to a frame oriented with the world frame.
+  lin_vel = rot*lin_vel; 
   
   Xd[0] = quat_dot[0];
   Xd[1] = quat_dot[1];

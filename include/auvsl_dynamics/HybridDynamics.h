@@ -2,6 +2,7 @@
 #include <fstream>
 #include <string.h>
 #include <Eigen/Dense>
+#include <memory>
 
 //Robcogen files
 #include "generated/forward_dynamics.h"
@@ -10,7 +11,7 @@
 //My files
 #include "TireNetwork.h"
 #include "BaseNetwork.h"
-#include "BekkerTireModel.h"
+#include "types/TerrainMap.h"
 
 //using namespace iit::Fancy;
 using Jackal::rcg::Scalar;
@@ -21,6 +22,7 @@ using Jackal::rcg::JointState;
 using Jackal::rcg::LinkDataMap;
 using Jackal::rcg::orderedLinkIDs;
 
+// This class is an abomination, sorry.
 class HybridDynamics{
 public:
 	typedef Eigen::Matrix<Scalar, Eigen::Dynamic, 1> VectorS;
@@ -39,7 +41,9 @@ public:
 	
 	void step(Scalar vl, Scalar vr);
 	void settle();
-  
+	
+	void setTerrainMap(const std::shared_ptr<const TerrainMap<Scalar>> &map) {m_terrain_map = map;}
+	
 	void Euler(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matrix<Scalar,STATE_DIM,1> &Xt1, Eigen::Matrix<Scalar,CNTRL_DIM,1> &u);
 	void RK4(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matrix<Scalar,STATE_DIM,1> &Xt1, Eigen::Matrix<Scalar,CNTRL_DIM,1> &u);
 	void ODE(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, Eigen::Matrix<Scalar,STATE_DIM,1> &Xd, Eigen::Matrix<Scalar,CNTRL_DIM,1> &u);
@@ -77,5 +81,8 @@ public:
 	Jackal::rcg::ForceTransforms       f_transforms; // Used to convert external forces to the right frame. Oh wait
 	Jackal::rcg::InertiaProperties     inertias;
 	Jackal::rcg::ForwardDynamics      *fwd_dynamics;
+
+private:
+	std::shared_ptr<const TerrainMap<Scalar>> m_terrain_map;
 };
 

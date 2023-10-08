@@ -3,6 +3,8 @@
 
 #include "VehicleSystem.h"
 #include "Trainer.h"
+#include "TestTerrainMaps.h"
+
 
 namespace {
 	typedef Eigen::Matrix<double, Eigen::Dynamic, 1> VectorF;
@@ -19,8 +21,9 @@ namespace {
 		{
 			init_params[i] = i;
 		}
-    
-		Trainer trainer(std::make_shared<VehicleSystemFactory<ADF>>());
+		
+		std::shared_ptr<const FlatTerrainMap<ADF>> map;
+		Trainer trainer(std::make_shared<VehicleSystemFactory<ADF>>(map));
 		trainer.saveVec(init_params, file_name);
 		trainer.loadVec(temp_params, file_name);
 

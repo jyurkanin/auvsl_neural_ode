@@ -5,6 +5,7 @@
 
 #include "HybridDynamics.h"
 #include "VehicleSystem.h"
+#include "TestTerrainMaps.h"
 #include "utils.h"
 
 namespace plt = matplotlibcpp;
@@ -18,13 +19,11 @@ namespace {
 	class VehicleFixture : public ::testing::Test
 	{
 	public:
-		std::vector<VectorF> m_gt_list;
-		std::vector<VectorAD> m_gt_list_adf;
 		VectorAD m_x0;
 		VectorAD m_params;
-
-		std::shared_ptr<VehicleSystem<ADF>>    m_system_adf;
-
+		
+		std::shared_ptr<VehicleSystem<ADF>> m_system_adf;
+		
 		bool loadVec(VectorAD &params, const std::string &file_name)
 		{
 			char comma;
@@ -47,78 +46,29 @@ namespace {
 		VehicleFixture()
 		{
 			srand(time(NULL)); // randomize seed
-      
-			m_system_adf = std::make_shared<VehicleSystem<ADF>>();
+
+			std::shared_ptr<const FlatTerrainMap<ADF>> map;
+			m_system_adf = std::make_shared<VehicleSystem<ADF>>(map);
       
 			m_params = VectorAD::Zero(m_system_adf->getNumParams());
 			m_x0 = VectorAD::Zero(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 			
-			loadVec(m_params, "/home/justin/tire.net");
-			m_system_adf->getDefaultParams(m_params);
+			if(loadVec(m_params, "/home/justin/tire.net"))
+			{
+				m_system_adf->getDefaultParams(m_params);
+			}
+			
 			m_system_adf->setParams(m_params);
 			
 			m_system_adf->getDefaultInitialState(m_x0);
-			m_x0[6] = .0605;
-			
-			int num_steps = 100;
-			m_gt_list.resize(num_steps);
-			m_gt_list_adf.resize(num_steps);
-      
-			for(int i = 0; i < m_gt_list.size(); i++)
-			{
-				m_gt_list[i] = VectorF::Zero(m_system_adf->getStateDim());
-				m_gt_list_adf[i] = VectorAD::Random(m_system_adf->getStateDim());
-				for(int j = 0; j < m_gt_list_adf[i].size(); j++)
-				{
-					m_gt_list[i][j] = CppAD::Value(m_gt_list_adf[i][j]);
-				}
-			}
+			m_x0[6] = .0605;			
 		}
 		~VehicleFixture(){}
-    
-		VectorF getGradientSimple()
-		{      
-			CppAD::Independent(m_params);
-			m_system_adf->setParams(m_params);
-
-			int num_steps = 100;
-			std::vector<VectorAD> x_list(num_steps);
-      
-			VectorAD loss(1);
-      
-			loss[0] = 0;
-			for(int i = 0; i < x_list.size(); i++)
-			{
-				loss[0] += m_system_adf->loss(m_gt_list_adf[i], x_list[i]);
-			}
-      
-			CppAD::ADFun<double> func(m_params, loss);
-      
-			VectorF y0(1);
-			y0[0] = 1;
-
-			std::cout << "Loss " << CppAD::Value(loss[0]) << "\n";
-      
-			return func.Reverse(1, y0);
-		}
+		
 	};
-
-  
-
-
-  
-	// TEST_F(VehicleFixture, validate_gradient_easy)
-	// {
-	// 	VectorF grad_simple = getGradientSimple();
-	// 	//VectorF grad_bptt = getGradientBPTT();
-
-	// 	for(int i = 0; i < m_system_adf->getNumParams(); i++)
-	// 	{
-      
-	// 	}
-	// }
-  
-  
+	
+	
+	
 	TEST_F(VehicleFixture, settling)
 	{
 		int num_steps = 100;
@@ -127,8 +77,6 @@ namespace {
 		std::vector<double> x_vec(num_steps);
 		std::vector<double> y_vec(num_steps);
     
-		m_system_adf->setParams(m_params);
-
 		VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 		VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
     
@@ -166,8 +114,6 @@ namespace {
 		std::vector<double> elev(num_steps);
 		std::vector<double> x_vec(num_steps);
 		std::vector<double> y_vec(num_steps);
-		
-		m_system_adf->setParams(m_params);
 		
 		VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 		VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
@@ -216,8 +162,6 @@ namespace {
 		std::vector<double> x_vec(num_steps);
 		std::vector<double> y_vec(num_steps);
     
-		m_system_adf->setParams(m_params);
-		
 		VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 		VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 		
@@ -263,8 +207,6 @@ namespace {
 		std::vector<double> x_vec(num_steps);
 		std::vector<double> y_vec(num_steps);
     
-		m_system_adf->setParams(m_params);
-		
 		VectorAD xk(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 		VectorAD xk1(m_system_adf->getStateDim() + m_system_adf->getControlDim());
 		

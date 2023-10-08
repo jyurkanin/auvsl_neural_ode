@@ -2,25 +2,27 @@ Updates
 
 
 
-* <2023-09-25 Mon 23:40>
-Plots you want
 
-** TODO Plot all models on the 144 different CV3 trajectories
 
-** TODO Plots for neural/Bekker tire-soil model vx-fx, vy-fy, zr-fz
+* <2023-09-25 mon 23:40>
+plots you want
 
-** TODO Plots to show training/validation loss over time
+** TODO plot all models on the 144 different cv3 trajectories
 
-** TODO Plots for example trajectories CV3#55, CV3#1, and a mostly straight CV3 would be good
+** TODO plots for neural/bekker tire-soil model vx-fx, vy-fy, zr-fz
+
+** TODO plots to show training/validation loss over time
+
+** TODO plots for example trajectories cv3#55, cv3#1, and a mostly straight CV3 would be good
 
 ** TODO 2D colormap plot to show unsafe vs safe 3D trajectories
+YEEE
 
 Code you need to write:
 
-** TODO 3D terrain simulation. Could be done with a branch.
+** DONE 3D terrain simulation. Could be done with a branch.
 Better yet, would be to use OOP and add a class that can provide the ability
-to try different terrain maps.
-
+to try different terrain maps. Nice.
 
 
 * <2023-08-23 Wed 18:50>

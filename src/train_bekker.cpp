@@ -1,4 +1,5 @@
 #include "BekkerSystem.h"
+#include "TestTerrainMaps.h"
 #include "Trainer.h"
 #include <iostream>
 #include <fenv.h>
@@ -8,8 +9,9 @@
 int main()
 {
 	int num_threads = 2;
-
-	std::shared_ptr<BekkerSystemFactory<ADF>> factory = std::make_shared<BekkerSystemFactory<ADF>>();
+	
+	std::shared_ptr<const FlatTerrainMap<ADF>> map;
+	std::shared_ptr<BekkerSystemFactory<ADF>> factory = std::make_shared<BekkerSystemFactory<ADF>>(map);
 	Trainer train(factory, num_threads);
 	std::cout << "Default Performance:\n";
 	
