@@ -60,7 +60,7 @@ HybridDynamics::~HybridDynamics(){
 }
 
 void HybridDynamics::initState(){
-  Scalar start_state[STATE_DIM] = {0,0,0,1, 0,0,.16, 0,0,0,0, 0,0,0, 0,0,0, 0,0,0,0};
+  Scalar start_state[STATE_DIM] = {0,0,0,1, 0,0,0.16, 0,0,0,0, 0,0,0, 0,0,0, 0,0,0,0};
   initState(start_state);
 }
 
@@ -165,8 +165,9 @@ void HybridDynamics::settle()
 			lin_vel = rot*lin_vel;
 
 			// Prevent moving in the x or y directions.
-			ang_vel[0] = 0;
-			ang_vel[1] = 0;
+			//ang_vel[0] = 0; // This is actually desirable if we want the quaternion to stabilize
+			//ang_vel[1] = 0;
+			
 			lin_vel[0] = 0;
 			lin_vel[1] = 0;
 
@@ -399,7 +400,7 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 		// ang_force = cpt_rots[ii].transpose()*ang_force;
 		// Numerical hack to help stabilize sinkage
 		// todo: replace cpt_vels with temp_vel
-		lin_force[2] += -200*cpt_vels[ii][2]; //dead simple, works fine.
+		lin_force[2] += -10*cpt_vels[ii][2]; //dead simple, works fine.
 		
 		Force wrench;
 		wrench[0] = 0;

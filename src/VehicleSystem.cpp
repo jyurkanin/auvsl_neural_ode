@@ -165,6 +165,15 @@ void VehicleSystem<Scalar>::getDefaultInitialState(VectorS &state)
 	state[4] = 0.0;
 	state[5] = 0.0;
 	state[6] = m_hybrid_dynamics.state_[6];
+	
+	std::cout << "Stabilized z: "
+			  << CppAD::Value(state[6]) << "\n";
+	
+	std::cout << "Stabilized Quaternion: "
+			  << CppAD::Value(state[0]) << ", "
+			  << CppAD::Value(state[1]) << ", "
+			  << CppAD::Value(state[2]) << ", "
+			  << CppAD::Value(state[3]) << "\n";
 }
 
 template<typename Scalar>

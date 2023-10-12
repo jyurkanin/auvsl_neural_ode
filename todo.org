@@ -16,7 +16,7 @@ plots you want
 ** TODO plots for example trajectories cv3#55, cv3#1, and a mostly straight CV3 would be good
 
 ** TODO 2D colormap plot to show unsafe vs safe 3D trajectories
-YEEE
+Add a unit test for this to generate this plot
 
 Code you need to write:
 
