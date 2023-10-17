@@ -230,6 +230,9 @@ namespace
 		plt::title("Elevation vs Time");
 		plt::xlabel("[s]");
 		plt::ylabel("[m]");
+
+		std::vector<std::vector<double>> failed_xs;
+		std::vector<std::vector<double>> failed_ys;
 		
 		for(int i = 0; i < max_i; i++)
 		{
@@ -251,15 +254,17 @@ namespace
 				std::string format;
 				if(len < time_vec.size())
 				{
-					format = "red";
+					format = "gray";
+					failed_xs.push_back(std::vector<double>(x_vec.begin(), x_vec.begin()+len));
+					failed_ys.push_back(std::vector<double>(y_vec.begin(), y_vec.begin()+len));
 				}
 				else
 				{
 					format = "black";
+					plt::plot(std::vector<double>(x_vec.begin(), x_vec.begin()+len),
+							  std::vector<double>(y_vec.begin(), y_vec.begin()+len),
+							  format);
 				}
-				plt::plot(std::vector<double>(x_vec.begin(), x_vec.begin()+len),
-						  std::vector<double>(y_vec.begin(), y_vec.begin()+len),
-						  format);
 				
 				plt::figure(2);
 				plt::plot(std::vector<double>(time_vec.begin(), time_vec.begin()+len),
@@ -267,15 +272,21 @@ namespace
 						  format);
 			}
 		}
-		
-		
+
+		plt::figure(1); //This is to make sure you draw the failed trajectories on top of the other trajectories so they're more visible.
+		for(int i = 0; i < failed_xs.size(); i++)
+		{
+			plt::plot(failed_xs[i],
+					  failed_ys[i],
+					  "gray");
+		}
 		
 		plt::figure(3);
 		plt::title("Safety of Different Vehicle Trajectories");
 		
 		const std::map<std::string, std::string> kwds =
 			{{"interpolation", "none"},
-			 {"cmap","hot"}
+			 {"cmap","gray"}
 			};
 		plt::imshow(max_angle_mat, kwds);
 		plt::colorbar();
@@ -285,8 +296,8 @@ namespace
 		const std::vector<std::string> labels_safety = {"0","1", "2", "3", "4", "5", "6", "7", "8", "9"};
 		plt::xticks(xticks_safety, labels_safety);
 		plt::yticks(yticks_safety, labels_safety);
-		plt::xlabel("vr");
-		plt::ylabel("vl");
+		plt::xlabel("Right Side Velocity [mps]");
+		plt::ylabel("Left Side Velocity [mps]");
 		
 		
 		
@@ -316,6 +327,7 @@ namespace
 		}
 		
 		plt::imshow(elev_mat, kwds);
+		plt::colorbar();
 
 		plt::figure(5);
 		std::vector<double> x_map_vec(1000);
@@ -325,7 +337,7 @@ namespace
 			x_map_vec[i] = 10.0*i / 1000;
 			z_map_vec[i] = CppAD::Value(m_map->getAltitude(x_map_vec[i], 0.0));
 		}
-		plt::plot(x_map_vec, z_map_vec);
+		plt::plot(x_map_vec, z_map_vec, "black");
 		
 		plt::show();
 	}

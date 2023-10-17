@@ -9,16 +9,17 @@ plots you want
 
 ** TODO plot all models on the 144 different cv3 trajectories
 
-** TODO plots for neural/bekker tire-soil model vx-fx, vy-fy, zr-fz
+** DONE plots for neural/bekker tire-soil model vx-fx, vy-fy, zr-fz
 
 ** TODO plots to show training/validation loss over time
 
 ** TODO plots for example trajectories cv3#55, cv3#1, and a mostly straight CV3 would be good
 
-** TODO 2D colormap plot to show unsafe vs safe 3D trajectories
+** DONE 2D colormap plot to show unsafe vs safe 3D trajectories
 Add a unit test for this to generate this plot
 
-Code you need to write:
+** DONE Greyscale plots^^
+
 
 ** DONE 3D terrain simulation. Could be done with a branch.
 Better yet, would be to use OOP and add a class that can provide the ability
@@ -28,8 +29,8 @@ to try different terrain maps. Nice.
 * <2023-08-23 Wed 18:50>
 It's so over. :DDDDD
 
-** TODO Double check you've addressed all the dumbass comments
-Mostly
+** Double check you've addressed all the dumbass comments
+Mostly. EVerything except for the SCM comment. not gonna do that.
 
 ** Uh what plots do I want to show?
 You can't train the bekker model.
@@ -45,6 +46,7 @@ LD3    |      |              |
 --------------------------------
 
 ** TODO Generate all plots with a single executable
+Yeah. Maybe you can make a script or something.
 
 ** DONE Create code to run the shit with the bekker model
 Yes.
