@@ -60,7 +60,6 @@ def readIMUFile(name, ii):
 def readFiles(name, num_files):
     timestep = .01
     
-    #for ii in range(1, num_files+1):
     for ii in range(1, num_files+1):
         df_odom = readOdomFile(name, ii)
         df_gt   = readGTFile(name, ii)
@@ -131,7 +130,7 @@ def plot_train3_w():
     plt.show()
 
 def plot_cv3_w():
-    for i in range(55,56):
+    for i in range(1, 144):
         fn = "CV3_data{0:02d}.csv".format(i)
         df = pd.read_csv(fn)
         print("Filename", fn)
@@ -160,7 +159,7 @@ def plot_train3_vx():
     plt.show()
 
 def plot_cv3_vx():
-    for i in range(1,145):
+    for i in range(24, 34):
         fn = "CV3_data{0:02d}.csv".format(i)
         df = pd.read_csv(fn)
         print("Filename", fn)
@@ -189,5 +188,5 @@ readFiles("LD3", 1)
 # plot_ld3_w()
 
 # plot_train3_vx()
-# plot_cv3_vx()
+plot_cv3_vx()
 # plot_ld3_vx()

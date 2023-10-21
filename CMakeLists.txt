@@ -30,7 +30,7 @@ include_directories(/usr/include/eigen3)
 
 include_directories(include/auvsl_dynamics)
 include_directories(src)
-include_directories(/home/justin/code/matplotlib-cpp)
+include_directories(lib)
 
 include(GNUInstallDirs)
 
@@ -52,6 +52,7 @@ add_executable(train
 	src/VehicleSystem.cpp
 	src/Trainer.cpp
 	src/BaseNetwork.cpp
+	src/TestTerrainMaps.cpp
 	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/BekkerDynamics.cpp
 	src/auvsl_dynamics/BekkerTireModel.cpp
@@ -230,6 +231,7 @@ add_executable(
 	src/auvsl_dynamics/utils.cpp
 	src/BaseNetwork.cpp
 	src/BekkerSystem.cpp
+	src/TestTerrainMaps.cpp
 	src/auvsl_dynamics/TireNetwork.cpp
 	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/BekkerDynamics.cpp
@@ -253,9 +255,13 @@ add_executable(
 	test/test_Trainer.cpp
 	src/Trainer.cpp
 	src/VehicleSystem.cpp
+	src/BekkerSystem.cpp
 	src/BaseNetwork.cpp
+	src/TestTerrainMaps.cpp
+	src/auvsl_dynamics/BekkerDynamics.cpp
 	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/TireNetwork.cpp
+	src/auvsl_dynamics/BekkerTireModel.cpp
 	src/auvsl_dynamics/utils.cpp
 	src/auvsl_dynamics/generated/forward_dynamics.cpp
 	src/auvsl_dynamics/generated/inertia_properties.cpp

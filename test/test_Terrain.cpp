@@ -207,7 +207,8 @@ namespace
 		std::cout << "Distance: " << x_vec.back() << "\n";
 		EXPECT_NEAR(x_vec.back(), 10*.098, 5e-2);
 	}
-	
+
+	// Couldn't find a way to add labels to the colorbars. Will need to do that manually.
 	TEST_F(TerrainFixture, safety_colormap)
 	{
 		const int max_i = 10;

@@ -66,7 +66,7 @@ namespace{
 			//feenableexcept(FE_INVALID | FE_OVERFLOW);
 			srand(time(NULL)); // randomize seed
 
-			std::shared_ptr<const FlatTerrainMap<ADF>> map;
+			auto map = std::make_shared<const FlatTerrainMap<ADF>>();
 			m_system_adf = std::make_shared<BekkerSystem<ADF>>(map);
       
 			m_params = VectorAD::Zero(m_system_adf->getNumParams());

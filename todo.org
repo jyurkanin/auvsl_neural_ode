@@ -8,10 +8,12 @@ Updates
 plots you want
 
 ** TODO plot all models on the 144 different cv3 trajectories
+Maybe. Maybe just as a unit test
 
 ** DONE plots for neural/bekker tire-soil model vx-fx, vy-fy, zr-fz
 
 ** TODO plots to show training/validation loss over time
+Literally would just need to run it and log the results.
 
 ** TODO plots for example trajectories cv3#55, cv3#1, and a mostly straight CV3 would be good
 
@@ -45,7 +47,7 @@ CV3    |      |              |
 LD3    |      |              |
 --------------------------------
 
-** TODO Generate all plots with a single executable
+** Generate all plots with a single executable
 Yeah. Maybe you can make a script or something.
 
 ** DONE Create code to run the shit with the bekker model

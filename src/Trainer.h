@@ -80,7 +80,8 @@ public:
 	};
 
 	std::vector<Worker> m_workers;
-private:
+	
+	//private: // lol!
 	const int m_train_steps = 200;
 	const int m_eval_steps = 600;
 	const int m_inc_train_steps = 200;

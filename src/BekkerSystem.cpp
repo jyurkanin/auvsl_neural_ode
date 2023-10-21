@@ -36,15 +36,15 @@ void BekkerSystem<Scalar>::getDefaultInitialState(VectorS &state)
 	m_bekker_dynamics.settle(); //allow the 3d vehicle to come to rest and reach steady state, equillibrium sinkage for tires.
 	
 	// Quaternion
-	state[0] = m_hybrid_dynamics.state_[0];
-	state[1] = m_hybrid_dynamics.state_[1];
-	state[2] = m_hybrid_dynamics.state_[2];
-	state[3] = m_hybrid_dynamics.state_[3];
+	state[0] = m_bekker_dynamics.state_[0];
+	state[1] = m_bekker_dynamics.state_[1];
+	state[2] = m_bekker_dynamics.state_[2];
+	state[3] = m_bekker_dynamics.state_[3];
 
 	// Position
 	state[4] = 0.0;
 	state[5] = 0.0;
-	state[6] = m_hybrid_dynamics.state_[6];
+	state[6] = m_bekker_dynamics.state_[6];
 }
 
 
