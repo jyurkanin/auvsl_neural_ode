@@ -7,6 +7,7 @@ BekkerTireModel::BekkerTireModel()
 	k0 = 2195;
 	Au = 192400;
 	K = .0254;
+	
 	density = 1681;
 	c = 8.62;
 	pg = 100; //15psi

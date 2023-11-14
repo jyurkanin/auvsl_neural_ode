@@ -184,7 +184,7 @@ void VehicleSystem<Scalar>::getDefaultParams(VectorS &params)
 }
 
 template<typename Scalar>
-VehicleSystem<Scalar>::VectorS VehicleSystem<Scalar>::initializeState(const GroundTruthDataRow &gt_state)
+typename VehicleSystem<Scalar>::VectorS VehicleSystem<Scalar>::initializeState(const GroundTruthDataRow &gt_state)
 {
 	Scalar xk[this->getStateDim()];
 	Scalar xk_base[this->getStateDim()];

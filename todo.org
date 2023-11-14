@@ -2,20 +2,18 @@ Updates
 
 
 
-
-
 * <2023-09-25 mon 23:40>
 plots you want
 
-** TODO plot all models on the 144 different cv3 trajectories
-Maybe. Maybe just as a unit test
+** plot all models on the 144 different cv3 trajectories
+Nah... Maybe just as a unit test
 
 ** DONE plots for neural/bekker tire-soil model vx-fx, vy-fy, zr-fz
 
 ** TODO plots to show training/validation loss over time
 Literally would just need to run it and log the results.
 
-** TODO plots for example trajectories cv3#55, cv3#1, and a mostly straight CV3 would be good
+** DONE plots for example trajectories cv3#55, cv3#1, and a mostly straight CV3 would be good
 
 ** DONE 2D colormap plot to show unsafe vs safe 3D trajectories
 Add a unit test for this to generate this plot
@@ -27,6 +25,19 @@ Add a unit test for this to generate this plot
 Better yet, would be to use OOP and add a class that can provide the ability
 to try different terrain maps. Nice.
 
+Things I don't want to do but might have to do:
+
+** Replace Scalar and ADF with float
+For a speed test. Super annoying to do this and I really don't
+want to do this.
+
+** Train on the other non-off-road datasets just to show it can be done
+Takes time and effort I don't feel like giving.
+
+** Train on the other datasets all with the same model, to show the model can learn to distinguish different ground types.
+I would have to append a 3 element 1 hot vector to the TireModel's
+input vector, depending on the type of dataset and retrain. It would be
+sort of painful to do this and I really don't want to.
 
 * <2023-08-23 Wed 18:50>
 It's so over. :DDDDD

@@ -179,7 +179,7 @@ void BekkerSystem<Scalar>::integrate(const VectorS &Xk, VectorS &Xk1)
 
 
 template<typename Scalar>
-BekkerSystem<Scalar>::VectorS BekkerSystem<Scalar>::initializeState(const GroundTruthDataRow &gt_state)
+typename BekkerSystem<Scalar>::VectorS BekkerSystem<Scalar>::initializeState(const GroundTruthDataRow &gt_state)
 {
 	Scalar xk[this->getStateDim()];
 	Scalar xk_base[this->getStateDim()];

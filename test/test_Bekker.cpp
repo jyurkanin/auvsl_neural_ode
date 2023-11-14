@@ -9,6 +9,7 @@
 
 #include <iostream>
 #include <fenv.h>
+#include <sstream>
 
 namespace plt = matplotlibcpp;
 
@@ -197,21 +198,21 @@ namespace{
 		features[6] = 0.102483;
 		features[7] = 0.652405;
     
-		int len = 100;
+		int len = 1000;
 		int num = 10;
 		std::vector<float> vx_vec(len);
 		std::vector<float> fx_vec(len);
-		std::vector<float> slip_ratio_vec(len);
 		
 		ADF tire_vy = 0;
-	  
-		for(int j = 0; j < 10; j++)
+
+
+		for(int j = 0; j < (num+1); j++)
 		{
 			ADF tire_vx = 0.1*ADF((2.0*j/(float)num) - 1.0);
 			
 			for(int i = 0; i < len; i++)
 			{
-				ADF tangent_vx = 0.1*ADF((2.0*i/(float)len) - 1.0); // + tire_vx;
+				ADF tangent_vx = 0.2*ADF((2.0*i/(float)len) - 1.0); // + tire_vx;
 				
 				inputs[0] = 0.004; //zr
 				inputs[1] = tire_vx;
@@ -230,21 +231,19 @@ namespace{
 				
 				vx_vec[i] = CppAD::Value(tangent_vx - tire_vx);
 				fx_vec[i] = CppAD::Value(forces[0]);
-				slip_ratio_vec[i] = CppAD::Value(features[1]);
 			}
-      
-			plt::subplot(2,1,1);
-			plt::plot(vx_vec, fx_vec);
-			plt::subplot(2,1,2);
-			plt::plot(vx_vec, slip_ratio_vec);
+			
+			std::stringstream stream;
+			stream << std::fixed << std::setprecision(2) << CppAD::Value(tire_vx);
+			std::string label = stream.str();
+			
+			float grey = (0.8*j / num);
+			plt::plot(vx_vec, fx_vec, {{"color", std::to_string(grey)}, {"label", label}});
 		}
 		
-		plt::subplot(2,1,1);
-		plot_cross(-1,1, -1,1);
-		plt::subplot(2,1,2);
-		plot_cross(-1,1, -1,1);
-
-		plt::title("Slip vs Fx");
+		plt::legend();
+		plt::xlabel("Velocity Difference (m/s)");
+		plt::ylabel("Longitudinal Force (N)");
 		plt::show();
 	}
 

@@ -24,12 +24,12 @@ namespace{
 	  x[1] = x2;
 	  y[0] = 0;
 	  y[1] = 0;
-	  plt::plot(x, y, "b");
+	  plt::plot(x, y, "k");
 	  x[0] = 0;
 	  x[1] = 0;
 	  y[0] = y1;
 	  y[1] = y2;
-	  plt::plot(x, y, "b");    
+	  plt::plot(x, y, "k");    
   }
   
   bool loadVec(VectorAD &params, const std::string &file_name)
@@ -89,37 +89,65 @@ namespace{
 	  features[2] = 0;
 	  features[3] = 0.005;
     
-	  features[4] = 29.758547;
-	  features[5] = 2083.0;
-	  features[6] = 1.197933;
-	  features[7] = 0.102483;
+	  features[4] = 0.0;
+	  features[5] = 0.0;
+	  features[6] = 0.0;
+	  features[7] = 0.0;
     
-	  int len = 10000;
+	  int len = 1000;
+	  int num = 10;
 	  std::vector<float> vx_vec(len);
 	  std::vector<float> fx_vec(len);
-
-	  for(int j = 0; j < 10; j++)
+	  
+	  for(int j = 0; j < (num+1); j++)
 	  {
-		  ADF tire_tangent_vel = j/4.0;
+		  ADF tire_vx = 0.1*ADF((2.0*j/(float)num) - 1.0);
+		  
 		  for(int i = 0; i < len; i++)
 		  {
-			  ADF tire_vx = 1.0*ADF((2.0*i/(float)len) - 1.0) + tire_tangent_vel;
-
+			  ADF tire_tangent_vel = 0.2*ADF((2.0*i/(float)len) - 1.0);
+			  
 			  features[0] = tire_vx;
 			  features[2] = tire_tangent_vel/.098;
-	
+			  
 			  tire_network.forward(features, forces, 0);
-	
+			  
 			  vx_vec[i] = CppAD::Value(tire_tangent_vel - tire_vx);
 			  fx_vec[i] = CppAD::Value(forces[0]);
 		  }
-      
-		  plot_cross(-1,1, -100,100);
-		  plt::plot(vx_vec, fx_vec);
-	  }
 
-	  plt::title("Diff vs Fx");
+		  std::stringstream stream;
+		  stream << std::fixed << std::setprecision(2) << CppAD::Value(tire_vx);
+		  std::string label = stream.str();
+		  
+		  float grey = (0.8*j / num);
+		  plt::plot(vx_vec, fx_vec, {{"color", std::to_string(grey)}, {"label", label}});
+	  }
+	  
+	  plt::legend();
+	  plt::xlabel("Velocity Difference (m/s)");
+	  plt::ylabel("Longitudinal Force (N)");
 	  plt::show();
+	  
+	  
+	  for(int i = 0; i < len; i++)
+	  {
+		  ADF tire_vx = 0.0;
+		  ADF tire_tangent_vel = 0.001*ADF((2.0*i/(float)len) - 1.0);
+		  features[0] = tire_vx;
+		  features[2] = tire_tangent_vel / 0.098;
+
+		  tire_network.forward(features, forces, 0);
+
+		  vx_vec[i] = CppAD::Value(tire_tangent_vel / 0.098);
+		  fx_vec[i] = CppAD::Value(forces[0]);
+	  }
+	  plt::plot(vx_vec, fx_vec, {{"color", "k"}});
+	  plot_cross(-.001,.001, -.1,.1);
+	  plt::xlabel("Tire Angular Velocity (m/s)");
+	  plt::ylabel("Longitudinal Force (N)");
+	  plt::show();
+	  
   }
 
 
