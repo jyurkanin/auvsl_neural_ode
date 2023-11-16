@@ -95,7 +95,7 @@ namespace{
 	  features[7] = 0.0;
     
 	  int len = 1000;
-	  int num = 10;
+	  int num = 11;
 	  std::vector<float> vx_vec(len);
 	  std::vector<float> fx_vec(len);
 	  
@@ -175,15 +175,15 @@ namespace{
 	  features[6] = 0.8;
 	  features[7] = 0.0;
 	  
-	  int num = 8;
+	  int num = 11;
 	  int len = 10000;
 	  std::vector<float> vy_vec(len);
 	  std::vector<float> fy_vec(len);
 	  std::vector<float> tanh_vec(len);
 
-	  for(int j = 0; j < (num+1); j++)
+	  for(int j = 0; j < num; j++)
 	  {
-		  ADF vx = (float) j/num;
+		  ADF vx = (float) j/(num-1);
 		  for(int i = 0; i < len; i++)
 		  {
 			  ADF vy = 1.0 * ADF((2.0*i/(float)len) - 1.0);
@@ -206,7 +206,7 @@ namespace{
 	  }
 	  
 	  plt::legend();
-	  plt::xlabel("Velocity Difference (m/s)");
+	  plt::xlabel("Lateral Velocity (m/s)");
 	  plt::ylabel("Lateral Force (N)");
 	  plt::show();
   }
@@ -235,28 +235,23 @@ namespace{
 	  features[6] = 0.8;
 	  features[7] = 0.0;
 	  
-	  int num = 8;
-	  int len = 10000;
+	  int num = 1;
+	  int len = 1000;
 	  std::vector<float> sinkage_vec(len);
 	  std::vector<float> fz_vec(len);
-
-	  for(int j = 0; j < 8; j++)
+	  
+	  for(int i = 0; i < len; i++)
 	  {
-		  features[0] = 0;
-		  for(int i = 0; i < len; i++)
-		  {
-			  ADF zr = 0.1 * ADF((2.0*i/(float)len) - 1.0);
-			  features[3] = zr;
-			  
-			  tire_network.forward(features, forces, 0);
-			  
-			  sinkage_vec[i] = CppAD::Value(zr);
-			  fz_vec[i] = CppAD::Value(forces[2]);
-		  }
+		  ADF zr = 0.01 * ADF((2.0*i/(float)len) - 0.5);
+		  features[3] = zr;
 		  
-		  plt::plot(sinkage_vec, fz_vec, {{"color", "k"}});
+		  tire_network.forward(features, forces, 0);
+		  
+		  sinkage_vec[i] = CppAD::Value(zr);
+		  fz_vec[i] = CppAD::Value(forces[2]);
 	  }
-    
+	  
+	  plt::plot(sinkage_vec, fz_vec, {{"color", "k"}});
 	  plt::xlabel("Tire Contact Height Error (m)");
 	  plt::ylabel("Normal Force (N)");
 	  plt::show();
