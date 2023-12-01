@@ -97,6 +97,7 @@ add_executable(evaluate_bekker
 	src/BekkerSystem.cpp
 	src/Trainer.cpp
 	src/BaseNetwork.cpp
+	src/TestTerrainMaps.cpp
 	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/BekkerDynamics.cpp
 	src/auvsl_dynamics/BekkerTireModel.cpp
@@ -120,6 +121,7 @@ add_executable(evaluate
 	src/VehicleSystem.cpp
 	src/Trainer.cpp
 	src/BaseNetwork.cpp
+	src/TestTerrainMaps.cpp
  	src/auvsl_dynamics/HybridDynamics.cpp
 	src/auvsl_dynamics/TireNetwork.cpp
 	src/auvsl_dynamics/utils.cpp
@@ -147,6 +149,35 @@ target_link_libraries(train_linear ${PYTHON_LIBRARIES})
 add_executable(gen_tire_data
 	src/gen_tire_model_data.cpp
 )
+
+
+
+add_executable(
+	plot_stuff
+	src/plot_stuff.cpp
+	src/VehicleSystem.cpp
+	src/BekkerSystem.cpp
+	src/BaseNetwork.cpp
+	src/TestTerrainMaps.cpp
+	src/Trainer.cpp
+	src/auvsl_dynamics/HybridDynamics.cpp
+	src/auvsl_dynamics/BekkerDynamics.cpp
+	src/auvsl_dynamics/TireNetwork.cpp
+	src/auvsl_dynamics/BekkerTireModel.cpp
+	src/auvsl_dynamics/utils.cpp
+	src/auvsl_dynamics/generated/forward_dynamics.cpp
+	src/auvsl_dynamics/generated/inertia_properties.cpp
+	src/auvsl_dynamics/generated/inverse_dynamics.cpp
+	src/auvsl_dynamics/generated/jacobians.cpp
+	src/auvsl_dynamics/generated/jsim.cpp
+	src/auvsl_dynamics/generated/miscellaneous.cpp
+	src/auvsl_dynamics/generated/transforms.cpp
+)
+target_include_directories(plot_stuff PRIVATE ${PYTHON_INCLUDE_DIRS})
+target_link_libraries(plot_stuff ${PYTHON_LIBRARIES})
+target_link_libraries(plot_stuff GTest::gtest_main)
+
+
 
 
 add_executable(
@@ -276,3 +307,6 @@ target_link_libraries(test_Trainer ${PYTHON_LIBRARIES})
 target_link_libraries(test_Trainer GTest::gtest_main)
 include(GoogleTest)
 gtest_discover_tests(test_Trainer)
+
+
+

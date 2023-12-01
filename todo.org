@@ -1,6 +1,17 @@
 Updates
 
 
+* <2023-11-15 Wed 18:01>
+
+** DONE Not sure where my pretraining script went.
+The pretraining script doesn't match the C++ implementation
+In terms of the tire network formulation. Which makes no sense.
+
+** TODO Add logic to set all reaction forces to zero during testing
+During training, allow this nonsense to happen for the purpose of creating
+a smooth simulation.
+During testing, make it realistic by setting these reaction forces to zero.
+
 
 * <2023-09-25 mon 23:40>
 plots you want

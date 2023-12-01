@@ -87,7 +87,7 @@ int main(){
     float vx = rand_float(1, -1); // The bekker model is literally not fucking equipped to handle negative velocities
     float vy = rand_float(1, -1);
     float wy = rand_float(1, -1);
-    float zr = 0.003; //rand_float(.01,.0001);
+    float zr = rand_float(.003,.0001);
 
     //29.76, 2083, 0.8, 0, 0.392699
     float bk_kc   = 29.76; //rand_float(100.0,20.0);

@@ -192,11 +192,11 @@ namespace{
 		features[1] = 0;
 		features[2] = 0;
 	  
-		features[3] = 29.758547;
+		features[3] = 29.76;
 		features[4] = 2083.0;
-		features[5] = 1.197933;
-		features[6] = 0.102483;
-		features[7] = 0.652405;
+		features[5] = 0.8;
+		features[6] = 0.0;
+		features[7] = 0.3927;
     
 		int len = 1000;
 		int num = 11;
@@ -324,23 +324,21 @@ namespace{
 		features[1] = 0;
 		features[2] = 0;
 	  
-		features[3] = 29.758547;
+		features[3] = 29.76;
 		features[4] = 2083.0;
-		features[5] = 1.197933;
-		features[6] = 0.102483;
-		features[7] = 0.652405;
+		features[5] = 0.8;
+		features[6] = 0.0;
+		features[7] = 0.3927;
     
 		int len = 1000;
 		std::vector<float> vz_vec(len);
 		std::vector<float> fz_vec(len);
 
-		ADF tire_tangent_vel = 0.0;
-		ADF tire_vx = 0.0;
+		ADF min_zr = 0.0001;
+		ADF max_zr = 0.003;
 		for(int i = 0; i < len; i++)
 		{
-			ADF zr = 0.01 * ADF((2.0*i/(float)len) - 0.5);
-			
-			std::cout << "zr: " << CppAD::Value(zr) << "\n";
+			ADF zr = ((max_zr - min_zr)*((float)i / len)) + min_zr;
 			
 			features[0] = zr;
 			features[1] = 1;

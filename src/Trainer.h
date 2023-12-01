@@ -33,6 +33,11 @@ public:
 	void evaluate_train3();
 	void evaluate_cv3();
 	void evaluate_ld3();
+	void evaluate_file(const std::string name,
+					   const int max_num_segments,
+					   std::vector<VectorAD> &sim_traj,
+					   std::vector<GroundTruthDataRow> &gt_traj);
+	
 	void evaluate_validation_dataset();
 	void computeEqState();
 	bool saveVec(const VectorAD &params, const std::string &file_name);

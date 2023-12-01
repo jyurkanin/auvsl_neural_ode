@@ -9,6 +9,7 @@
 #include <chrono>
 #include <mutex>
 #include <stdlib.h>
+#include <string>
 
 namespace plt = matplotlibcpp;
 
@@ -151,7 +152,7 @@ void Trainer::train()
 
 	int cnt_actual = 0;
 	
-	for(int i = 1; i <= 17; i++)
+	for(int i = 1; i <= 16; i++)
 	{
 		memset(fn_array, 0, 100);
 		sprintf(fn_array, "/home/justin/code/auvsl_dynamics_bptt/scripts/Train3_data%02d.csv", i);
@@ -502,12 +503,14 @@ void Trainer::plotTrajectory(const std::vector<GroundTruthDataRow> &traj, const 
   aspect_ratio_hack_x[1] = max;
   aspect_ratio_hack_y[1] = max;
 
-  plt::subplot(1,6,1);
-  plt::plot(gt_vl);
-  plt::plot(gt_vr);
-  plt::title("Vl Vr");
+  // plt::subplot(1,6,1);
+  // plt::figure(1);
+  // plt::plot(gt_vl);
+  // plt::plot(gt_vr);
+  // plt::title("Vl Vr");
   
-  plt::subplot(1,6,2);
+  //plt::subplot(1,6,2);
+  plt::figure(2);
   plt::title("X-Y plot");
   plt::xlabel("[m]");
   plt::ylabel("[m]");
@@ -516,13 +519,15 @@ void Trainer::plotTrajectory(const std::vector<GroundTruthDataRow> &traj, const 
   plt::scatter(aspect_ratio_hack_x, aspect_ratio_hack_y);
   plt::legend();
   
-  plt::subplot(1,6,3);
+  //plt::subplot(1,6,3);
+  plt::figure(3);
   plt::title("Time vs Elevation");
   plt::xlabel("Time [s]");
   plt::ylabel("Elevation [m]");
   plt::plot(model_z);
 
-  plt::subplot(1,6,4);
+  //plt::subplot(1,6,4);
+  plt::figure(4);
   plt::title("Time vs yaw");
   plt::xlabel("Time [s]");
   plt::ylabel("yaw [Rads]");
@@ -530,14 +535,16 @@ void Trainer::plotTrajectory(const std::vector<GroundTruthDataRow> &traj, const 
   plt::plot(x_axis, gt_yaw, "b", {{"label", "gt"}});
   plt::legend();
   
-  plt::subplot(1,6,5);
+  //plt::subplot(1,6,5);
+  plt::figure(5);
   plt::plot(gt_vx);
   plt::plot(model_vx);
   
-  plt::subplot(1,6,6);
+  //plt::subplot(1,6,6);
+  plt::figure(6);
   plt::plot(gt_vy);
   plt::plot(model_vy);
-  plt::show();
+  //plt::show();
 }
 
 void Trainer::evaluateTrajectory(const std::vector<GroundTruthDataRow> &traj, std::vector<VectorAD> &x_list, double &loss)
@@ -575,19 +582,10 @@ void Trainer::evaluateTrajectory(const std::vector<GroundTruthDataRow> &traj, st
   
 	// plotTrajectory(traj, x_list);
 	
-	// This could also be a running loss instead of a terminal loss
 	ADF ang_mse;
 	ADF lin_mse;
 	m_system_adf->evaluate(gt_vec, x_list.back(), ang_mse, lin_mse);
-	//std::cout << "Lin err " << CppAD::Value(CppAD::sqrt(lin_mse)) << " Ang err " << CppAD::Value(CppAD::sqrt(ang_mse)) << "\n";
-
 	loss = CppAD::Value(CppAD::sqrt(lin_mse) / traj_len);
-	// std::cout << "Lin err: " << CppAD::Value(CppAD::sqrt(lin_mse))
-	// 	    << " traj_len: " << CppAD::Value(traj_len)
-	// 	    << " Relative Linear: " << loss << "\n";
-  
-  
-  
 }
 
 void Trainer::trainTrajectory(const std::vector<GroundTruthDataRow> &traj,
@@ -747,6 +745,38 @@ bool Trainer::loadVec(VectorAD &params, const std::string &file_name)
 
 
 
+void Trainer::evaluate_file(const std::string name,
+							const int max_num_segments,
+							std::vector<VectorAD> &sim_traj,
+							std::vector<GroundTruthDataRow> &gt_traj)
+{
+  	double loss = 0;
+	loadDataFile(name);
+	
+	for(int j = 0; j < (m_data.size() - m_eval_steps); j += m_inc_eval_steps)
+	{
+		std::vector<VectorAD> x_list(m_eval_steps);
+		std::vector<GroundTruthDataRow> traj(m_data.begin()+j, m_data.begin()+j+m_eval_steps);
+		
+		evaluateTrajectory(traj, x_list, loss);
+		sim_traj.insert(sim_traj.end(), x_list.begin(), x_list.end());
+		gt_traj.insert(gt_traj.end(), traj.begin(), traj.end());
+		
+		std::cout << "Name: " << j << " Loss: " << loss << "\n";
+
+		//if((max_num_segments*m_eval_steps) > j)
+		{
+			return;
+		}
+	}
+}
+
+
+
+
+
+
+
 // Worker Definition
 Trainer::Worker::Worker()
 {
@@ -755,7 +785,7 @@ Trainer::Worker::Worker()
 
 Trainer::Worker::~Worker()
 {
-  if(m_thread.joinable()) { m_thread.join(); }
+	if(m_thread.joinable()) { m_thread.join(); }
 }
 
 

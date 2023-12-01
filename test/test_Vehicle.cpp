@@ -47,7 +47,7 @@ namespace {
 		{
 			srand(time(NULL)); // randomize seed
 
-			std::shared_ptr<const FlatTerrainMap<ADF>> map;
+			auto map = std::make_shared<const FlatTerrainMap<ADF>>();
 			m_system_adf = std::make_shared<VehicleSystem<ADF>>(map);
       
 			m_params = VectorAD::Zero(m_system_adf->getNumParams());

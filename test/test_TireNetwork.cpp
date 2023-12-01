@@ -159,6 +159,7 @@ namespace{
 	  VectorAD params = VectorAD::Zero(tire_network.getNumParams());
 	  if(!loadVec(params, "/home/justin/tire.net"))
 	  {
+		  std::cout << "Successfully loaded tire network\n";
 		  tire_network.setParams(params, 0);
 	  }
 	  
@@ -215,13 +216,14 @@ namespace{
   {
 	  TireNetwork tire_network;
 	  tire_network.load_model();
-	  
+
 	  VectorAD params = VectorAD::Zero(tire_network.getNumParams());
 	  if(!loadVec(params, "/home/justin/tire.net"))
 	  {
+		  std::cout << "Successfully loaded tire network\n";
 		  tire_network.setParams(params, 0);
 	  }
-	  
+	  	  
 	  Eigen::Matrix<ADF,8,1> features;
 	  Eigen::Matrix<ADF,TireNetwork::num_out_features,1> forces;
 	  
@@ -239,10 +241,12 @@ namespace{
 	  int len = 1000;
 	  std::vector<float> sinkage_vec(len);
 	  std::vector<float> fz_vec(len);
-	  
+
+	  ADF min_zr = 0.0001;
+	  ADF max_zr = 0.003;
 	  for(int i = 0; i < len; i++)
 	  {
-		  ADF zr = 0.01 * ADF((2.0*i/(float)len) - 0.5);
+		  ADF zr = ((max_zr - min_zr)*((float)i / len)) + min_zr;
 		  features[3] = zr;
 		  
 		  tire_network.forward(features, forces, 0);

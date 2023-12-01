@@ -400,7 +400,7 @@ void HybridDynamics::get_tire_f_ext(const Eigen::Matrix<Scalar,STATE_DIM,1> &X, 
 		// ang_force = cpt_rots[ii].transpose()*ang_force;
 		// Numerical hack to help stabilize sinkage
 		// todo: replace cpt_vels with temp_vel
-		lin_force[2] += -10*cpt_vels[ii][2]; //dead simple, works fine.
+		lin_force[2] += -20*cpt_vels[ii][2]; //dead simple, works fine.
 		
 		Force wrench;
 		wrench[0] = 0;
