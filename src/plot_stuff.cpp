@@ -14,7 +14,7 @@
 namespace plt = matplotlibcpp;
 typedef Eigen::Matrix<ADF, Eigen::Dynamic, 1> VectorAD;
 
-int main()
+int plot_stuff()
 {
 	int num_threads = 1;
 	
@@ -74,4 +74,59 @@ int main()
 	}
 	
 	plt::show();
+}
+
+
+
+void time_stuff()
+{
+	int num_threads = 1;
+	
+	auto map = std::make_shared<const FlatTerrainMap<ADF>>();
+	auto bekker_factory = std::make_shared<BekkerSystemFactory<ADF>>(map);
+	auto neural_factory = std::make_shared<VehicleSystemFactory<ADF>>(map);
+	
+	Trainer train_bekker(bekker_factory, num_threads);
+	Trainer train_neural(neural_factory, num_threads);
+	train_neural.load();
+	
+	const std::string ex3_name = "/home/justin/code/auvsl_dynamics_bptt/scripts/LD3_data01.csv";
+	
+	std::vector<VectorAD> nn_traj;
+	std::vector<VectorAD> bk_traj;
+	std::vector<GroundTruthDataRow> gt_traj;
+	std::vector<GroundTruthDataRow> gt_traj_ignore;
+
+	const int num_steps = 100;
+	const float num_secs = num_steps*6;
+
+
+	auto start = std::chrono::system_clock::now();
+	train_bekker.evaluate_file(ex3_name,
+							   num_steps,
+							   bk_traj,
+							   gt_traj);	
+	auto end = std::chrono::system_clock::now();
+	std::chrono::duration<double> bekker_runtime = end - start;
+	
+
+	start = std::chrono::system_clock::now();
+	train_neural.evaluate_file(ex3_name,
+							   num_steps,
+							   nn_traj,
+							   gt_traj_ignore);
+	end = std::chrono::system_clock::now();
+	std::chrono::duration<double> neural_runtime = end - start;
+	
+	
+	std::cout << "Bekker 600s of Simulation in: " << bekker_runtime.count() << "s\n";
+	std::cout << "Neural 600s of Simulation in: " << neural_runtime.count() << "s\n";
+}
+
+
+
+int main()
+{
+	// plot_stuff();
+	time_stuff();
 }

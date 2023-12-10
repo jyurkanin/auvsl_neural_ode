@@ -764,7 +764,7 @@ void Trainer::evaluate_file(const std::string name,
 		
 		std::cout << "Name: " << j << " Loss: " << loss << "\n";
 
-		//if((max_num_segments*m_eval_steps) > j)
+		if(j > ((max_num_segments - 1)*m_eval_steps))
 		{
 			return;
 		}

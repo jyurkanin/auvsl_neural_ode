@@ -200,7 +200,8 @@ namespace
 		plt::xlabel("Time [s]");
 		plt::ylabel("Elevation [m]");
 		plt::plot(time, elev);
-    
+		plt::text(5.0, 0.15, "derb");
+		
 		plt::show();
 
 		// tire_radius is .098m * 1rad/s
@@ -223,12 +224,12 @@ namespace
 		Eigen::Matrix<double, max_i, max_j>  max_angle_mat;
 		
 		plt::figure(1);
-		plt::title("X-Y plot");
+		//plt::title("X-Y plot");
 		plt::xlabel("[m]");
 		plt::ylabel("[m]");
 
 		plt::figure(2);
-		plt::title("Elevation vs Time");
+		//plt::title("Elevation vs Time");
 		plt::xlabel("[s]");
 		plt::ylabel("[m]");
 
@@ -283,11 +284,12 @@ namespace
 		}
 		
 		plt::figure(3);
-		plt::title("Safety of Different Vehicle Trajectories");
+		//plt::title("Safety of Different Vehicle Trajectories");
 		
 		const std::map<std::string, std::string> kwds =
 			{{"interpolation", "none"},
-			 {"cmap","gray"}
+			 {"cmap","gray"},
+			 {"label","Elevation (m)"}
 			};
 		plt::imshow(max_angle_mat, kwds);
 		plt::colorbar();
@@ -303,7 +305,7 @@ namespace
 		
 		
 		plt::figure(4);
-		plt::title("Simulated Map Elevation");
+		//plt::title("Simulated Map Elevation");
 
 		const int num_rows = 100;
 		const int num_cols = 100;
