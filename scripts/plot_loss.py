@@ -1,8 +1,22 @@
 import matplotlib.pyplot as plt
 import pandas as pd
 import re
+import argparse
 
-f = open("../build/train_output.txt")
+
+parser = argparse.ArgumentParser(
+                    prog='plot_loss',
+                    description='This plots the loss',
+                    epilog='bruh')
+
+parser.add_argument('-f', '--filename')
+args = parser.parse_args()
+
+if args.filename == None:
+    print("Need filename")
+    quit()
+
+f = open("../build/" + args.filename)
 
 
 training_loss = []
@@ -17,17 +31,23 @@ for line in f:
     elif("Gradient" in line):
         param0.append(float(line.split()[4]))
 
-plt.subplot(3,1,1)
-plt.plot(training_loss, marker='2')
-plt.title("Training Loss")
+plt.figure()
+plt.plot(training_loss[0:30], color="k", marker='o')
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+#plt.title("Training Loss")
 
-plt.subplot(3,1,2)
-plt.plot(validation, marker='2')
-plt.title("Validation Loss")
+plt.figure()
+plt.plot(validation[0:30], color="k", marker='o')
+plt.xlabel("Epoch")
+plt.ylabel("Loss")
+#plt.title("Validation Loss")
 
-plt.subplot(3,1,3)
-plt.plot(param0, marker='2')
-plt.title("Param[0] Loss")
+plt.figure()
+plt.plot(param0, color="k")
+plt.xlabel("Batch")
+plt.ylabel("Gradient Norm")
+#plt.title("Gradient Norm (dont plot)")
 
 plt.tight_layout()
 plt.show()

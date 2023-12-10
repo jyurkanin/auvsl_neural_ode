@@ -53,7 +53,6 @@ public:
   
 private:
   Eigen::Matrix<Scalar,3,1> out_std;
-  Eigen::Matrix<Scalar,num_in_features,1>  in_mean;
   Eigen::Matrix<Scalar,num_in_features,1>  in_std_inv; //inverse of in_std. Because multiply is faster than divide.
 
 };

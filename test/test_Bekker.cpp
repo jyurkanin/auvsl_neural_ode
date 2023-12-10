@@ -192,23 +192,23 @@ namespace{
 		features[1] = 0;
 		features[2] = 0;
 	  
-		features[3] = 29.758547;
+		features[3] = 29.76;
 		features[4] = 2083.0;
-		features[5] = 1.197933;
-		features[6] = 0.102483;
-		features[7] = 0.652405;
+		features[5] = 0.8;
+		features[6] = 0.0;
+		features[7] = 0.3927;
     
 		int len = 1000;
-		int num = 10;
+		int num = 11;
 		std::vector<float> vx_vec(len);
 		std::vector<float> fx_vec(len);
 		
 		ADF tire_vy = 0;
 
 
-		for(int j = 0; j < (num+1); j++)
+		for(int j = 0; j < num; j++)
 		{
-			ADF tire_vx = 0.1*ADF((2.0*j/(float)num) - 1.0);
+			ADF tire_vx = 0.1*ADF((2.0*j/(float)(num - 1)) - 1.0);
 			
 			for(int i = 0; i < len; i++)
 			{
@@ -268,22 +268,22 @@ namespace{
 		features[5] = 1.197933;
 		features[6] = 0.102483;
 		features[7] = 0.652405;
-    
-		int len = 100;
+
+		int num = 11;
+		int len = 10000;
 		std::vector<float> vy_vec(len);
 		std::vector<float> fy_vec(len);
 
-		ADF tire_vy = 0;
-		ADF tire_tangent_vel = 2;
+		ADF tire_tangent_vel = 0.1;
 	  
-		for(int j = 0; j < 10; j++)
+		for(int j = 0; j < num; j++)
 		{
-			ADF tire_vx = j/4.0;
+			ADF tire_vx = (float)j/(num-1);
 			for(int i = 0; i < len; i++)
 			{
-				ADF tire_vy = 4.0*ADF((2.0*i/(float)len) - 1.0);
+				ADF tire_vy = 1*ADF((2.0*i/(float)len) - 1.0);
 			  
-				inputs[0] = 0.004; //zr
+				inputs[0] = 0.001; //zr
 				inputs[1] = tire_vx;
 				inputs[2] = tire_vy;
 				inputs[3] = tire_tangent_vel;
@@ -296,15 +296,20 @@ namespace{
 				
 				forces = tire_model.get_forces(features);
 				
-				vy_vec[i] = CppAD::Value(features[2]);
+				vy_vec[i] = CppAD::Value(tire_vy);
 				fy_vec[i] = CppAD::Value(forces[1]);
 			}
-      
-			plot_cross(-1,1, -100,100);
-			plt::plot(vy_vec, fy_vec);
+			std::stringstream stream;
+			stream << std::fixed << std::setprecision(2) << CppAD::Value(tire_vx);
+			std::string label = stream.str();
+		  
+			float grey = (0.8*j) / num;
+			plt::plot(vy_vec, fy_vec, {{"color", std::to_string(grey)}, {"label", label}});
 		}
 
-		plt::title("Slip Angle vs Fy");
+		plt::legend();
+		plt::xlabel("Lateral Velocity (m/s)");
+		plt::ylabel("Lateral Force (N)");
 		plt::show();
 	}
 
@@ -319,41 +324,35 @@ namespace{
 		features[1] = 0;
 		features[2] = 0;
 	  
-		features[3] = 29.758547;
+		features[3] = 29.76;
 		features[4] = 2083.0;
-		features[5] = 1.197933;
-		features[6] = 0.102483;
-		features[7] = 0.652405;
+		features[5] = 0.8;
+		features[6] = 0.0;
+		features[7] = 0.3927;
     
-		int len = 100;
+		int len = 1000;
 		std::vector<float> vz_vec(len);
 		std::vector<float> fz_vec(len);
 
-		ADF tire_vy = 0;
-		ADF tire_tangent_vel = 2;
-	  
-		for(int j = 0; j < 10; j++)
+		ADF min_zr = 0.0001;
+		ADF max_zr = 0.003;
+		for(int i = 0; i < len; i++)
 		{
-			ADF tire_vx = j/4.0;
-			for(int i = 0; i < len; i++)
-			{
-				ADF zr = 1e-1f * i/len;
+			ADF zr = ((max_zr - min_zr)*((float)i / len)) + min_zr;
+			
+			features[0] = zr;
+			features[1] = 1;
+			features[2] = 0;
 			  
-				features[0] = zr;
-				features[1] = (tire_tangent_vel - tire_vx)/(CppAD::abs(tire_tangent_vel) + 1e-4f);
-				features[2] = 0;
+			forces = tire_model.get_forces(features);
 			  
-				forces = tire_model.get_forces(features);
-			  
-				vz_vec[i] = CppAD::Value(features[0]);
-				fz_vec[i] = CppAD::Value(forces[2]);
-			}
-      
-			plot_cross(0,0.1, 0,100);
-			plt::plot(vz_vec, fz_vec);
+			vz_vec[i] = CppAD::Value(zr);
+			fz_vec[i] = CppAD::Value(forces[2]);
 		}
-
-		plt::title("Sinkage vs Fz");
+      
+		plt::plot(vz_vec, fz_vec, {{"color", "k"}});
+		plt::xlabel("Tire Contact Height Error (m)");
+		plt::ylabel("Normal Force (N)");
 		plt::show();
 	}
 
